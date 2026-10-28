@@ -19,20 +19,17 @@ window.APP_CONFIG = {
   // Fuente de datos:
   //   "json"      -> archivos de la carpeta /data (versión inicial, sin base de datos)
   //   "supabase"  -> base de datos en línea con tiempo real (ver GUIA.md)
-  fuente: "json",
+  fuente: "supabase",
 
   // Solo si fuente === "supabase". Se copian desde Supabase: Project Settings > API.
   // La clave "anon" es pública por diseño; la seguridad la dan las políticas RLS de db/schema.sql.
   // NUNCA pegues aquí la clave "service_role".
-  supabase: {
-    url: "",      // ej. "https://abcdefgh.supabase.co"
-    anonKey: ""   // clave "anon public"
-  },
+  supabase: { url: "https://TU_ID.supabase.co", anonKey: "TU_CLAVE" },
 
   // Cada cuántos segundos se vuelven a pedir los estados (0 = no repetir).
   // Con supabase el tiempo real ya avisa solo; esto sirve además para el
   // modo "horario", que cambia con el reloj (30 es un buen valor).
-  refrescarCadaSegundos: 0,
+  refrescarCadaSegundos: 30,
 
   // Minutos antes del inicio del horario en que las primeras calles pasan a amarillo (modo horario).
   avisoMinutos: 15,
