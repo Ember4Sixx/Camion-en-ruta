@@ -24,7 +24,7 @@ window.APP_CONFIG = {
   // Solo si fuente === "supabase". Se copian desde Supabase: Project Settings > API.
   // La clave "anon" es pública por diseño; la seguridad la dan las políticas RLS de db/schema.sql.
   // NUNCA pegues aquí la clave "service_role".
-  supabase: { url: "https://TU_ID.supabase.co", anonKey: "TU_CLAVE" },
+  supabase: { url: "https://bltyftujdfowhyjsjjrj.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJsdHlmdHVqZGZvd2h5anNqanJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxNTcxMDgsImV4cCI6MjEwODczMzEwOH0.Ex_YcG7qbprILpf3KZHHFQYfQz8x4l1r8JAC_4wqRDo" },
 
   // Cada cuántos segundos se vuelven a pedir los estados (0 = no repetir).
   // Con supabase el tiempo real ya avisa solo; esto sirve además para el
