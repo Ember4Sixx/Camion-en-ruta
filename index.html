@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Camión En Ruta · José Leonardo Ortiz</title>
+  <meta name="description" content="Información sobre la recolección de residuos sólidos en José Leonardo Ortiz, Chiclayo, y ODS 12: Producción y Consumo Responsables.">
+
+  <!-- Leaflet (mapa). Para trabajar sin internet, descarga estos archivos y cámbialos por rutas locales. -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#inicio" aria-label="Camión En Ruta, inicio">
+        <span class="brand-mark" aria-hidden="true">♻</span>
+        <span>Camión <strong>En Ruta</strong></span>
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="menu">Menú</button>
+      <nav id="menu" class="nav" aria-label="Principal">
+        <a href="#ods12">ODS 12</a>
+        <a href="#cuidado">Cuida el ambiente</a>
+        <a href="#mapa">Mapa</a>
+        <a href="#horarios">Horarios</a>
+        <a href="#acerca">Acerca del proyecto</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenido">
+    <!-- ===================== INICIO ===================== -->
+    <section id="inicio" class="hero">
+      <div class="container hero-inner">
+        <p class="eyebrow">José Leonardo Ortiz · Chiclayo</p>
+        <h1>Sabe cuándo pasa el camión y saca tus residuos a tiempo</h1>
+        <p class="lead">
+          Camión En Ruta te muestra, calle por calle, si el camión recolector todavía no pasó,
+          está cerca, está recolectando o ya terminó. Menos basura acumulada, calles más limpias.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#mapa">Ver el mapa</a>
+          <a class="btn btn-ghost" href="#ods12">Conocer el ODS 12</a>
+        </div>
+        <ul class="hero-legend" aria-label="Significado de los colores">
+          <li><span class="dot dot-gris"></span> Aún no pasa</li>
+          <li><span class="dot dot-amarillo"></span> Próximo</li>
+          <li><span class="dot dot-verde"></span> Recolectando</li>
+          <li><span class="dot dot-negro"></span> Finalizado</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===================== ODS 12 ===================== -->
+    <section id="ods12" class="section">
+      <div class="container">
+        <h2>ODS 12: Producción y Consumo Responsables</h2>
+        <p class="section-intro">
+          El Objetivo de Desarrollo Sostenible 12 de las Naciones Unidas busca que usemos los recursos
+          de forma eficiente y generemos menos residuos. Lo que hacemos en casa y en el barrio también cuenta.
+        </p>
+        <div class="grid grid-3">
+          <article class="card">
+            <h3>Reducir</h3>
+            <p>Comprar solo lo necesario y evitar envases de un solo uso disminuye la cantidad de basura desde el origen.</p>
+          </article>
+          <article class="card">
+            <h3>Reutilizar y reciclar</h3>
+            <p>Darle una segunda vida a frascos, bolsas y cartón, y separar materiales aprovechables, alarga la vida de los recursos.</p>
+          </article>
+          <article class="card">
+            <h3>Disponer bien</h3>
+            <p>Sacar los residuos en el horario correcto evita acumulaciones, malos olores, plagas y puntos críticos en la calle.</p>
+          </article>
+        </div>
+        <!-- TODO (Integrante 1): ampliar con datos y cifras de fuentes confiables y citarlas en "Fuentes". -->
+      </div>
+    </section>
+
+    <!-- ===================== CUIDADO DEL AMBIENTE ===================== -->
+    <section id="cuidado" class="section section-alt">
+      <div class="container">
+        <h2>Pequeñas acciones, gran diferencia</h2>
+        <div class="grid grid-2">
+          <article class="card">
+            <h3>Antes de que pase el camión</h3>
+            <ul class="check-list">
+              <li>Guarda los residuos en bolsas bien cerradas.</li>
+              <li>Sácalos poco antes del paso del camión, no el día anterior.</li>
+              <li>Revisa en el mapa si tu calle está en gris, amarillo, verde o negro.</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>En casa y en el negocio</h3>
+            <ul class="check-list">
+              <li>Separa residuos orgánicos de los reciclables (papel, cartón, plástico, vidrio).</li>
+              <li>No dejes residuos en esquinas, veredas ni canales.</li>
+              <li>Comparte esta página con tus vecinos y comerciantes de la zona.</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== MAPA ===================== -->
+    <section id="mapa" class="section">
+      <div class="container">
+        <h2>Mapa de recolección</h2>
+
+        <div id="aviso-datos" class="notice" role="note">
+          <strong>Datos de demostración.</strong>
+          La información de este mapa es de ejemplo y no representa el recorrido real del camión.
+        </div>
+
+        <div class="map-layout">
+          <div class="map-wrap">
+            <div id="map" role="application" aria-label="Mapa interactivo de calles y estado de recolección"></div>
+            <ul class="legend" aria-label="Leyenda del mapa">
+              <li><span class="swatch swatch-gris"></span> Gris: el camión aún no pasa</li>
+              <li><span class="swatch swatch-amarillo"></span> Amarillo: el camión está próximo</li>
+              <li><span class="swatch swatch-verde"></span> Verde: el camión está recolectando</li>
+              <li><span class="swatch swatch-negro"></span> Negro: recolección finalizada</li>
+            </ul>
+          </div>
+
+          <aside class="side-panel" aria-labelledby="lista-titulo">
+            <h3 id="lista-titulo">Estado por calle</h3>
+            <p class="muted" id="ultima-actualizacion">Cargando…</p>
+            <ul id="lista-calles" class="street-list" aria-live="polite"></ul>
+          </aside>
+        </div>
+
+        <!-- Panel solo para desarrollo/demostración. Se puede quitar poniendo modoDemo:false en js/config.js -->
+        <div id="panel-demo" class="demo-panel" hidden>
+          <h3>Modo demostración</h3>
+          <p class="muted">Cambia el estado de una calle para probar los colores. Esto no guarda datos en ningún servidor.</p>
+          <div class="demo-controls">
+            <label>Calle
+              <select id="demo-calle"></select>
+            </label>
+            <label>Estado
+              <select id="demo-estado">
+                <option value="gris">Gris · aún no pasa</option>
+                <option value="amarillo">Amarillo · próximo</option>
+                <option value="verde">Verde · recolectando</option>
+                <option value="negro">Negro · finalizado</option>
+              </select>
+            </label>
+            <button id="demo-aplicar" class="btn btn-primary" type="button">Aplicar</button>
+            <button id="demo-simular" class="btn btn-ghost" type="button">Simular recorrido</button>
+            <button id="demo-reiniciar" class="btn btn-ghost" type="button">Reiniciar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== HORARIOS ===================== -->
+    <section id="horarios" class="section section-alt">
+      <div class="container">
+        <h2>Horarios y recorridos</h2>
+        <p class="section-intro" id="horarios-nota"></p>
+        <div class="table-wrap">
+          <table>
+            <caption class="sr-only">Horarios de recolección por ruta</caption>
+            <thead>
+              <tr><th scope="col">Ruta</th><th scope="col">Días</th><th scope="col">Horario</th><th scope="col">Calles</th></tr>
+            </thead>
+            <tbody id="tabla-horarios"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== ACERCA ===================== -->
+    <section id="acerca" class="section">
+      <div class="container">
+        <h2>Acerca del proyecto</h2>
+        <p>
+          Camión En Ruta busca mejorar el acceso a la información sobre la recolección de residuos sólidos en una zona
+          delimitada de José Leonardo Ortiz. Está pensado para vecinos, comerciantes, personal de limpieza pública y toda la comunidad.
+        </p>
+        <h3>Fuentes</h3>
+        <ul>
+          <li>Naciones Unidas: <a href="https://sdgs.un.org/es/goals/goal12" target="_blank" rel="noopener">ODS 12 – Producción y consumo responsables</a></li>
+          <!-- TODO: añadir las fuentes que consulte el equipo -->
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© <span id="anio"></span> Camión En Ruta · Proyecto escolar/comunitario</p>
+      <p class="muted">Mapa: © colaboradores de <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · <a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a></p>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Librería de Supabase: solo se usa si fuente: "supabase" en js/config.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/estado.js"></script>
+  <script src="js/data-source.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

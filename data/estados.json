@@ -1,0 +1,11 @@
+{
+  "_aviso": "DATOS DE PRUEBA. Cada clave es el id de una calle en calles.geojson. Valores: gris, amarillo, verde, negro.",
+  "actualizado": "2026-10-17T08:00:00-05:00",
+  "estados": {
+    "c1": "negro",
+    "c2": "verde",
+    "c3": "amarillo",
+    "c4": "gris",
+    "c5": "gris"
+  }
+}

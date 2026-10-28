@@ -1,0 +1,17 @@
+// Consulta para https://overpass-turbo.eu  (OpenStreetMap)
+// 1) Pégala en el cuadro de texto de la izquierda.
+// 2) Toca "Ejecutar".
+// 3) Menú "Exportar" > "datos" > "descargar como JSON sin procesar" (raw OSM data).
+// 4) Guarda el archivo como data/osm_jlo.json y sigue el paso del README/GUIA.
+
+[out:json][timeout:120];
+area["boundary"="administrative"]["name"="José Leonardo Ortiz"]->.jlo;
+(
+  way(area.jlo)["highway"]["name"];
+);
+out geom;
+
+// Si "area" no encuentra el distrito, usa un recuadro en su lugar
+// (sur, oeste, norte, este; ajusta alrededor de la zona):
+//   way["highway"]["name"](-6.780,-79.860,-6.740,-79.815);
+//   out geom;
