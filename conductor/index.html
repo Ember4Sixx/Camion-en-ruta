@@ -34,6 +34,9 @@
     .aviso { background: #fff8db; border: 1px solid #ecd36b; border-radius: 10px; padding: .7rem .9rem; font-size: .92rem; }
     .error { color: #b3261e; }
     #msg { min-height: 1.4em; }
+    .lista-calles { list-style: none; margin: .6rem 0 0; padding: 0; display: grid; gap: .35rem; font-size: .92rem; }
+    .lista-calles li { display: flex; justify-content: space-between; gap: .6rem; align-items: center; }
+    details summary { cursor: pointer; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -68,12 +71,21 @@
       <div class="card" style="display:grid;gap:.7rem">
         <p class="estado" style="margin:0"><span class="luz" id="luz"></span><span id="estado-texto">Detenido</span></p>
         <ul class="datos">
+          <li><span>Calle actual:</span> <strong id="d-calle">—</strong></li>
+          <li><span>Calles terminadas:</span> <strong id="d-terminadas">—</strong></li>
           <li><span>Último envío:</span> <strong id="d-envio">—</strong></li>
           <li><span>Precisión del GPS:</span> <strong id="d-precision">—</strong></li>
           <li><span>Envíos en este recorrido:</span> <strong id="d-contador">0</strong></li>
           <li><span>Pantalla siempre encendida:</span> <strong id="d-pantalla">—</strong></li>
         </ul>
       </div>
+
+      <details class="card">
+        <summary>Avance por calle</summary>
+        <p class="muted" style="margin:.5rem 0 0">Una calle queda <strong>terminada</strong> (negro en el mapa) cuando el camión recorre el 80 % o más. Si solo cruza una esquina, sigue en gris.</p>
+        <ul class="lista-calles" id="lista-calles"></ul>
+        <button class="btn btn-borde" id="b-reiniciar" type="button" style="margin-top:.8rem;width:100%">Borrar el avance de hoy</button>
+      </details>
 
       <p class="aviso">Mantén esta página <strong>abierta y en primer plano</strong> durante todo el recorrido. Si cambias de app o se bloquea el celular, la ubicación deja de enviarse.</p>
 
@@ -86,6 +98,7 @@
   <!-- Supabase (versión fija) y la configuración común del proyecto -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script src="../js/config.js"></script>
+  <script src="../js/estado.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

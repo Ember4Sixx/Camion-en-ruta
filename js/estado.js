@@ -115,7 +115,133 @@
     return { orden: Math.max(previo || 0, mejor.orden), id: mejor.id, distancia: mejor.distancia };
   }
 
-  var API = { estadosDeRuta: estadosDeRuta, estimarPorHorario: estimarPorHorario, indicePorGPS: indicePorGPS };
+  // ==========================================================
+  // AVANCE REAL POR GPS (lo usa la app del conductor y el mapa)
+  //
+  // En vez de suponer un orden de calles, se anota qué partes de cada
+  // calle recorrió de verdad el camión:
+  //   - Cada calle se divide en "puntos de control" cada pocos metros.
+  //   - Cuando el camión pasa cerca de un punto, ese punto queda recorrido.
+  //   - Verde  = el camión está ahora en esa calle.
+  //   - Negro  = el camión recorrió casi toda la calle (umbral, p. ej. 80 %) y ya salió.
+  //   - Gris   = todavía no la recorre (o solo cruzó una esquina).
+  //   No hay amarillo: sin el orden oficial de la ruta no se puede saber cuál sigue.
+  // ==========================================================
+  var KX = function (lat) { return 111320 * Math.cos((lat * Math.PI) / 180); }, KY = 110540;
+
+  /** Distancia aproximada en metros entre dos puntos {lat,lng}. */
+  function distanciaM(a, b) {
+    var dx = (a.lng - b.lng) * KX(a.lat), dy = (a.lat - b.lat) * KY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  /** Distancia (m) de un punto a la calle más cercana de sus tramos. lineas: [[[lng,lat],…],…] */
+  function distanciaACalle(pos, lineas) {
+    var min = Infinity;
+    (lineas || []).forEach(function (linea) {
+      for (var i = 0; i < linea.length - 1; i++) {
+        var d = distPuntoSegmento(pos, linea[i], linea[i + 1], pos.lat);
+        if (d < min) min = d;
+      }
+      if (linea.length === 1) min = Math.min(min, distanciaM(pos, { lng: linea[0][0], lat: linea[0][1] }));
+    });
+    return min;
+  }
+
+  /** Divide una calle en puntos de control cada pasoM metros. Devuelve [{lat,lng}]. */
+  function muestrearCalle(lineas, pasoM) {
+    var paso = pasoM || 8, puntos = [];
+    (lineas || []).forEach(function (linea) {
+      for (var i = 0; i < linea.length - 1; i++) {
+        var a = { lng: linea[i][0], lat: linea[i][1] }, b = { lng: linea[i + 1][0], lat: linea[i + 1][1] };
+        var n = Math.max(1, Math.ceil(distanciaM(a, b) / paso));
+        for (var k = 0; k < n; k++) {
+          var t = k / n;
+          puntos.push({ lat: a.lat + (b.lat - a.lat) * t, lng: a.lng + (b.lng - a.lng) * t });
+        }
+      }
+      if (linea.length) { var u = linea[linea.length - 1]; puntos.push({ lng: u[0], lat: u[1] }); }
+    });
+    return puntos;
+  }
+
+  /** Puntos intermedios entre dos lecturas del GPS (para no saltarse tramos si el camión va rápido). */
+  function puntosEntre(a, b, pasoM) {
+    var paso = pasoM || 5;
+    if (!a) return [b];
+    var n = Math.max(1, Math.ceil(distanciaM(a, b) / paso)), out = [];
+    for (var k = 1; k <= n; k++) {
+      var t = k / n;
+      out.push({ lat: a.lat + (b.lat - a.lat) * t, lng: a.lng + (b.lng - a.lng) * t });
+    }
+    return out;
+  }
+
+  /** Marca como recorridos los puntos de control a menos de radioM de p. Devuelve cuántos se marcaron nuevos. */
+  function marcarCercanos(puntos, visitados, p, radioM) {
+    var nuevos = 0;
+    for (var i = 0; i < puntos.length; i++) {
+      if (!visitados[i] && distanciaM(puntos[i], p) <= radioM) { visitados[i] = 1; nuevos++; }
+    }
+    return nuevos;
+  }
+
+  /** Fracción recorrida (0 a 1). */
+  function fraccion(visitados) {
+    if (!visitados.length) return 0;
+    var s = 0;
+    for (var i = 0; i < visitados.length; i++) s += visitados[i] ? 1 : 0;
+    return s / visitados.length;
+  }
+
+  /**
+   * En qué calle está el camión. Para que no "salte" en las esquinas, se queda
+   * con la calle actual mientras siga cerca y otra no esté claramente más cerca.
+   * calles: [{id, lineas}] ; devuelve el id o null si está lejos de todas.
+   */
+  function calleActual(pos, calles, actualId, umbralM, margenM) {
+    var umbral = umbralM == null ? 40 : umbralM, margen = margenM == null ? 8 : margenM;
+    var mejor = null, dActual = Infinity;
+    calles.forEach(function (c) {
+      var d = distanciaACalle(pos, c.lineas);
+      if (c.id === actualId) dActual = d;
+      if (!mejor || d < mejor.d) mejor = { id: c.id, d: d };
+    });
+    if (!mejor || mejor.d > umbral) return null;
+    if (actualId && dActual <= umbral && dActual - mejor.d < margen) return actualId;
+    return mejor.id;
+  }
+
+  /** Estado de una calle según su avance. enCalle: el camión está ahora en ella. */
+  function estadoPorAvance(enCalle, avance, umbralCompleta) {
+    if (enCalle) return "verde";
+    return avance >= (umbralCompleta == null ? 0.8 : umbralCompleta) ? "negro" : "gris";
+  }
+
+  /**
+   * Colores de una ruta a partir de lo guardado en la tabla `avance_calles`.
+   * callesRuta: [{id}] ; filas: [{calle_id, estado}] ; vigente: hay posición reciente del camión.
+   * Si la posición ya no es reciente, una calle "verde" se muestra gris (no se sabe si sigue ahí).
+   */
+  function estadosPorAvance(callesRuta, filas, vigente) {
+    var porCalle = {};
+    (filas || []).forEach(function (f) { porCalle[f.calle_id] = f.estado; });
+    var out = {};
+    callesRuta.forEach(function (c) {
+      var e = porCalle[c.id] || "gris";
+      if (e === "verde" && !vigente) e = "gris";
+      if (e !== "verde" && e !== "negro") e = "gris";
+      out[c.id] = e;
+    });
+    return out;
+  }
+
+  var API = {
+    estadosDeRuta: estadosDeRuta, estimarPorHorario: estimarPorHorario, indicePorGPS: indicePorGPS,
+    distanciaM: distanciaM, distanciaACalle: distanciaACalle, muestrearCalle: muestrearCalle,
+    puntosEntre: puntosEntre, marcarCercanos: marcarCercanos, fraccion: fraccion,
+    calleActual: calleActual, estadoPorAvance: estadoPorAvance, estadosPorAvance: estadosPorAvance
+  };
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   root.Estado = API;
 })(typeof window !== "undefined" ? window : globalThis);
