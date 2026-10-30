@@ -1,17 +1,17 @@
 # Guía paso a paso · Camión En Ruta
 
-Esta guía lleva el proyecto desde la versión con archivos de ejemplo hasta una versión con base de datos, cambios en tiempo real y GPS. Pueden detenerse en cualquier paso: cada uno deja algo que funciona.
+Esta guía lleva el proyecto desde la versión con archivos locales hasta una versión con base de datos, cambios en tiempo real y GPS. Pueden detenerse en cualquier paso: cada uno deja algo que funciona.
 
 ## Cómo encajan las piezas
 
 ```
- Personal del camión                      Vecinos
- (admin.html, con sesión)          (index.html, sin sesión)
-        │ escribe                          ▲ lee y se actualiza solo
-        ▼                                  │
+ Teléfono / GPS del camión                  Vecinos
+ (admin.html, con sesión)            (index.html, sin sesión)
+        │ escribe su posición                ▲ lee y se actualiza solo
+        ▼                                    │
  ┌─────────────────────────  Supabase  ─────────────────────────┐
- │ rutas · calles · ruta_calles · horarios                      │
- │ recorridos (fase + calle actual)   posicion_camion (lat/lng) │
+ │ zonas · rutas · calles · ruta_calles · horarios              │
+ │ posicion_camion (lat/lng)                                    │
  └───────────────────────────────────────────────────────────────┘
                                    │
               js/data-source.js  →  js/estado.js (algoritmo de colores)  →  js/map.js (pinta el mapa)
@@ -20,6 +20,7 @@ Esta guía lleva el proyecto desde la versión con archivos de ejemplo hasta una
 - **Dónde está el algoritmo:** `js/estado.js`. Recibe la fase de la ruta y en qué calle va el camión, y devuelve el color de cada calle. No sabe nada de la base de datos ni del mapa.
 - **Dónde se leen los datos:** `js/data-source.js`. Es el único archivo que habla con la base de datos.
 - **Dónde se dibuja:** `js/map.js` y `js/main.js`.
+- **No hay tabla de "recorridos":** nadie marca calles a mano. El estado se calcula con el horario y con la posición del camión.
 
 ## El algoritmo de colores
 
@@ -34,13 +35,12 @@ Cada ruta tiene sus calles en orden (1, 2, 3…). Solo hay que saber en qué cal
 | El resto | **gris** (aún no pasa) |
 | Fase `finalizado` | todas **negro** |
 
-`orden_actual` puede salir de tres fuentes (columna `fuente` de la tabla `recorridos`, se elige por ruta en el panel):
+La fase y el `orden_actual` salen de dos fuentes (se calculan en `js/data-source.js`, no se guardan en la base de datos):
 
-1. **manual:** una persona toca "Siguiente calle" en `admin.html`. Es la más confiable para empezar.
-2. **horario:** se reparte el horario en partes iguales entre las calles. Es una estimación y la página lo avisa; no la presenten como tiempo real.
-3. **gps:** se toma la ubicación del camión y se busca la calle más cercana de la ruta (si está a menos de `umbralGpsMetros`, 40 m por defecto).
+1. **horario:** se reparte el horario de la tabla `horarios` en partes iguales entre las calles. Es una estimación y la página lo avisa; no la presenten como tiempo real. Si no hay horario cargado, todas las calles quedan en gris.
+2. **gps:** si `gpsActivo` está en `true` y hay una posición del camión de hace menos de `gpsVigenciaSegundos` (120 por defecto), manda el GPS: se busca la calle más cercana de la ruta (si está a menos de `umbralGpsMetros`, 40 m por defecto). El orden nunca retrocede mientras llegue GPS vigente. Si la posición se vuelve vieja, se vuelve al horario.
 
-Las pruebas de esta lógica están hechas con Node; si cambian el algoritmo, vuelvan a probar los casos de arriba.
+Las pruebas de esta lógica están en `tests/pruebas.js` (`node tests/pruebas.js`). Si cambian el algoritmo, vuelvan a correrlas.
 
 ---
 
@@ -70,35 +70,36 @@ Las pruebas de esta lógica están hechas con Node; si cambian el algoritmo, vue
 ```
 python -m http.server 8000
 ```
-Abre http://localhost:8000. Con `fuente: "json"` (valor por defecto) todo funciona sin base de datos, con los datos de `data/`.
+Abre http://localhost:8000. Con `fuente: "json"` todo funciona sin base de datos, con los datos de `data/` (primero hay que generarlos con el paso 2B; vienen vacíos). Hoy `js/config.js` usa `fuente: "supabase"`.
 
-## Paso 2B · Delimitar la zona (Virrey Toledo, Sáenz Peña, Av. México y Chongoyape) y sacar sus calles
+## Paso 2B · Delimitar la zona y sacar sus calles de OpenStreetMap
 
-Las calles que hay hoy en `data/calles.geojson` son de ejemplo. Para reemplazarlas por las reales:
+**Perímetro de la zona:** Av. Sáenz Peña, Av. México, Calle Virrey Toledo y Calle Túpac Amaru.
+
+**Calles del proyecto (16):** Avenida Sáenz Peña, Avenida México, Cacique Cinto, Cacique Collique, Caminos del Inca, Virrey Toledo, Jirón Gonzalo Pizarro, Jirón Hernando de Soto, Chongoyape, Carlos Castañeda Iparraguirre, Atusparias, Pasaje Perú, José Carlos Mariátegui, Unión, Pasaje San Martín y Túpac Amaru. La lista está en `CALLES_PROYECTO`, dentro de `db/osm_a_zona.py`.
 
 1. Entra a https://overpass-turbo.eu, pega la consulta de `db/consulta_overpass.txt`, toca **Ejecutar**, y en **Exportar → datos → descargar como JSON sin procesar** guarda el archivo como `data/osm_jlo.json`.
 2. Ejecuta:
    ```
    python db/osm_a_zona.py data/osm_jlo.json
    ```
-3. El programa busca las 4 calles por nombre, calcula las 4 esquinas, dibuja el cuadrado y se queda con todas las calles que quedan adentro (cortando las que se salen). Imprime en pantalla los nombres que encontró para cada límite: **léanlos y confirmen que son las calles correctas**. Si una se llama distinto en OpenStreetMap, ajusten con `--limites "Virrey Toledo,Sáenz Peña,México,Chongoyape"`.
-4. Escribe: `data/zona.geojson` (el cuadrado), `data/calles.geojson` (calles con nombre, una por nombre), `data/estados.json` (todas en gris), `data/horarios.json` y `db/zona.sql` (para la base de datos, paso 3).
-5. Abran la página en local (paso 2): el cuadrado sale con borde punteado y las calles dentro, con su nombre al pasar el cursor. Comparen con Google Maps o con una visita a la zona.
+3. El programa busca las 4 calles del perímetro por nombre, calcula las 4 esquinas, dibuja el cuadrado y se queda **solo con las 16 calles del proyecto** que quedan adentro (cortando las que se salen). Imprime los nombres que tiene cada calle en OSM: **léanlos y confirmen que son las correctas**.
+4. Escribe: `data/zona.geojson` (el perímetro), `data/calles.geojson`, `data/horarios.json` (sin horario, hasta que se confirme) y `db/zona.sql` (para la base de datos, paso 3). Si alguna calle del proyecto no quedó dentro de la zona, la lista en `data/calles_no_encontradas.txt` y la avisa en pantalla.
+5. Abran la página en local (paso 2): el perímetro sale con borde punteado y las calles dentro, con su nombre al pasar el cursor. Comparen con Google Maps o con una visita a la zona.
 
 Límites a tener en cuenta:
-- Solo salen las calles que tienen nombre en OpenStreetMap; el programa informa cuántos tramos sin nombre quedaron fuera (`data/calles_sin_nombre.txt`). Si faltan calles, hay que nombrarlas en OpenStreetMap o agregarlas a mano en `calles.geojson`.
+- Una calle que en OpenStreetMap tiene otro nombre (o no tiene nombre) no aparece: corrijan el nombre en OSM o agreguen esa variante en `consulta_overpass.txt` y en `CALLES_PROYECTO`.
+- Una calle que queda **fuera del perímetro** (por ejemplo, al norte de Virrey Toledo si esa es la calle de arriba) se descarta y se avisa en `calles_no_encontradas.txt`. Si pasa con calles que sí deben estar, revisen cuáles son las 4 calles del perímetro.
 - El **orden de recorrido** que genera es provisional (de norte a sur). El orden real del camión hay que definirlo con quien conoce la ruta y cambiarlo en `ruta_calles.orden`.
 - Los lados del cuadrado se calculan con las esquinas de las 4 calles; si alguna es curva, el contorno punteado es una aproximación y la calle real se dibuja encima.
 
 ## Paso 3 · Crear la base de datos (Supabase)
 
 1. Crea una cuenta y un proyecto en https://supabase.com (hay plan gratuito; revisen sus condiciones actuales, por ejemplo si pausan proyectos sin actividad).
-2. En el proyecto: **SQL Editor → New query**. Pega todo `db/schema.sql` y ejecuta. Esto crea las tablas, las reglas de seguridad y activa el tiempo real.
-3. Carga las calles y rutas:
-   - Si hicieron el paso 2B: pega `db/zona.sql` en el SQL Editor y ejecuta (incluye la zona, las calles y el orden).
-   - Si usan calles preparadas a mano: ejecuta `python db/geojson_a_sql.py > db/calles.sql` y pega ese archivo.
-4. Carga los horarios: edita `db/horarios.sql` con los horarios oficiales (`dias`: 0 domingo … 6 sábado) y ejecútalo.
-5. Revisa en **Table Editor** que `rutas`, `calles`, `ruta_calles`, `horarios` y `recorridos` tengan filas.
+2. En el proyecto: **SQL Editor → New query**. Pega todo `db/schema.sql` y ejecuta. Esto crea las tablas, las reglas de seguridad y activa el tiempo real. *(Si la base ya existía con la tabla `recorridos`, ejecuten en cambio `db/migracion_01_quitar_recorridos.sql`.)*
+3. Carga las calles y la ruta: pega `db/zona.sql` (paso 2B) en el SQL Editor y ejecuta. Reemplaza los datos anteriores de zona, rutas, calles y orden.
+4. Carga el horario oficial cuando la municipalidad lo confirme: edita `db/horarios.sql` (`dias`: 0 domingo … 6 sábado) y ejecútalo. Mientras no haya horario, las calles se muestran en gris y la página avisa que el horario está pendiente.
+5. Revisa en **Table Editor** que `zonas`, `rutas`, `calles` y `ruta_calles` tengan filas.
 
 ## Paso 4 · Conectar la página a la base de datos
 
@@ -113,33 +114,32 @@ Límites a tener en cuenta:
 
 Sobre las claves: la `anon` va en el código público y no es un secreto, porque lo que protege los datos son las reglas RLS de `db/schema.sql` (todos leen, solo usuarios con sesión escriben). La clave `service_role` **nunca** debe ir en el código ni subirse a GitHub.
 
-## Paso 5 · Panel para actualizar estados
+## Paso 5 · Cuentas del personal
 
 1. En Supabase: **Authentication → Users → Add user**. Crea una cuenta (correo y contraseña) por cada persona autorizada. En **Authentication → Sign In / Providers** desactiven el registro abierto de usuarios, para que nadie más pueda crear cuentas.
-2. Abre `admin.html` (en local: http://localhost:8000/admin.html), entra y elige la ruta.
-3. Usa "Iniciar recorrido", "Siguiente calle", "Calle anterior", "Finalizar" o "Reiniciar". El mapa público cambia de color sin recargar.
+2. Abre `admin.html` (en local: http://localhost:8000/admin.html), entra y elige la ruta. Desde ahí se comparte la ubicación del camión (paso 8). El panel ya no marca calles a mano: los colores salen del horario y del GPS.
 
 ## Paso 6 · Tiempo real
 
-Ya viene incluido: `AppData.suscribir()` en `js/data-source.js` se suscribe a los cambios de `recorridos` y `posicion_camion`, y `js/main.js` vuelve a pedir los estados cuando llega un aviso. Para probarlo, abre el mapa en una pestaña y `admin.html` en otra, y toca "Siguiente calle".
+Ya viene incluido: `AppData.suscribir()` en `js/data-source.js` se suscribe a los cambios de `posicion_camion`, y `js/main.js` vuelve a calcular los estados cuando llega un aviso. Los cambios por horario se ven con el refresco periódico (`refrescarCadaSegundos`, 30 por defecto).
 
-Si no se actualiza solo: confirmen que se ejecutaron las dos últimas líneas de `db/schema.sql` (`alter publication supabase_realtime …`) y que `refrescarCadaSegundos` esté en 30 como respaldo.
+Si no se actualiza solo: confirmen que se ejecutó la última línea de `db/schema.sql` (`alter publication supabase_realtime add table posicion_camion`) y que `refrescarCadaSegundos` esté en 30 como respaldo.
 
-## Paso 7 · Estado por horario (sin que nadie toque botones)
+## Paso 7 · Estado por horario
 
-En `admin.html`, cambia "¿De dónde sale el estado?" a **Estimado por horario**. La página calcula la fase con el reloj usando la tabla `horarios`. Es una aproximación: si el camión se atrasa, los colores no lo sabrán. La página muestra el texto "estimado según el horario (no es en tiempo real)".
+Es la base del sistema y no requiere que nadie toque botones: la página calcula la fase con el reloj usando la tabla `horarios`. Es una aproximación: si el camión se atrasa, los colores no lo sabrán. La página muestra el texto "estimado según el horario (no es en tiempo real)". Sin horarios cargados, todo queda en gris.
 
 ## Paso 8 · GPS
 
 **Fase A: teléfono en el camión (sin comprar equipos).**
 1. Pongan `gpsActivo: true` en `js/config.js`.
-2. En el teléfono del camión, abre la página `admin.html` **publicada** (el navegador solo permite ubicación con HTTPS), inicia sesión y toca **Compartir ubicación**. Guarda la posición en `posicion_camion` cada 5 segundos.
-3. En el panel, pongan la fuente de la ruta en **Por GPS** y la fase en **En curso** (con "Iniciar recorrido"). El camión 🚛 aparece en el mapa y las calles cambian de color según la calle más cercana.
+2. En el teléfono del camión, abre la página `admin.html` **publicada** (el navegador solo permite ubicación con HTTPS), inicia sesión, elige la ruta y toca **Compartir ubicación**. Guarda la posición en `posicion_camion` cada 5 segundos.
+3. El camión 🚛 aparece en el mapa y las calles cambian de color según la calle más cercana. Si la posición deja de llegar por más de `gpsVigenciaSegundos`, el camión desaparece del mapa y los colores vuelven al horario.
 4. Necesitan permiso del conductor y de quien administre el camión para usar su ubicación. Mantener la pantalla encendida y la página abierta es necesario; los navegadores pausan la ubicación en segundo plano.
 
 **Fase B: dispositivo GPS dedicado.** Si la municipalidad ya tiene GPS en los camiones, hay que preguntarles si comparten esos datos. Se conectaría escribiendo la posición en la tabla `posicion_camion` desde un servicio propio; la página no necesita cambios.
 
-**Limitaciones de la Fase A.** El cálculo de la calle se hace en el navegador de cada visitante; con señal imprecisa el camión puede "saltar" entre calles cercanas (el algoritmo nunca retrocede respecto al `orden_actual` guardado, pero ese valor solo cambia en modo manual). Para algo más estable, el siguiente paso es calcular `orden_actual` en un servicio propio y guardarlo en `recorridos`.
+**Limitaciones de la Fase A.** El cálculo de la calle se hace en el navegador de cada visitante y el último orden conocido vive solo en la memoria de ese navegador; con señal imprecisa el camión puede "saltar" entre calles cercanas y dos visitantes pueden ver cosas distintas. Para algo más estable, el siguiente paso es calcular la calle actual en un servicio propio (por ejemplo, una Edge Function de Supabase) y guardarla en una tabla.
 
 ## Paso 9 · Publicar y poner dominio
 
@@ -159,6 +159,8 @@ En `admin.html`, cambia "¿De dónde sale el estado?" a **Estimado por horario**
 
 ## Qué falta por verificar
 
-- La conexión con Supabase está escrita siguiendo su API, pero no se probó contra un proyecto real. Si algo falla en el Paso 4, la consola del navegador (F12) mostrará el mensaje de error.
-- Los nombres y coordenadas de las calles de ejemplo no son reales.
-- Los horarios reales deben confirmarse con la municipalidad.
+- Los horarios oficiales de la zona: no se encontró un horario público de recolección para estas calles; hay que pedirlo a la municipalidad.
+- Las calles salen de OpenStreetMap: comparar el resultado con la zona real.
+- El orden real de recorrido del camión (`ruta_calles.orden`).
+- Probar el GPS en un teléfono real con la página publicada (HTTPS).
+- Antes de entregar: `modoDemo: false` y `datosDemostracion: false`.

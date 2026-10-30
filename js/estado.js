@@ -13,8 +13,7 @@
                            actual < orden <= actual+N    -> amarillo (próximas N calles)
                            el resto                      -> gris     (aún no pasa)
 
-   "ordenActual" puede venir de tres fuentes (columna `fuente` en la BD):
-     manual  -> alguien lo marca desde admin.html
+   "ordenActual" puede venir de dos fuentes:
      horario -> se estima con la hora (estimarPorHorario)
      gps     -> se calcula con la posición del camión (indicePorGPS)
    ========================================================== */
@@ -95,17 +94,22 @@
    * A partir de la posición del camión, devuelve el orden de la calle más
    * cercana de la ruta, o null si el camión está a más de umbralM metros de
    * todas (fuera de la ruta o señal dudosa).
-   * pos: {lat,lng}; calles: [{id, orden, coords:[[lng,lat],…]}]
+   * pos: {lat,lng}
+   * calles: [{id, orden, lineas:[ [[lng,lat],…], … ]}]  (una calle puede tener varios tramos
+   *         separados; cada tramo se recorre por su cuenta, sin unir el final de uno con el inicio del siguiente)
    * previo: orden anterior; el resultado nunca retrocede de él.
    */
   function indicePorGPS(pos, calles, previo, umbralM) {
     var umbral = umbralM == null ? 40 : umbralM;
     var mejor = null;
     calles.forEach(function (c) {
-      for (var i = 0; i < c.coords.length - 1; i++) {
-        var d = distPuntoSegmento(pos, c.coords[i], c.coords[i + 1], pos.lat);
-        if (!mejor || d < mejor.distancia) mejor = { orden: c.orden, id: c.id, distancia: d };
-      }
+      var lineas = c.lineas || [c.coords || []];
+      lineas.forEach(function (linea) {
+        for (var i = 0; i < linea.length - 1; i++) {
+          var d = distPuntoSegmento(pos, linea[i], linea[i + 1], pos.lat);
+          if (!mejor || d < mejor.distancia) mejor = { orden: c.orden, id: c.id, distancia: d };
+        }
+      });
     });
     if (!mejor || mejor.distancia > umbral) return null;
     return { orden: Math.max(previo || 0, mejor.orden), id: mejor.id, distancia: mejor.distancia };

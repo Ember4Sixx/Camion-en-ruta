@@ -4,7 +4,7 @@
 -- Se puede ejecutar una sola vez; para empezar de cero borra las tablas antes.
 -- ==========================================================
 
--- Rutas del camión (ej. "Ruta A"). `proximas` = cuántas calles siguientes salen en amarillo.
+-- Rutas del camión (ej. "Ruta 1"). `proximas` = cuántas calles siguientes salen en amarillo.
 create table rutas (
   id        text primary key,
   nombre    text not null,
@@ -26,6 +26,7 @@ create table calles (
 );
 
 -- Qué calles tiene cada ruta y en qué ORDEN las recorre el camión (1, 2, 3…).
+-- El orden inicial que genera db/osm_a_zona.py es PROVISIONAL: hay que ajustarlo al recorrido real.
 create table ruta_calles (
   ruta_id  text not null references rutas(id)  on delete cascade,
   calle_id text not null references calles(id) on delete cascade,
@@ -43,19 +44,9 @@ create table horarios (
   hora_fin     time   not null
 );
 
--- Estado del recorrido de hoy, una fila por ruta. Es lo que cambia en tiempo real.
---   fase:          pendiente | en_curso | finalizado
---   orden_actual:  orden de la calle donde está el camión (0 = aún no empieza)
---   fuente:        manual | horario | gps  (de dónde sale el estado)
-create table recorridos (
-  ruta_id       text primary key references rutas(id) on delete cascade,
-  fase          text not null default 'pendiente' check (fase in ('pendiente','en_curso','finalizado')),
-  orden_actual  int  not null default 0,
-  fuente        text not null default 'manual' check (fuente in ('manual','horario','gps')),
-  actualizado   timestamptz not null default now()
-);
-
--- Última posición conocida del camión (una fila por ruta).
+-- Última posición conocida del camión (una fila por ruta). Hoy la escribe el teléfono del
+-- camión desde admin.html; más adelante la puede escribir el GPS dedicado del camión.
+-- El estado de las calles (colores) se calcula con esta posición y con la tabla `horarios`.
 create table posicion_camion (
   ruta_id      text primary key references rutas(id) on delete cascade,
   lat          double precision not null,
@@ -70,7 +61,6 @@ alter table rutas           enable row level security;
 alter table calles          enable row level security;
 alter table ruta_calles     enable row level security;
 alter table horarios        enable row level security;
-alter table recorridos      enable row level security;
 alter table posicion_camion enable row level security;
 
 create policy "lectura publica" on zonas           for select using (true);
@@ -78,7 +68,6 @@ create policy "lectura publica" on rutas           for select using (true);
 create policy "lectura publica" on calles          for select using (true);
 create policy "lectura publica" on ruta_calles     for select using (true);
 create policy "lectura publica" on horarios        for select using (true);
-create policy "lectura publica" on recorridos      for select using (true);
 create policy "lectura publica" on posicion_camion for select using (true);
 
 create policy "escritura con sesion" on zonas           for all to authenticated using (true) with check (true);
@@ -86,10 +75,8 @@ create policy "escritura con sesion" on rutas           for all to authenticated
 create policy "escritura con sesion" on calles          for all to authenticated using (true) with check (true);
 create policy "escritura con sesion" on ruta_calles     for all to authenticated using (true) with check (true);
 create policy "escritura con sesion" on horarios        for all to authenticated using (true) with check (true);
-create policy "escritura con sesion" on recorridos      for all to authenticated using (true) with check (true);
 create policy "escritura con sesion" on posicion_camion for all to authenticated using (true) with check (true);
 
 -- ---------- Tiempo real ----------
--- Hace que Supabase avise a la página cuando cambian estas dos tablas.
-alter publication supabase_realtime add table recorridos;
+-- Hace que Supabase avise a la página cuando cambia la posición del camión.
 alter publication supabase_realtime add table posicion_camion;

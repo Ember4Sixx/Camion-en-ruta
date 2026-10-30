@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
-Convierte data/calles.geojson en SQL para cargar rutas, calles y recorridos.
+Convierte un calles.geojson hecho a mano en SQL para cargar rutas, calles y ruta_calles.
+(Si usan db/osm_a_zona.py no hace falta este script: ese ya genera db/zona.sql.)
 
 Uso (desde la carpeta del proyecto):
     python db/geojson_a_sql.py > db/calles.sql
 
 Reglas del archivo GeoJSON:
-  - Cada calle (Feature) debe tener properties: id, nombre, ruta.
-  - El ORDEN de las calles dentro del archivo, dentro de cada ruta,
+  - Cada calle (Feature) debe tener properties: id, nombre, ruta (y, opcional, orden).
+  - Si no hay `orden`, vale el orden de las calles dentro del archivo, dentro de cada ruta;
     es el orden en que el camión las recorre.
 Luego pega db/calles.sql en Supabase > SQL Editor. Los horarios se cargan aparte
-(ver GUIA.md, paso 3).
+(ver db/horarios.sql y GUIA.md, paso 3).
 """
 import json
 import sys
@@ -28,7 +29,8 @@ def q(texto):
 
 rutas = OrderedDict()
 calles_sql = []
-for f in datos["features"]:
+feats = sorted(enumerate(datos["features"]), key=lambda t: (t[1]["properties"].get("orden") or t[0] + 1, t[0]))
+for _, f in feats:
     p = f["properties"]
     rutas.setdefault(p["ruta"], []).append(p["id"])
     geom = json.dumps(f["geometry"], ensure_ascii=False)
@@ -43,7 +45,4 @@ print(",\n".join("  " + c for c in calles_sql) + "\non conflict (id) do update s
 
 print("insert into ruta_calles (ruta_id, calle_id, orden) values")
 filas = [f"  ({q(r)}, {q(c)}, {i})" for r, ids in rutas.items() for i, c in enumerate(ids, start=1)]
-print(",\n".join(filas) + "\non conflict (ruta_id, calle_id) do update set orden = excluded.orden;\n")
-
-print("insert into recorridos (ruta_id) values")
-print(",\n".join(f"  ({q(r)})" for r in rutas) + "\non conflict (ruta_id) do nothing;")
+print(",\n".join(filas) + "\non conflict (ruta_id, calle_id) do update set orden = excluded.orden;")

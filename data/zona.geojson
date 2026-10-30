@@ -1,0 +1,45 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "zona-1",
+    "nombre": "Zona de recolección",
+    "limites": [
+     "Sáenz Peña",
+     "México",
+     "Virrey Toledo",
+     "Túpac Amaru"
+    ]
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -79.833737,
+       -6.7561572
+      ],
+      [
+       -79.8293569,
+       -6.7566329
+      ],
+      [
+       -79.82959569999998,
+       -6.7586418
+      ],
+      [
+       -79.8339192,
+       -6.7581671
+      ],
+      [
+       -79.833737,
+       -6.7561572
+      ]
+     ]
+    ]
+   }
+  }
+ ]
+}

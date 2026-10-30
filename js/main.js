@@ -48,7 +48,6 @@
     });
     if (fecha !== undefined) {
       const ORIGEN = {
-        manual: "marcado por el personal",
         horario: "estimado según el horario (no es en tiempo real)",
         gps: "calculado con la ubicación del camión",
         mixto: "varias fuentes"

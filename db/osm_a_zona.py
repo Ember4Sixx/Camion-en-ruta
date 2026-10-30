@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
 """
-Delimita la zona (el "cuadrado") formada por 4 calles y extrae las calles de adentro.
+Delimita la zona (el "cuadrado") formada por 4 calles y extrae SOLO las calles del proyecto que quedan dentro.
+
+Perímetro por defecto : Sáenz Peña, México, Virrey Toledo y Túpac Amaru.
+Calles del proyecto   : las 16 de CALLES_PROYECTO (más abajo). Cualquier otra calle de OSM se ignora.
 
 Entrada : exportación JSON de Overpass (ver db/consulta_overpass.txt), con geometría.
-Salida  : data/zona.geojson      polígono + las 4 esquinas
-          data/calles.geojson    una calle por nombre (MultiLineString), con id, nombre, ruta, tipo
-          data/estados.json      todas en gris
-          data/horarios.json     horario de ejemplo para la ruta
-          db/zona.sql            tablas zonas, rutas, calles, ruta_calles, recorridos para Supabase
+Salida  : data/zona.geojson      polígono del perímetro
+          data/calles.geojson    una calle por nombre (LineString o MultiLineString), con id, nombre, ruta, tipo, orden
+          data/horarios.json     la ruta SIN horario (el horario oficial se carga cuando se confirme)
+          db/zona.sql            limpia los datos anteriores y carga zonas, rutas, calles y ruta_calles en Supabase
           data/calles_sin_nombre.txt   cantidad de tramos sin nombre que quedaron fuera
+          data/calles_no_encontradas.txt  calles del proyecto que NO aparecieron dentro de la zona (si hay)
 
 Uso:
     python db/osm_a_zona.py data/osm_jlo.json
-    python db/osm_a_zona.py data/osm_jlo.json --limites "Virrey Toledo,Sáenz Peña,México,Chongoyape"
+    python db/osm_a_zona.py data/osm_jlo.json --limites "Sáenz Peña,México,Virrey Toledo,Túpac Amaru"
     python db/osm_a_zona.py data/osm_jlo.json --salida otra_carpeta   (para probar sin pisar data/)
 
 El ORDEN de recorrido que genera es PROVISIONAL (de norte a sur). Cámbienlo por el
-recorrido real del camión editando la columna `orden` de ruta_calles o el orden en calles.geojson.
+recorrido real del camión editando la columna `orden` de ruta_calles o la propiedad `orden` en calles.geojson.
 """
 import argparse
 import itertools
@@ -30,12 +33,27 @@ from pathlib import Path
 
 TOL_M = 15  # tolerancia (m) para considerar que un punto está sobre el borde de la zona
 
+# Las 16 calles del proyecto (el tipo de vía -calle, avenida, jirón, pasaje- no importa al comparar).
+CALLES_PROYECTO = [
+    "Avenida Sáenz Peña", "Avenida México", "Calle Cacique Cinto",
+    "Calle Cacique Collique", "Calle Caminos del Inca", "Calle Virrey Toledo",
+    "Jirón Gonzalo Pizarro", "Jirón Hernando de Soto",
+    "Calle Chongoyape", "Calle Carlos Castañeda Iparraguirre", "Calle Atusparias",
+    "Pasaje Perú", "Calle José Carlos Mariátegui", "Calle Unión", "Pasaje San Martín", "Calle Túpac Amaru",
+]
+TIPOS_VIA = {"calle", "avenida", "av", "jiron", "jr", "pasaje", "psje", "pje", "ca", "ave"}
+
 
 # ---------- utilidades ----------
 def norm(t):
     t = unicodedata.normalize("NFD", t or "")
     t = "".join(c for c in t if unicodedata.category(c) != "Mn").lower()
     return re.sub(r"[^a-z0-9 ]", " ", t)
+
+
+def clave(t):
+    """Nombre sin tildes ni tipo de vía: 'Jirón Gonzalo Pizarro' -> 'gonzalo pizarro'."""
+    return " ".join(w for w in norm(t).split() if w not in TIPOS_VIA)
 
 
 def slug(t):
@@ -150,9 +168,13 @@ def extremos_corner(comp_a, comp_b):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("entrada")
-    ap.add_argument("--limites", default="Virrey Toledo,Sáenz Peña,México,Chongoyape")
+    ap.add_argument("--limites", default="Sáenz Peña,México,Virrey Toledo,Túpac Amaru")
     ap.add_argument("--salida", default=".", help="carpeta base donde están data/ y db/")
     ap.add_argument("--ruta", default="Ruta 1")
+    ap.add_argument("--tramo-minimo", type=float, default=30.0,
+                    help="metros: se descartan los trozos recortados más cortos (calles que solo rozan la zona)")
+    ap.add_argument("--tolerancia", type=float, default=TOL_M,
+                    help="metros de tolerancia para considerar que una calle está sobre el borde de la zona")
     a = ap.parse_args()
 
     datos = json.loads(Path(a.entrada).read_text(encoding="utf-8"))
@@ -164,7 +186,10 @@ def main():
     lat0 = sum(p["lat"] for p in todos) / len(todos)
     P = Plano(lat0)
 
-    # tramos con nombre
+    # tramos con nombre, solo de las calles del proyecto
+    canon = {clave(n): n for n in CALLES_PROYECTO}   # clave -> nombre oficial del proyecto
+    permitidas = set(canon)
+    variantes = defaultdict(set)                     # nombre oficial -> nombres distintos que tiene en OSM
     tramos = []  # (nombre, [(x,y)...], [(lng,lat)...], osm_id)
     sin_nombre = 0
     for e in elems:
@@ -172,6 +197,9 @@ def main():
         if not nom:
             sin_nombre += 1
             continue
+        if clave(nom) not in permitidas:
+            continue
+        variantes[canon[clave(nom)]].add(nom)
         ll = [(p["lon"], p["lat"]) for p in e["geometry"]]
         tramos.append((nom, [P.xy(*p) for p in ll], ll, e["id"]))
 
@@ -222,8 +250,9 @@ def main():
 
     # --- calles dentro del cuadrado (o sobre su borde) ---
     def dentro(p):
-        return en_poligono(p, poligono) or dist_borde(p, poligono) <= TOL_M
+        return en_poligono(p, poligono) or dist_borde(p, poligono) <= a.tolerancia
 
+    tol = a.tolerancia
     nombres_lim = {t[0] for t in tramos
                    if any(k in norm(t[0]) for k in claves)}
     def t_cortes(a, b):
@@ -236,9 +265,24 @@ def main():
                 continue
             t = ((c[0] - a[0]) * (d[1] - c[1]) - (c[1] - a[1]) * (d[0] - c[0])) / den
             u = ((c[0] - a[0]) * (b[1] - a[1]) - (c[1] - a[1]) * (b[0] - a[0])) / den
-            if 0 < t < 1 and 0 <= u <= 1:
+            # eps: una calle que pasa justo por una esquina del polígono (caso normal en las calles
+            # límite) puede quedar en u = 1.0000000001 por redondeo y no cortarse.
+            if 0 < t < 1 and -1e-9 <= u <= 1 + 1e-9:
                 ts.append(t)
+        # También se corta donde el segmento pasa junto a una esquina del polígono.
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        l2 = dx * dx + dy * dy
+        if l2 > 0:
+            for v in poligono:
+                t = ((v[0] - a[0]) * dx + (v[1] - a[1]) * dy) / l2
+                if 0 < t < 1 and math.hypot(v[0] - (a[0] + t * dx), v[1] - (a[1] + t * dy)) <= tol:
+                    ts.append(t)
         return sorted(ts)
+
+    def largo_m(run):
+        lat0 = math.radians(run[0][1])
+        return sum(math.hypot((q2[0] - q1[0]) * 111320 * math.cos(lat0), (q2[1] - q1[1]) * 110540)
+                   for q1, q2 in zip(run, run[1:]))
 
     por_nombre = defaultdict(list)
     for nom, xy, ll, oid in tramos:
@@ -259,17 +303,17 @@ def main():
                         run = [p0]
                     run.append(p1)
                 else:
-                    if len(run) >= 2:
-                        por_nombre[nom].append(run)
+                    if len(run) >= 2 and largo_m(run) >= a.tramo_minimo:
+                        por_nombre[canon[clave(nom)]].append(run)
                     run = []
-        if len(run) >= 2:
-            por_nombre[nom].append(run)
+        if len(run) >= 2 and largo_m(run) >= a.tramo_minimo:
+            por_nombre[canon[clave(nom)]].append(run)
 
     nombre_lim_zona = set()
     for k, comp in zip(claves, combo):
         for t in tramos:
             if k in norm(t[0]) and any(t[1] is w for c in [comp] for w in c):
-                nombre_lim_zona.add(t[0])
+                nombre_lim_zona.add(canon[clave(t[0])])
 
     def inv(c):  # lng,lat -> m
         return P.xy(*c)
@@ -307,18 +351,23 @@ def main():
               "_aviso": "Calles extraídas de OpenStreetMap con db/osm_a_zona.py. El orden de recorrido (orden) es PROVISIONAL.",
               "features": features}
     (base / "data/calles.geojson").write_text(json.dumps(calles, ensure_ascii=False, indent=1), encoding="utf-8")
-    (base / "data/estados.json").write_text(json.dumps(
-        {"_aviso": "Todas en gris al inicio.", "actualizado": None, "estados": {f["properties"]["id"]: "gris" for f in features}},
-        ensure_ascii=False, indent=1), encoding="utf-8")
+    nombres_zona = [f["properties"]["nombre"] for f in features]
     (base / "data/horarios.json").write_text(json.dumps(
-        {"nota": "Horario de ejemplo. Reemplazar por el oficial cuando se verifique con la municipalidad.",
-         "rutas": [{"ruta": a.ruta, "dias": "Lunes, miércoles y viernes (ejemplo)", "horario": "07:00 – 10:00 (ejemplo)",
-                    "calles": [f["properties"]["nombre"] for f in features]}]}, ensure_ascii=False, indent=1), encoding="utf-8")
+        {"nota": "El horario oficial de esta zona aún está pendiente de confirmar con la municipalidad.",
+         "rutas": [{"ruta": a.ruta, "dias": "—", "horario": "—", "calles": nombres_zona,
+                    "programa": []}]}, ensure_ascii=False, indent=1), encoding="utf-8")
+    # Calles del proyecto que no aparecieron dentro de la zona
+    faltan = [n for n in CALLES_PROYECTO if n not in nombres_zona]
+    (base / "data/calles_no_encontradas.txt").write_text(
+        ("\n".join(faltan) + "\n") if faltan else "Todas las calles del proyecto aparecen dentro de la zona.\n", encoding="utf-8")
     (base / "data/calles_sin_nombre.txt").write_text(f"{sin_nombre} tramos sin nombre en OSM quedaron fuera.\n", encoding="utf-8")
 
     # SQL para Supabase
     sql = ["-- Generado por db/osm_a_zona.py (zona delimitada + calles interiores).",
-           "-- Ejecutar DESPUÉS de db/schema.sql. Para recargar, borra antes las filas de ruta_calles, calles y rutas.", "",
+           "-- Ejecutar DESPUÉS de db/schema.sql. REEMPLAZA los datos anteriores de zonas, rutas, calles y ruta_calles",
+           "-- (incluidos los de ejemplo). No toca horarios de la ruta cargada ni la tabla posicion_camion.", "",
+           "delete from zonas;", "delete from ruta_calles;", "delete from calles;",
+           f"delete from rutas where id <> {q(a.ruta)};", "",
            "insert into zonas (id, nombre, geom) values",
            f"  ({q('zona-1')}, {q('Zona de recolección')}, {q(json.dumps(zona['features'][0]['geometry']))}::jsonb)",
            "on conflict (id) do update set geom = excluded.geom;", "",
@@ -329,13 +378,17 @@ def main():
     sql.append("insert into ruta_calles (ruta_id, calle_id, orden) values")
     sql.append(",\n".join(f"  ({q(a.ruta)}, {q(c)}, {o})" for c, o in filas_ruta))
     sql.append("on conflict (ruta_id, calle_id) do update set orden = excluded.orden;\n")
-    sql.append(f"insert into recorridos (ruta_id) values ({q(a.ruta)}) on conflict (ruta_id) do nothing;")
     (base / "db/zona.sql").write_text("\n".join(sql) + "\n", encoding="utf-8")
 
     lim = [f['properties']['nombre'] for f in features if f['properties']['tipo'] == 'limite']
     print(f"Calles límite incluidas: {lim}")
     print(f"Calles dentro de la zona: {len(features)} (interiores: {len(features) - len(lim)})")
     print(f"Tramos sin nombre fuera de la lista: {sin_nombre}")
+    print("Nombres que tienen en OSM las calles del proyecto (revisen que sean las correctas):")
+    for n in CALLES_PROYECTO:
+        print(f"  {n}: {sorted(variantes[n]) or 'NO ENCONTRADA EN EL ARCHIVO'}")
+    if faltan:
+        print(f"AVISO: {len(faltan)} calle(s) del proyecto no quedaron dentro de la zona: {faltan}")
     print("Archivos escritos en", base.resolve())
 
 
