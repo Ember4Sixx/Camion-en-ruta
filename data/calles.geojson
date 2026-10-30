@@ -1,16 +1,5 @@
 {
-  "type": "FeatureCollection",
-  "_aviso": "COORDENADAS DE EJEMPLO. No son calles reales verificadas. Reemplazar por las calles reales de la zona delimitada (ver README, sección 'Cargar las calles reales').",
-  "features": [
-    { "type": "Feature", "properties": { "id": "c1", "nombre": "Calle Ejemplo 1", "ruta": "Ruta A" },
-      "geometry": { "type": "LineString", "coordinates": [[-79.8395, -6.7570], [-79.8365, -6.7570], [-79.8335, -6.7570]] } },
-    { "type": "Feature", "properties": { "id": "c2", "nombre": "Calle Ejemplo 2", "ruta": "Ruta A" },
-      "geometry": { "type": "LineString", "coordinates": [[-79.8395, -6.7585], [-79.8365, -6.7585], [-79.8335, -6.7585]] } },
-    { "type": "Feature", "properties": { "id": "c3", "nombre": "Calle Ejemplo 3", "ruta": "Ruta A" },
-      "geometry": { "type": "LineString", "coordinates": [[-79.8395, -6.7600], [-79.8365, -6.7600], [-79.8335, -6.7600]] } },
-    { "type": "Feature", "properties": { "id": "c4", "nombre": "Avenida Ejemplo 4", "ruta": "Ruta B" },
-      "geometry": { "type": "LineString", "coordinates": [[-79.8365, -6.7570], [-79.8365, -6.7585], [-79.8365, -6.7600]] } },
-    { "type": "Feature", "properties": { "id": "c5", "nombre": "Pasaje Ejemplo 5", "ruta": "Ruta B" },
-      "geometry": { "type": "LineString", "coordinates": [[-79.8335, -6.7570], [-79.8335, -6.7585], [-79.8335, -6.7600]] } }
-  ]
+ "type": "FeatureCollection",
+ "_aviso": "Vacío a propósito: se llena con `python db/osm_a_zona.py data/osm_jlo.json` (ver GUIA.md, paso 2B).",
+ "features": []
 }

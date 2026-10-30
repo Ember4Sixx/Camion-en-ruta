@@ -7,14 +7,21 @@
    Contrato (igual para "json" y "supabase"):
      calles()    -> GeoJSON FeatureCollection; properties { id, nombre, ruta }
      estados()   -> { actualizado, origen, estados: { "<id calle>": "gris|amarillo|verde|negro" } }
+                    origen: "horario" (estimado con la hora) | "gps" (con la ubicación del camión) | "mixto"
      horarios()  -> { nota, rutas: [ { ruta, dias, horario, calles: [...] } ] }
      zona()      -> GeoJSON del cuadrado delimitado (Polygon) o null si no hay
-     camion()    -> { lat, lng, actualizado } o null
-     suscribir(cb) (opcional) -> llama cb() cuando la BD cambia
+     camion()    -> { lat, lng, actualizado } o null (null si la posición es vieja)
+     suscribir(cb) (opcional) -> llama cb() cuando llega una posición nueva del camión
+
+   Cómo se calcula el estado de cada ruta (no hay tabla de "recorridos"):
+     1. Base: se estima con la hora y la tabla `horarios` (Estado.estimarPorHorario).
+     2. Si hay una posición del camión reciente (cfg.gpsActivo y no más vieja que
+        cfg.gpsVigenciaSegundos), manda el GPS: se busca la calle más cercana de la ruta.
    ========================================================== */
 (function () {
   const cfg = window.APP_CONFIG;
   const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+  const vigenciaMs = () => (cfg.gpsVigenciaSegundos || 120) * 1000;
 
   async function leerJSON(url) {
     const r = await fetch(url, { cache: "no-store" });
@@ -22,13 +29,66 @@
     return r.json();
   }
 
+  // Un Feature puede traer LineString o MultiLineString: siempre devolvemos una lista de tramos.
+  const lineasDe = (g) => (g.type === "MultiLineString" ? g.coordinates : [g.coordinates]);
+
+  // Último orden conocido por ruta (en memoria del navegador) para que el camión no "retroceda" por GPS.
+  const ultimoOrden = {};
+
+  // Combina horario + GPS para una ruta. Devuelve { fase, orden, origen, gpsActualizado }.
+  //   callesRuta: [{id, orden}] ; lineasPorCalle: { id: [tramos] } ; horariosRuta: [{dias, hora_inicio, hora_fin}]
+  //   pos: {lat, lng, actualizado} o undefined
+  function estadoDeRuta(ahora, rutaId, callesRuta, lineasPorCalle, horariosRuta, pos) {
+    const e = Estado.estimarPorHorario(ahora, horariosRuta, callesRuta.length, cfg.avisoMinutos);
+    let res = { fase: e.fase, orden: e.orden, origen: "horario", gpsActualizado: null };
+
+    const fresca = pos && ahora - new Date(pos.actualizado) <= vigenciaMs();
+    if (!cfg.gpsActivo || !fresca) { delete ultimoOrden[rutaId]; return res; }
+
+    const g = Estado.indicePorGPS(
+      { lat: pos.lat, lng: pos.lng },
+      callesRuta.map((c) => ({ id: c.id, orden: c.orden, lineas: lineasPorCalle[c.id] || [] })),
+      ultimoOrden[rutaId] || 0, cfg.umbralGpsMetros);
+
+    if (g) ultimoOrden[rutaId] = g.orden;
+    if (ultimoOrden[rutaId]) {
+      // Si el camión se salió un momento de la ruta, se conserva la última calle conocida.
+      res = { fase: "en_curso", orden: ultimoOrden[rutaId], origen: "gps", gpsActualizado: pos.actualizado };
+    }
+    return res;
+  }
+
+  function resumir(estados, origenes, gpsFechas) {
+    const fechas = gpsFechas.filter(Boolean).sort();
+    return {
+      actualizado: fechas.length ? fechas[fechas.length - 1] : new Date().toISOString(),
+      origen: origenes.size === 0 ? "horario" : origenes.size === 1 ? [...origenes][0] : "mixto",
+      estados
+    };
+  }
+
   // ---------- Fuente 1: archivos JSON en /data ----------
+  // calles.geojson: properties { id, nombre, ruta, orden }.  horarios.json: ver `programa` en cada ruta.
   const fuenteJSON = {
     calles:   () => leerJSON("data/calles.geojson"),
     zona:     () => leerJSON("data/zona.geojson").catch(() => null),
-    estados:  async () => ({ origen: "manual", ...(await leerJSON("data/estados.json")) }),
     horarios: () => leerJSON("data/horarios.json"),
-    camion:   async () => null
+    camion:   async () => null,
+    async estados() {
+      const [c, h] = await Promise.all([leerJSON("data/calles.geojson"), leerJSON("data/horarios.json")]);
+      const ahora = new Date();
+      const estados = {}, origenes = new Set();
+      (h.rutas || []).forEach((r) => {
+        const feats = c.features
+          .filter((f) => f.properties.ruta === r.ruta)
+          .sort((a, b) => (a.properties.orden || 0) - (b.properties.orden || 0));
+        const callesRuta = feats.map((f, i) => ({ id: f.properties.id, orden: f.properties.orden || i + 1 }));
+        const e = estadoDeRuta(ahora, r.ruta, callesRuta, {}, r.programa || [], null);
+        Object.assign(estados, Estado.estadosDeRuta(callesRuta, e.fase, e.orden, r.proximas));
+        origenes.add(e.origen);
+      });
+      return resumir(estados, origenes, []);
+    }
   };
 
   // ---------- Fuente 2: Supabase (Postgres + tiempo real) ----------
@@ -55,7 +115,6 @@
       return estaticos;
     }
 
-    const coordsDe = (g) => g.type === "MultiLineString" ? [].concat(...g.coordinates) : g.coordinates;
     const callesDeRuta = (s, rutaId) =>
       s.rc.filter((x) => x.ruta_id === rutaId).sort((a, b) => a.orden - b.orden);
 
@@ -77,46 +136,21 @@
       // Aquí se aplica el algoritmo de colores (js/estado.js) a cada ruta.
       async estados() {
         const s = await cargarEstaticos();
-        const [recs, pos] = await Promise.all([
-          sb.from("recorridos").select("*"),
-          sb.from("posicion_camion").select("*")
-        ]).then((r) => [chk(r[0]), chk(r[1])]);
+        const pos = chk(await sb.from("posicion_camion").select("*"));
+        const lineasPorCalle = {};
+        s.calles.forEach((c) => { lineasPorCalle[c.id] = lineasDe(c.geom); });
 
-        const geomPorId = {};
-        s.calles.forEach((c) => { geomPorId[c.id] = c.geom; });
-
-        const estados = {};
-        const origenes = new Set();
-        let ultimo = null;
-
+        const ahora = new Date();
+        const estados = {}, origenes = new Set(), gpsFechas = [];
         s.rutas.forEach((ruta) => {
-          const rc = callesDeRuta(s, ruta.id);
-          const callesRuta = rc.map((x) => ({ id: x.calle_id, orden: x.orden }));
-          const rec = recs.find((r) => r.ruta_id === ruta.id) || { fase: "pendiente", orden_actual: 0, fuente: "manual" };
-          let fase = rec.fase, orden = rec.orden_actual;
-          const origen = rec.fuente || "manual";
-
-          if (origen === "horario") {
-            const e = Estado.estimarPorHorario(
-              new Date(), s.horarios.filter((h) => h.ruta_id === ruta.id), callesRuta.length, cfg.avisoMinutos);
-            fase = e.fase; orden = e.orden;
-          } else if (origen === "gps") {
-            const p = pos.find((x) => x.ruta_id === ruta.id);
-            if (p && fase === "en_curso") {
-              const g = Estado.indicePorGPS(
-                { lat: p.lat, lng: p.lng },
-                rc.map((x) => ({ id: x.calle_id, orden: x.orden, coords: coordsDe(geomPorId[x.calle_id]) })),
-                orden, cfg.umbralGpsMetros);
-              if (g) orden = g.orden;
-            }
-          }
-
-          Object.assign(estados, Estado.estadosDeRuta(callesRuta, fase, orden, ruta.proximas));
-          origenes.add(origen);
-          if (rec.actualizado && (!ultimo || rec.actualizado > ultimo)) ultimo = rec.actualizado;
+          const callesRuta = callesDeRuta(s, ruta.id).map((x) => ({ id: x.calle_id, orden: x.orden }));
+          const e = estadoDeRuta(ahora, ruta.id, callesRuta, lineasPorCalle,
+            s.horarios.filter((h) => h.ruta_id === ruta.id), pos.find((p) => p.ruta_id === ruta.id));
+          Object.assign(estados, Estado.estadosDeRuta(callesRuta, e.fase, e.orden, ruta.proximas));
+          origenes.add(e.origen);
+          gpsFechas.push(e.gpsActualizado);
         });
-
-        return { actualizado: ultimo, origen: origenes.size === 1 ? [...origenes][0] : "mixto", estados };
+        return resumir(estados, origenes, gpsFechas);
       },
 
       async zona() {
@@ -130,7 +164,9 @@
         const nombre = {};
         s.calles.forEach((c) => { nombre[c.id] = c.nombre; });
         return {
-          nota: "Horarios cargados desde la base de datos.",
+          nota: s.horarios.length
+            ? "Horarios cargados desde la base de datos."
+            : "El horario oficial de esta zona aún está pendiente de confirmar con la municipalidad.",
           rutas: s.rutas.map((r) => {
             const hs = s.horarios.filter((h) => h.ruta_id === r.id);
             return {
@@ -143,15 +179,16 @@
         };
       },
 
+      // Última posición conocida, solo si es reciente (una posición vieja no se dibuja).
       async camion() {
         const r = chk(await sb.from("posicion_camion").select("*").order("actualizado", { ascending: false }).limit(1));
-        return r[0] ? { lat: r[0].lat, lng: r[0].lng, actualizado: r[0].actualizado } : null;
+        if (!r[0] || new Date() - new Date(r[0].actualizado) > vigenciaMs()) return null;
+        return { lat: r[0].lat, lng: r[0].lng, actualizado: r[0].actualizado };
       },
 
-      // Tiempo real: Supabase avisa cuando cambia `recorridos` o `posicion_camion`.
+      // Tiempo real: Supabase avisa cuando cambia la posición del camión.
       suscribir(callback) {
         sb.channel("camion-en-ruta")
-          .on("postgres_changes", { event: "*", schema: "public", table: "recorridos" }, callback)
           .on("postgres_changes", { event: "*", schema: "public", table: "posicion_camion" }, callback)
           .subscribe();
       }

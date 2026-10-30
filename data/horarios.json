@@ -1,7 +1,4 @@
 {
-  "nota": "Horarios de ejemplo. Reemplazar por los horarios oficiales cuando se verifiquen con la municipalidad.",
-  "rutas": [
-    { "ruta": "Ruta A", "dias": "Lunes, miércoles y viernes", "horario": "07:00 – 10:00 (ejemplo)", "calles": ["Calle Ejemplo 1", "Calle Ejemplo 2", "Calle Ejemplo 3"] },
-    { "ruta": "Ruta B", "dias": "Martes y jueves", "horario": "07:00 – 10:00 (ejemplo)", "calles": ["Avenida Ejemplo 4", "Pasaje Ejemplo 5"] }
-  ]
+ "nota": "El horario oficial de esta zona aún está pendiente de confirmar con la municipalidad.",
+ "rutas": []
 }

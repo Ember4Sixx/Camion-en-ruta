@@ -19,7 +19,7 @@
   <main class="section">
     <div class="container panel-box">
       <h1>Panel de recolección</h1>
-      <p class="muted">Solo personal autorizado. Los cambios se ven al instante en el mapa público. <a href="index.html">Volver al mapa</a></p>
+      <p class="muted">Solo personal autorizado. La ubicación que compartas aquí se usa para colorear el mapa público. <a href="index.html">Volver al mapa</a></p>
 
       <!-- Inicio de sesión: las cuentas se crean a mano en Supabase (ver GUIA.md, paso 5) -->
       <form id="login" class="card" style="display:grid;gap:.8rem">
@@ -32,25 +32,12 @@
         <section class="card" style="display:grid;gap:.8rem">
           <label>Ruta<br><select id="ruta"></select></label>
           <p class="estado-actual" id="estado-actual" aria-live="polite">Cargando…</p>
-          <div class="row">
-            <button class="btn btn-primary" id="b-iniciar" type="button">Iniciar recorrido</button>
-            <button class="btn btn-ghost" id="b-anterior" type="button">Calle anterior</button>
-            <button class="btn btn-primary" id="b-siguiente" type="button">Siguiente calle</button>
-            <button class="btn btn-ghost" id="b-finalizar" type="button">Finalizar</button>
-            <button class="btn btn-ghost" id="b-reiniciar" type="button">Reiniciar (todas en gris)</button>
-          </div>
-          <label>¿De dónde sale el estado de esta ruta?<br>
-            <select id="fuente">
-              <option value="manual">Manual (con estos botones)</option>
-              <option value="horario">Estimado por horario</option>
-              <option value="gps">Por GPS (ubicación del teléfono del camión)</option>
-            </select>
-          </label>
+          <p class="muted">Los colores del mapa se calculan solos con el horario y con la ubicación del camión; aquí ya no hay que marcar calles a mano.</p>
         </section>
 
         <section class="card" style="display:grid;gap:.6rem">
           <h2 style="font-size:1.1rem">Ubicación del camión</h2>
-          <p class="muted">Abre esta página en el teléfono que va en el camión y toca el botón. Pide permiso de ubicación y solo funciona con HTTPS (por ejemplo, la página publicada).</p>
+          <p class="muted">Abre esta página en el teléfono que va en el camión, elige la ruta y toca el botón. Pide permiso de ubicación y solo funciona con HTTPS (por ejemplo, la página publicada). Para que el mapa use esta posición, <code>gpsActivo</code> debe estar en <code>true</code> en <code>js/config.js</code>.</p>
           <div class="row">
             <button class="btn btn-primary" id="b-gps" type="button">Compartir ubicación</button>
           </div>
@@ -79,8 +66,8 @@
       }
       const sb = window.supabase.createClient(cfg.supabase.url, cfg.supabase.anonKey);
 
-      let rutaId = null, nCalles = 0, rec = { fase: "pendiente", orden_actual: 0, fuente: "manual" };
-      let nombreCalle = {};
+      let rutaId = null;
+      let infoRutas = {};   // id -> { nombre, nCalles }
 
       function mostrar(conSesion) {
         $("#login").style.display = conSesion ? "none" : "grid";
@@ -89,49 +76,22 @@
       }
 
       async function cargarRutas() {
-        const { data, error } = await sb.from("rutas").select("id,nombre").order("nombre");
-        if (error) return msg(error.message, true);
+        const [rutas, rc] = await Promise.all([
+          sb.from("rutas").select("id,nombre").order("nombre"),
+          sb.from("ruta_calles").select("ruta_id")
+        ]);
+        if (rutas.error || rc.error) return msg((rutas.error || rc.error).message, true);
+        infoRutas = {};
+        rutas.data.forEach((r) => { infoRutas[r.id] = { nombre: r.nombre, nCalles: rc.data.filter((x) => x.ruta_id === r.id).length }; });
         const sel = $("#ruta");
         sel.textContent = "";
-        data.forEach((r) => { const o = document.createElement("option"); o.value = r.id; o.textContent = r.nombre; sel.append(o); });
-        if (data.length) { rutaId = data[0].id; await cargarRuta(); } else msg("No hay rutas en la base de datos.", true);
-      }
-
-      async function cargarRuta() {
-        const [rc, rr, calles] = await Promise.all([
-          sb.from("ruta_calles").select("calle_id,orden").eq("ruta_id", rutaId).order("orden"),
-          sb.from("recorridos").select("*").eq("ruta_id", rutaId).maybeSingle(),
-          sb.from("calles").select("id,nombre")
-        ]);
-        if (rc.error || rr.error || calles.error) return msg((rc.error || rr.error || calles.error).message, true);
-        nCalles = rc.data.length;
-        nombreCalle = {};
-        calles.data.forEach((c) => { nombreCalle[c.id] = c.nombre; });
-        rec = rr.data || { fase: "pendiente", orden_actual: 0, fuente: "manual" };
-        rec.porOrden = {};
-        rc.data.forEach((x) => { rec.porOrden[x.orden] = x.calle_id; });
-        $("#fuente").value = rec.fuente || "manual";
-        pintar();
+        rutas.data.forEach((r) => { const o = document.createElement("option"); o.value = r.id; o.textContent = r.nombre; sel.append(o); });
+        if (rutas.data.length) { rutaId = rutas.data[0].id; pintar(); } else msg("No hay rutas en la base de datos.", true);
       }
 
       function pintar() {
-        let t = "Pendiente: el camión aún no sale";
-        if (rec.fase === "finalizado") t = "Recolección finalizada";
-        else if (rec.fase === "en_curso") {
-          const id = rec.porOrden && rec.porOrden[rec.orden_actual];
-          t = rec.orden_actual === 0 ? "En camino al inicio de la ruta"
-            : "Recolectando: " + (nombreCalle[id] || "calle " + rec.orden_actual) + " (" + rec.orden_actual + " de " + nCalles + ")";
-        }
-        $("#estado-actual").textContent = t;
-      }
-
-      async function guardar(fase, orden) {
-        const fila = { ruta_id: rutaId, fase: fase, orden_actual: orden, fuente: $("#fuente").value, actualizado: new Date().toISOString() };
-        const { error } = await sb.from("recorridos").upsert(fila);
-        if (error) return msg("No se pudo guardar: " + error.message, true);
-        rec.fase = fase; rec.orden_actual = orden; rec.fuente = fila.fuente;
-        msg("Guardado.");
-        pintar();
+        const r = infoRutas[rutaId];
+        $("#estado-actual").textContent = r ? r.nombre + " · " + r.nCalles + " calles" : "Sin ruta";
       }
 
       $("#login").addEventListener("submit", async (e) => {
@@ -141,16 +101,7 @@
         msg(""); mostrar(true); cargarRutas();
       });
       $("#b-salir").addEventListener("click", async () => { await sb.auth.signOut(); detenerGPS(); mostrar(false); });
-      $("#ruta").addEventListener("change", (e) => { rutaId = e.target.value; cargarRuta(); });
-      $("#b-iniciar").addEventListener("click", () => guardar("en_curso", 1));
-      $("#b-siguiente").addEventListener("click", () => {
-        if (rec.fase !== "en_curso") return guardar("en_curso", 1);
-        rec.orden_actual + 1 > nCalles ? guardar("finalizado", nCalles) : guardar("en_curso", rec.orden_actual + 1);
-      });
-      $("#b-anterior").addEventListener("click", () => guardar("en_curso", Math.max(1, rec.orden_actual - 1)));
-      $("#b-finalizar").addEventListener("click", () => guardar("finalizado", nCalles));
-      $("#b-reiniciar").addEventListener("click", () => guardar("pendiente", 0));
-      $("#fuente").addEventListener("change", () => guardar(rec.fase, rec.orden_actual));
+      $("#ruta").addEventListener("change", (e) => { rutaId = e.target.value; pintar(); });
 
       // ---------- Enviar ubicación (GPS del teléfono) ----------
       let watchId = null, ultimoEnvio = 0;

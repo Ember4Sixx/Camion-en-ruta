@@ -1,5 +1,7 @@
--- Horarios de EJEMPLO (reemplazar por los oficiales cuando se verifiquen).
--- dias: 0 = domingo, 1 = lunes, 2 = martes, 3 = miércoles, 4 = jueves, 5 = viernes, 6 = sábado
-insert into horarios (ruta_id, dias, hora_inicio, hora_fin) values
-  ('Ruta A', '{1,3,5}', '07:00', '10:00'),
-  ('Ruta B', '{2,4}',   '07:00', '10:00');
+-- PLANTILLA para cargar el horario OFICIAL de la ruta (todavía no hay uno confirmado, por eso no hay filas).
+-- Descomenten y ajusten cuando la municipalidad confirme el horario de recolección de esta zona.
+-- ruta_id debe ser el id de la ruta (por defecto 'Ruta 1').  dias: 0 = domingo, 1 = lunes … 6 = sábado.
+-- Si hay varios turnos, agreguen una fila por turno.
+--
+-- insert into horarios (ruta_id, dias, hora_inicio, hora_fin) values
+--   ('Ruta 1', '{1,2,3,4,5,6}', 'HH:MM', 'HH:MM');
