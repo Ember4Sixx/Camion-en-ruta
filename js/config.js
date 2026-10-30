@@ -39,7 +39,7 @@ window.APP_CONFIG = {
 
   // GPS del camión (fuente supabase). En true: se dibuja el camión en el mapa y los colores
   // de las calles salen de su posición; en false, los colores salen solo del horario.
-  gpsActivo: false,
+     gpsActivo: true,
 
   // Segundos máximos de antigüedad de la posición del camión para considerarla vigente.
   // Si es más vieja, no se dibuja el camión y los colores vuelven a calcularse por horario.
