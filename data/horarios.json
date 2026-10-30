@@ -1,4 +1,29 @@
 {
  "nota": "El horario oficial de esta zona aún está pendiente de confirmar con la municipalidad.",
- "rutas": []
+ "rutas": [
+  {
+   "ruta": "Ruta 1",
+   "dias": "—",
+   "horario": "—",
+   "calles": [
+    "Avenida México",
+    "Calle Cacique Cinto",
+    "Calle Atusparias",
+    "Jirón Gonzalo Pizarro",
+    "Avenida Sáenz Peña",
+    "Calle Cacique Collique",
+    "Calle Chongoyape",
+    "Calle Carlos Castañeda Iparraguirre",
+    "Calle Túpac Amaru",
+    "Calle José Carlos Mariátegui",
+    "Pasaje Perú",
+    "Pasaje San Martín",
+    "Calle Caminos del Inca",
+    "Jirón Hernando de Soto",
+    "Calle Unión",
+    "Calle Virrey Toledo"
+   ],
+   "programa": []
+  }
+ ]
 }

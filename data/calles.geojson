@@ -1,5 +1,694 @@
 {
  "type": "FeatureCollection",
- "_aviso": "Vacío a propósito: se llena con `python db/osm_a_zona.py data/osm_jlo.json` (ver GUIA.md, paso 2B).",
- "features": []
+ "_aviso": "Calles extraídas de OpenStreetMap con db/osm_a_zona.py. El orden de recorrido (orden) es PROVISIONAL.",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-mexico",
+    "nombre": "Avenida México",
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 1
+   },
+   "geometry": {
+    "type": "MultiLineString",
+    "coordinates": [
+     [
+      [
+       -79.8293569,
+       -6.7566329
+      ],
+      [
+       -79.8301795,
+       -6.7565409
+      ],
+      [
+       -79.8307330642823,
+       -6.756483441917059
+      ],
+      [
+       -79.8310408,
+       -6.7564515
+      ],
+      [
+       -79.8314177,
+       -6.7564124
+      ],
+      [
+       -79.8318395,
+       -6.7563702
+      ],
+      [
+       -79.8322675,
+       -6.7563204
+      ],
+      [
+       -79.8327407,
+       -6.7562714
+      ],
+      [
+       -79.8331437157921,
+       -6.756221633528387
+      ],
+      [
+       -79.8332193,
+       -6.7562123
+      ],
+      [
+       -79.8333412,
+       -6.7562
+      ],
+      [
+       -79.83336436085656,
+       -6.756197670409471
+      ],
+      [
+       -79.8336156,
+       -6.7561724
+      ],
+      [
+       -79.833737,
+       -6.7561572
+      ]
+     ],
+     [
+      [
+       -79.8338137,
+       -6.7562263
+      ],
+      [
+       -79.83374572480808,
+       -6.756234021173603
+      ],
+      [
+       -79.83374398188415,
+       -6.756234219149039
+      ],
+      [
+       -79.8337195,
+       -6.756237
+      ],
+      [
+       -79.8325091,
+       -6.7563739
+      ],
+      [
+       -79.8319303,
+       -6.7564372
+      ],
+      [
+       -79.8314292,
+       -6.756492
+      ],
+      [
+       -79.8310513,
+       -6.756527
+      ],
+      [
+       -79.8301838,
+       -6.7566189
+      ],
+      [
+       -79.8293662,
+       -6.7567069
+      ],
+      [
+       -79.82936570322282,
+       -6.756706956927733
+      ],
+      [
+       -79.82936538947443,
+       -6.756706992881446
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-cacique-cinto",
+    "nombre": "Calle Cacique Cinto",
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 2
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8338714,
+      -6.7567038
+     ],
+     [
+      -79.83378740756679,
+      -6.756713260200373
+     ],
+     [
+      -79.8337764,
+      -6.7567145
+     ],
+     [
+      -79.8325583,
+      -6.7568429
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-atusparias",
+    "nombre": "Calle Atusparias",
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 3
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8294042,
+      -6.7571606
+     ],
+     [
+      -79.82941942765063,
+      -6.757158912551809
+     ],
+     [
+      -79.8298166,
+      -6.7571149
+     ],
+     [
+      -79.8302288,
+      -6.7570692
+     ],
+     [
+      -79.8306727,
+      -6.7570204
+     ],
+     [
+      -79.831114,
+      -6.7569719
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "jiron-gonzalo-pizarro",
+    "nombre": "Jirón Gonzalo Pizarro",
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 4
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8326603,
+      -6.7578157
+     ],
+     [
+      -79.8326067,
+      -6.7573047
+     ],
+     [
+      -79.8325583,
+      -6.7568429
+     ],
+     [
+      -79.8325091,
+      -6.7563739
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-saenz-pena",
+    "nombre": "Avenida Sáenz Peña",
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 5
+   },
+   "geometry": {
+    "type": "MultiLineString",
+    "coordinates": [
+     [
+      [
+       -79.8339192,
+       -6.7581671
+      ],
+      [
+       -79.8338758,
+       -6.75768
+      ],
+      [
+       -79.83385984340836,
+       -6.757512320562361
+      ],
+      [
+       -79.8338286,
+       -6.757184
+      ],
+      [
+       -79.8337764,
+       -6.7567145
+      ],
+      [
+       -79.8337195,
+       -6.756237
+      ],
+      [
+       -79.833737,
+       -6.7561572
+      ]
+     ],
+     [
+      [
+       -79.833737,
+       -6.7561572
+      ],
+      [
+       -79.8338137,
+       -6.7562263
+      ],
+      [
+       -79.8338714,
+       -6.7567038
+      ],
+      [
+       -79.8339281,
+       -6.7571727
+      ],
+      [
+       -79.8339744,
+       -6.7576691
+      ],
+      [
+       -79.8340208,
+       -6.7581545
+      ],
+      [
+       -79.83402084279365,
+       -6.758154855275101
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-cacique-collique",
+    "nombre": "Calle Cacique Collique",
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 6
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8339281,
+      -6.7571727
+     ],
+     [
+      -79.8338300656415,
+      -6.757183833550262
+     ],
+     [
+      -79.8338286,
+      -6.757184
+     ],
+     [
+      -79.8326067,
+      -6.7573047
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-chongoyape",
+    "nombre": "Calle Chongoyape",
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 7
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8316511,
+      -6.7584226
+     ],
+     [
+      -79.83165036524541,
+      -6.758416207403261
+     ],
+     [
+      -79.8314292,
+      -6.756492
+     ],
+     [
+      -79.8314177,
+      -6.7564124
+     ],
+     [
+      -79.83141730474877,
+      -6.756409130099999
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-carlos-castaneda-iparraguirre",
+    "nombre": "Calle Carlos Castañeda Iparraguirre",
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 8
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8312755,
+      -6.7584688
+     ],
+     [
+      -79.83127428114365,
+      -6.758457499671818
+     ],
+     [
+      -79.8312261,
+      -6.7580108
+     ],
+     [
+      -79.831114,
+      -6.7569719
+     ],
+     [
+      -79.8310513,
+      -6.756527
+     ],
+     [
+      -79.8310408,
+      -6.7564515
+     ],
+     [
+      -79.83104062301845,
+      -6.7564500395539175
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-tupac-amaru",
+    "nombre": "Calle Túpac Amaru",
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 9
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8295957,
+      -6.7586418
+     ],
+     [
+      -79.8295404,
+      -6.7581953
+     ],
+     [
+      -79.8294042,
+      -6.7571606
+     ],
+     [
+      -79.82936740103823,
+      -6.756721239764338
+     ],
+     [
+      -79.8293662,
+      -6.7567069
+     ],
+     [
+      -79.8293569,
+      -6.7566329
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-jose-carlos-mariategui",
+    "nombre": "Calle José Carlos Mariátegui",
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 10
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.830392,
+      -6.7585611
+     ],
+     [
+      -79.83039143361626,
+      -6.758554432185117
+     ],
+     [
+      -79.8303533,
+      -6.7581055
+     ],
+     [
+      -79.8302288,
+      -6.7570692
+     ],
+     [
+      -79.8301838,
+      -6.7566189
+     ],
+     [
+      -79.83017964585979,
+      -6.756543545828746
+     ],
+     [
+      -79.8301795,
+      -6.7565409
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "pasaje-peru",
+    "nombre": "Pasaje Perú",
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 11
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8307811,
+      -6.7580591
+     ],
+     [
+      -79.8306727,
+      -6.7570204
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "pasaje-san-martin",
+    "nombre": "Pasaje San Martín",
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 12
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8298166,
+      -6.7571149
+     ],
+     [
+      -79.8299499,
+      -6.7581492
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-caminos-del-inca",
+    "nombre": "Calle Caminos del Inca",
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 13
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8339744,
+      -6.7576691
+     ],
+     [
+      -79.8338758,
+      -6.75768
+     ],
+     [
+      -79.83387505134013,
+      -6.757680083581361
+     ],
+     [
+      -79.8326603,
+      -6.7578157
+     ],
+     [
+      -79.832086,
+      -6.7578798
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "jiron-hernando-de-soto",
+    "nombre": "Jirón Hernando de Soto",
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 14
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8321381,
+      -6.7583628
+     ],
+     [
+      -79.83213808469337,
+      -6.758362658097851
+     ],
+     [
+      -79.832086,
+      -6.7578798
+     ],
+     [
+      -79.8319303,
+      -6.7564372
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-union",
+    "nombre": "Calle Unión",
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 15
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8295404,
+      -6.7581953
+     ],
+     [
+      -79.82954259471795,
+      -6.758195052926745
+     ],
+     [
+      -79.8299499,
+      -6.7581492
+     ],
+     [
+      -79.8303533,
+      -6.7581055
+     ],
+     [
+      -79.8307811,
+      -6.7580591
+     ],
+     [
+      -79.8312261,
+      -6.7580108
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-virrey-toledo",
+    "nombre": "Calle Virrey Toledo",
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 16
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8340208,
+      -6.7581545
+     ],
+     [
+      -79.8339192,
+      -6.7581671
+     ],
+     [
+      -79.8334417,
+      -6.7582261
+     ],
+     [
+      -79.8321381,
+      -6.7583628
+     ],
+     [
+      -79.8316511,
+      -6.7584226
+     ],
+     [
+      -79.8312755,
+      -6.7584688
+     ],
+     [
+      -79.830392,
+      -6.7585611
+     ],
+     [
+      -79.8295957,
+      -6.7586418
+     ]
+    ]
+   }
+  }
+ ]
 }

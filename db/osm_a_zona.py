@@ -35,7 +35,7 @@ TOL_M = 15  # tolerancia (m) para considerar que un punto está sobre el borde d
 
 # Las 16 calles del proyecto (el tipo de vía -calle, avenida, jirón, pasaje- no importa al comparar).
 CALLES_PROYECTO = [
-    "Sáenz Peña", "Avenida México", "Calle Cacique Cinto",
+    "Avenida Sáenz Peña", "Avenida México", "Calle Cacique Cinto",
     "Calle Cacique Collique", "Calle Caminos del Inca", "Calle Virrey Toledo",
     "Jirón Gonzalo Pizarro", "Jirón Hernando de Soto",
     "Calle Chongoyape", "Calle Carlos Castañeda Iparraguirre", "Calle Atusparias",
@@ -171,6 +171,8 @@ def main():
     ap.add_argument("--limites", default="Sáenz Peña,México,Virrey Toledo,Túpac Amaru")
     ap.add_argument("--salida", default=".", help="carpeta base donde están data/ y db/")
     ap.add_argument("--ruta", default="Ruta 1")
+    ap.add_argument("--tramo-minimo", type=float, default=30.0,
+                    help="metros: se descartan los trozos recortados más cortos (calles que solo rozan la zona)")
     ap.add_argument("--tolerancia", type=float, default=TOL_M,
                     help="metros de tolerancia para considerar que una calle está sobre el borde de la zona")
     a = ap.parse_args()
@@ -277,6 +279,11 @@ def main():
                     ts.append(t)
         return sorted(ts)
 
+    def largo_m(run):
+        lat0 = math.radians(run[0][1])
+        return sum(math.hypot((q2[0] - q1[0]) * 111320 * math.cos(lat0), (q2[1] - q1[1]) * 110540)
+                   for q1, q2 in zip(run, run[1:]))
+
     por_nombre = defaultdict(list)
     for nom, xy, ll, oid in tramos:
         run = []
@@ -296,10 +303,10 @@ def main():
                         run = [p0]
                     run.append(p1)
                 else:
-                    if len(run) >= 2:
+                    if len(run) >= 2 and largo_m(run) >= a.tramo_minimo:
                         por_nombre[canon[clave(nom)]].append(run)
                     run = []
-        if len(run) >= 2:
+        if len(run) >= 2 and largo_m(run) >= a.tramo_minimo:
             por_nombre[canon[clave(nom)]].append(run)
 
     nombre_lim_zona = set()

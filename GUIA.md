@@ -76,7 +76,7 @@ Abre http://localhost:8000. Con `fuente: "json"` todo funciona sin base de datos
 
 **Perímetro de la zona:** Av. Sáenz Peña, Av. México, Calle Virrey Toledo y Calle Túpac Amaru.
 
-**Calles del proyecto (16):** Sáenz Peña, Avenida México, Cacique Cinto, Cacique Collique, Caminos del Inca, Virrey Toledo, Jirón Gonzalo Pizarro, Jirón Hernando de Soto, Chongoyape, Carlos Castañeda Iparraguirre, Atusparias, Pasaje Perú, José Carlos Mariátegui, Unión, Pasaje San Martín y Túpac Amaru. La lista está en `CALLES_PROYECTO`, dentro de `db/osm_a_zona.py`.
+**Calles del proyecto (16):** Avenida Sáenz Peña, Avenida México, Cacique Cinto, Cacique Collique, Caminos del Inca, Virrey Toledo, Jirón Gonzalo Pizarro, Jirón Hernando de Soto, Chongoyape, Carlos Castañeda Iparraguirre, Atusparias, Pasaje Perú, José Carlos Mariátegui, Unión, Pasaje San Martín y Túpac Amaru. La lista está en `CALLES_PROYECTO`, dentro de `db/osm_a_zona.py`.
 
 1. Entra a https://overpass-turbo.eu, pega la consulta de `db/consulta_overpass.txt`, toca **Ejecutar**, y en **Exportar → datos → descargar como JSON sin procesar** guarda el archivo como `data/osm_jlo.json`.
 2. Ejecuta:
