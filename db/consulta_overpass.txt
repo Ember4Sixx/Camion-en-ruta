@@ -2,16 +2,23 @@
 // 1) Pégala en el cuadro de texto de la izquierda.
 // 2) Toca "Ejecutar".
 // 3) Menú "Exportar" > "datos" > "descargar como JSON sin procesar" (raw OSM data).
-// 4) Guarda el archivo como data/osm_jlo.json y sigue el paso del README/GUIA.
+// 4) Guarda el archivo como data/osm_jlo.json y ejecuta:  python db/osm_a_zona.py data/osm_jlo.json
+//
+// (Atajo: `python db/osm_a_zona.py --descargar` hace estos pasos solo.)
+//
+// Trae TODAS las vías (con y sin nombre) del distrito, con su geometría completa (`out geom`).
+// Las 4 calles límite necesitan estar completas para seguir sus curvas; el recorte al perímetro
+// (solo el tramo entre esquinas) lo hace db/osm_a_zona.py, no esta consulta.
 
-[out:json][timeout:120];
+[out:json][timeout:180];
 area["boundary"="administrative"]["name"="José Leonardo Ortiz"]->.jlo;
 (
-  way(area.jlo)["highway"]["name"];
+  way(area.jlo)["highway"];
 );
 out geom;
 
 // Si "area" no encuentra el distrito, usa un recuadro en su lugar
 // (sur, oeste, norte, este; ajusta alrededor de la zona):
-//   way["highway"]["name"](-6.780,-79.860,-6.740,-79.815);
+//   [out:json][timeout:180];
+//   way["highway"](-6.800,-79.880,-6.730,-79.800);
 //   out geom;

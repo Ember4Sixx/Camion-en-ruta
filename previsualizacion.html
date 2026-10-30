@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Previsualización · perímetro y calles · Camión En Ruta</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root{--bosque:#14532d;--hoja:#2e9e5b;--menta:#e8f6ed;--texto:#1b2b20}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;color:var(--texto);background:#f6fbf7}
+  header{background:var(--bosque);color:#fff;padding:12px 18px}
+  header h1{margin:0;font-size:1.15rem}
+  header p{margin:2px 0 0;font-size:.85rem;opacity:.85}
+  .wrap{display:grid;grid-template-columns:320px 1fr;gap:14px;padding:14px;height:calc(100vh - 66px)}
+  aside{overflow:auto;background:#fff;border:1px solid #cfe8d8;border-radius:12px;padding:12px}
+  #map{height:100%;border-radius:12px;border:2px solid var(--hoja);min-height:420px}
+  h2{font-size:.95rem;margin:14px 0 6px;color:var(--bosque)}
+  h2:first-child{margin-top:0}
+  .datos{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .dato{background:var(--menta);border-radius:8px;padding:6px 8px;font-size:.8rem}
+  .dato b{display:block;font-size:1.05rem;color:var(--bosque)}
+  button,input[type=file]{font:inherit}
+  button{background:var(--hoja);color:#fff;border:0;border-radius:8px;padding:7px 11px;cursor:pointer;margin:2px 2px 2px 0}
+  button.sec{background:#fff;color:var(--bosque);border:1.5px solid var(--hoja)}
+  button:focus-visible{outline:3px solid #f2c200;outline-offset:2px}
+  input[type=range]{width:100%}
+  .leyenda span{display:inline-flex;align-items:center;gap:5px;margin:0 10px 4px 0;font-size:.82rem}
+  .pt{width:13px;height:13px;border-radius:50%;display:inline-block;border:1px solid #0003}
+  #lista{list-style:none;margin:0;padding:0;font-size:.82rem}
+  #lista li{display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer;border-bottom:1px solid #eef5f0}
+  #lista li small{margin-left:auto;color:#6b7c70}
+  #carga{background:#fff8e1;border:1px solid #f2c200;border-radius:8px;padding:8px;font-size:.82rem;margin-bottom:10px}
+  #carga[hidden]{display:none}
+  @media(max-width:800px){.wrap{grid-template-columns:1fr;height:auto}#map{height:62vh}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Previsualización: perímetro real y calles interiores</h1>
+  <p>Usa el mismo mapa (js/map.js) y el mismo algoritmo de colores (js/estado.js) del proyecto. Solo lee data/*.geojson; no toca Supabase.</p>
+</header>
+<div class="wrap">
+  <aside>
+    <div id="carga" hidden>
+      <b>No pude leer data/ automáticamente</b> (pasa al abrir el archivo con doble clic).
+      Elige a la vez <code>zona.geojson</code> y <code>calles.geojson</code> (y opcional <code>esquinas.geojson</code>):
+      <input type="file" id="archivos" multiple accept=".geojson,.json">
+      <div style="margin-top:6px;color:#6b5b00">Alternativa: en la carpeta del proyecto ejecuta <code>python -m http.server</code> y abre <code>http://localhost:8000/previsualizacion.html</code>.</div>
+    </div>
+
+    <h2>Resumen</h2>
+    <div class="datos" id="datos"><div class="dato">Sin datos todavía</div></div>
+
+    <h2>Simular recorrido</h2>
+    <div>
+      <button id="bPend" class="sec">Pendiente</button>
+      <button id="bCurso">En curso</button>
+      <button id="bFin" class="sec">Finalizado</button>
+    </div>
+    <label style="font-size:.82rem">Calle actual: <b id="ordenTxt">0</b>
+      <input type="range" id="orden" min="0" max="0" value="0">
+    </label>
+    <div><button id="bSig" class="sec">Avanzar una calle</button><button id="bAuto" class="sec">▶ Automático</button></div>
+
+    <h2>Colores</h2>
+    <div class="leyenda" id="leyenda"></div>
+
+    <h2>Capas</h2>
+    <label style="font-size:.85rem;display:block"><input type="checkbox" id="chkLim" checked> Resaltar el perímetro (4 calles límite)</label>
+    <label style="font-size:.85rem;display:block"><input type="checkbox" id="chkEsq" checked> Mostrar las 4 esquinas</label>
+
+    <h2>Calles (toca para ubicarla)</h2>
+    <ul id="lista"></ul>
+  </aside>
+  <div id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/config.js"></script>
+<script src="js/estado.js"></script>
+<script src="js/map.js"></script>
+<script>
+(function () {
+  const cfg = window.APP_CONFIG;
+  let zona = null, calles = null, esquinas = null, mapa, capaLim, capaEsq, timer = null;
+  let fase = "pendiente", orden = 0, n = 0;
+  const $ = (id) => document.getElementById(id);
+
+  const leer = (u) => fetch(u, { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error(u); return r.json(); });
+
+  // --- Leyenda con los colores reales del proyecto ---
+  $("leyenda").innerHTML = Object.values(cfg.estados)
+    .map((e) => `<span><i class="pt" style="background:${e.color}"></i>${e.etiqueta}</span>`).join("");
+
+  async function cargarAuto() {
+    try {
+      const [z, c] = await Promise.all([leer("data/zona.geojson"), leer("data/calles.geojson")]);
+      let e = null; try { e = await leer("data/esquinas.geojson"); } catch (_) {}
+      iniciar(z, c, e);
+    } catch (err) { $("carga").hidden = false; mapa = AppMap.iniciar(); }
+  }
+
+  $("archivos").addEventListener("change", async (ev) => {
+    let z = null, c = null, e = null;
+    for (const f of ev.target.files) {
+      let j; try { j = JSON.parse(await f.text()); } catch (_) { continue; }
+      const t = j.features && j.features[0] && j.features[0].geometry.type;
+      if (t === "Polygon") z = j; else if (t === "Point") e = j; else if (t) c = j;
+    }
+    if (!z || !c) { alert("Faltan zona.geojson y/o calles.geojson."); return; }
+    iniciar(z, c, e);
+  });
+
+  function iniciar(z, c, e) {
+    zona = z; calles = c; esquinas = e;
+    if (!mapa) mapa = AppMap.iniciar(); else if (window.__capas) window.__capas.forEach((l) => l.remove());
+    $("carga").hidden = true;
+    n = calles.features.length;
+    $("orden").max = n;
+    resumen();
+    pintar();
+    dibujarExtras();
+    lista();
+  }
+
+  function estadosActuales() {
+    const callesRuta = calles.features.map((f) => ({ id: f.properties.id, orden: f.properties.orden }));
+    return Estado.estadosDeRuta(callesRuta, fase, orden, 2);
+  }
+
+  function pintar() {
+    const est = estadosActuales();
+    AppMap.pintarZona(zona);
+    AppMap.pintarCalles(calles, est);
+    window.__est = est;
+    colorLista(est);
+  }
+  function aplicar() {
+    const est = estadosActuales();
+    AppMap.actualizarEstados(est);
+    colorLista(est);
+    $("ordenTxt").textContent = orden;
+  }
+
+  function dibujarExtras() {
+    window.__capas = [];
+    if (!mapa.getPane("casing")) { mapa.createPane("casing"); mapa.getPane("casing").style.zIndex = 395; }
+    const lim = { type: "FeatureCollection", features: calles.features.filter((f) => f.properties.tipo === "limite") };
+    capaLim = L.geoJSON(lim, { pane: "casing", interactive: false,
+      style: { color: "#14532d", weight: 13, opacity: 0.35, lineCap: "round" } });
+    capaEsq = L.layerGroup((esquinas ? esquinas.features : []).map((f) =>
+      L.circleMarker([f.geometry.coordinates[1], f.geometry.coordinates[0]],
+        { radius: 7, color: "#fff", weight: 2, fillColor: "#14532d", fillOpacity: 1 }).bindTooltip("Esquina: " + f.properties.entre)));
+    window.__capas.push(capaLim, capaEsq);
+    $("chkLim").checked && capaLim.addTo(mapa);
+    $("chkEsq").checked && capaEsq.addTo(mapa);
+  }
+  $("chkLim").onchange = (e) => e.target.checked ? capaLim && capaLim.addTo(mapa) : capaLim && capaLim.remove();
+  $("chkEsq").onchange = (e) => e.target.checked ? capaEsq && capaEsq.addTo(mapa) : capaEsq && capaEsq.remove();
+
+  // --- Datos del resumen ---
+  function resumen() {
+    const lim = calles.features.filter((f) => f.properties.tipo === "limite").length;
+    const anillo = zona.features[0].geometry.coordinates[0];
+    const k = 111320 * Math.cos(anillo[0][1] * Math.PI / 180), ky = 110540;
+    let a = 0, per = 0;
+    for (let i = 0; i < anillo.length - 1; i++) {
+      const p = anillo[i], q = anillo[i + 1];
+      a += (p[0] * k) * (q[1] * ky) - (q[0] * k) * (p[1] * ky);
+      per += Math.hypot((q[0] - p[0]) * k, (q[1] - p[1]) * ky);
+    }
+    const cerrado = anillo[0][0] === anillo[anillo.length - 1][0] && anillo[0][1] === anillo[anillo.length - 1][1];
+    const dato = (t, v) => `<div class="dato">${t}<b>${v}</b></div>`;
+    $("datos").innerHTML = dato("Calles límite", lim) + dato("Calles interiores", calles.features.length - lim)
+      + dato("Área", (Math.abs(a) / 2 / 10000).toFixed(2) + " ha") + dato("Contorno", Math.round(per) + " m")
+      + dato("Vértices del perímetro", anillo.length - 1) + dato("Polígono cerrado", cerrado ? "Sí" : "NO");
+  }
+
+  // --- Lista de calles ---
+  function lista() {
+    $("lista").innerHTML = "";
+    calles.features.forEach((f) => {
+      const li = document.createElement("li");
+      li.dataset.id = f.properties.id;
+      li.innerHTML = `<i class="pt"></i><span></span><small>${f.properties.tipo === "limite" ? "límite" : "interior"}</small>`;
+      li.querySelector("span").textContent = f.properties.nombre;
+      li.onclick = () => AppMap.enfocarCalle(f.properties.id);
+      $("lista").appendChild(li);
+    });
+    colorLista(estadosActuales());
+  }
+  function colorLista(est) {
+    document.querySelectorAll("#lista li").forEach((li) => {
+      li.querySelector(".pt").style.background = cfg.estados[est[li.dataset.id] || "gris"].color;
+    });
+  }
+
+  // --- Controles de simulación ---
+  const setFase = (f, o) => { fase = f; if (o != null) orden = o; $("orden").value = orden; aplicar(); };
+  $("bPend").onclick = () => setFase("pendiente", 0);
+  $("bCurso").onclick = () => setFase("en_curso", Math.max(1, orden));
+  $("bFin").onclick = () => setFase("finalizado", n);
+  $("orden").oninput = (e) => { orden = +e.target.value; fase = orden === 0 ? "pendiente" : "en_curso"; aplicar(); };
+  $("bSig").onclick = () => { if (!n) return; if (orden >= n) return setFase("finalizado", n); setFase("en_curso", orden + 1); };
+  $("bAuto").onclick = () => {
+    if (timer) { clearInterval(timer); timer = null; $("bAuto").textContent = "▶ Automático"; return; }
+    setFase("en_curso", 1);
+    $("bAuto").textContent = "⏸ Pausar";
+    timer = setInterval(() => {
+      if (orden >= n) { setFase("finalizado", n); clearInterval(timer); timer = null; $("bAuto").textContent = "▶ Automático"; }
+      else setFase("en_curso", orden + 1);
+    }, 1200);
+  };
+
+  cargarAuto();
+})();
+</script>
+</body>
+</html>
