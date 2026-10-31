@@ -5,7 +5,8 @@
    JSON a base de datos no rompe nada más.
 
    Contrato (igual para "json" y "supabase"):
-     calles()    -> GeoJSON FeatureCollection; properties { id, nombre, ruta }
+     calles()    -> GeoJSON FeatureCollection de TRAMOS; properties { id, nombre, calle, calle_id, carril, ruta, orden }
+                    (`calle` = nombre de la calle completa; `nombre` = nombre del tramo, ej. "Calle Unión · entre A y B")
      estados()   -> { actualizado, origen, estados: { "<id calle>": "gris|amarillo|verde|negro" } }
                     origen: "horario" (estimado con la hora) | "gps" (con la ubicación del camión) | "mixto"
      horarios()  -> { nota, rutas: [ { ruta, dias, horario, calles: [...] } ] }
@@ -16,7 +17,7 @@
    Cómo se calcula el estado de cada ruta:
      1. Base: se estima con la hora y la tabla `horarios` (Estado.estimarPorHorario).
      2. Con GPS (cfg.gpsActivo): manda el AVANCE REAL que guarda la app del conductor en la
-        tabla `avance_calles` (qué calles recorrió de verdad hoy). Verde = el camión está ahí,
+        tabla `avance_tramos` (qué tramos recorrió de verdad hoy). Verde = el camión está ahí,
         negro = la recorrió casi completa, gris = aún no. No se usa el orden de las calles ni
         se marca amarillo, porque el orden oficial de la ruta todavía no se conoce.
    ========================================================== */
@@ -57,14 +58,14 @@
   }
 
   // ---------- Fuente 1: archivos JSON en /data ----------
-  // calles.geojson: properties { id, nombre, ruta, orden }.  horarios.json: ver `programa` en cada ruta.
+  // tramos.geojson: properties { id, nombre, calle, ruta, orden }.  horarios.json: ver `programa` en cada ruta.
   const fuenteJSON = {
-    calles:   () => leerJSON("data/calles.geojson"),
+    calles:   () => leerJSON("data/tramos.geojson"),
     zona:     () => leerJSON("data/zona.geojson").catch(() => null),
     horarios: () => leerJSON("data/horarios.json"),
     camion:   async () => null,
     async estados() {
-      const [c, h] = await Promise.all([leerJSON("data/calles.geojson"), leerJSON("data/horarios.json")]);
+      const [c, h] = await Promise.all([leerJSON("data/tramos.geojson"), leerJSON("data/horarios.json")]);
       const ahora = new Date();
       const estados = {}, origenes = new Set();
       (h.rutas || []).forEach((r) => {
@@ -94,31 +95,36 @@
     function cargarEstaticos() {
       if (!estaticos) {
         estaticos = Promise.all([
-          sb.from("calles").select("id,nombre,geom"),
+          sb.from("calles").select("id,nombre,tipo"),
+          sb.from("tramos").select("id,calle_id,nombre,carril,k,geom"),
           sb.from("rutas").select("id,nombre,proximas"),
-          sb.from("ruta_calles").select("ruta_id,calle_id,orden"),
+          sb.from("ruta_tramos").select("ruta_id,tramo_id,orden"),
           sb.from("horarios").select("ruta_id,dias,hora_inicio,hora_fin")
-        ]).then((r) => ({ calles: chk(r[0]), rutas: chk(r[1]), rc: chk(r[2]), horarios: chk(r[3]) }))
+        ]).then((r) => ({ calles: chk(r[0]), tramos: chk(r[1]), rutas: chk(r[2]), rt: chk(r[3]), horarios: chk(r[4]) }))
           .catch((e) => { estaticos = null; throw e; });
       }
       return estaticos;
     }
 
-    const callesDeRuta = (s, rutaId) =>
-      s.rc.filter((x) => x.ruta_id === rutaId).sort((a, b) => a.orden - b.orden);
+    // Tramos de una ruta, en orden de recorrido.
+    const tramosDeRuta = (s, rutaId) =>
+      s.rt.filter((x) => x.ruta_id === rutaId).sort((a, b) => a.orden - b.orden);
 
     return {
       async calles() {
         const s = await cargarEstaticos();
-        const rutaDe = {};
-        s.rc.forEach((x) => { if (!rutaDe[x.calle_id]) rutaDe[x.calle_id] = x.ruta_id; });
+        const rutaDe = {}, ordenDe = {}, calleDe = {};
+        s.rt.forEach((x) => { if (!rutaDe[x.tramo_id]) { rutaDe[x.tramo_id] = x.ruta_id; ordenDe[x.tramo_id] = x.orden; } });
+        s.calles.forEach((c) => { calleDe[c.id] = c.nombre; });
         return {
           type: "FeatureCollection",
-          features: s.calles.map((c) => ({
+          // Un Feature por TRAMO; `calle` es el nombre de la calle completa (la lista lateral agrupa por él).
+          features: s.tramos.map((t) => ({
             type: "Feature",
-            properties: { id: c.id, nombre: c.nombre, ruta: rutaDe[c.id] || "" },
-            geometry: c.geom
-          }))
+            properties: { id: t.id, nombre: t.nombre, calle: calleDe[t.calle_id] || Estado.nombreBase(t.nombre),
+                          calle_id: t.calle_id, carril: t.carril || "", ruta: rutaDe[t.id] || "", orden: ordenDe[t.id] || 0 },
+            geometry: t.geom
+          })).sort((a, b) => (a.properties.orden || 1e9) - (b.properties.orden || 1e9))   // en orden de recorrido
         };
       },
 
@@ -128,9 +134,9 @@
         const pos = chk(await sb.from("posicion_camion").select("*"));
         let avance = [];
         if (cfg.gpsActivo) {
-          // Si la tabla aún no existe (falta db/migracion_02_avance_calles.sql), se sigue sin ella.
-          const r = await sb.from("avance_calles").select("ruta_id,calle_id,estado,actualizado");
-          if (r.error) console.warn("Sin tabla avance_calles:", r.error.message);
+          // Si la tabla aún no existe (falta db/migracion_03_calles_y_tramos.sql), se sigue sin ella.
+          const r = await sb.from("avance_tramos").select("ruta_id,tramo_id,estado,actualizado");
+          if (r.error) console.warn("Sin tabla avance_tramos:", r.error.message);
           else avance = r.data || [];
         }
 
@@ -138,7 +144,7 @@
         const hoy = diaLocal(ahora);
         const estados = {}, origenes = new Set(), gpsFechas = [];
         s.rutas.forEach((ruta) => {
-          const callesRuta = callesDeRuta(s, ruta.id).map((x) => ({ id: x.calle_id, orden: x.orden }));
+          const callesRuta = tramosDeRuta(s, ruta.id).map((x) => ({ id: x.tramo_id, orden: x.orden }));   // cada elemento es un tramo
           const p = pos.find((x) => x.ruta_id === ruta.id);
           const fresca = !!p && ahora - new Date(p.actualizado) <= vigenciaMs();
           const filasHoy = avance.filter((f) => f.ruta_id === ruta.id && diaLocal(f.actualizado) === hoy);
@@ -165,8 +171,9 @@
 
       async horarios() {
         const s = await cargarEstaticos();
-        const nombre = {};
-        s.calles.forEach((c) => { nombre[c.id] = c.nombre; });
+        const nombreCalle = {}, calleDeTramo = {};
+        s.calles.forEach((c) => { nombreCalle[c.id] = c.nombre; });
+        s.tramos.forEach((t) => { calleDeTramo[t.id] = t.calle_id; });
         return {
           nota: s.horarios.length
             ? "Horarios cargados desde la base de datos."
@@ -177,8 +184,8 @@
               ruta: r.nombre,
               dias: hs.map((h) => h.dias.map((d) => DIAS[d]).join(", ")).join(" / ") || "—",
               horario: hs.map((h) => h.hora_inicio.slice(0, 5) + " – " + h.hora_fin.slice(0, 5)).join(" / ") || "—",
-              // Cada calle una sola vez (sus tramos se llaman "Calle X · entre A y B").
-              calles: [...new Set(callesDeRuta(s, r.id).map((x) => String(nombre[x.calle_id]).split(" · ")[0]))]
+              // Cada calle una sola vez (aunque tenga varios tramos).
+              calles: [...new Set(tramosDeRuta(s, r.id).map((x) => nombreCalle[calleDeTramo[x.tramo_id]]).filter(Boolean))]
             };
           })
         };
@@ -195,7 +202,7 @@
       suscribir(callback) {
         sb.channel("camion-en-ruta")
           .on("postgres_changes", { event: "*", schema: "public", table: "posicion_camion" }, callback)
-          .on("postgres_changes", { event: "*", schema: "public", table: "avance_calles" }, callback)
+          .on("postgres_changes", { event: "*", schema: "public", table: "avance_tramos" }, callback)
           .subscribe();
       }
     };

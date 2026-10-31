@@ -1,0 +1,98 @@
+[
+ {
+  "id": "avenida-mexico",
+  "nombre": "Avenida México",
+  "tipo": "limite",
+  "tramos": 12
+ },
+ {
+  "id": "calle-cacique-cinto",
+  "nombre": "Calle Cacique Cinto",
+  "tipo": "interior",
+  "tramos": 1
+ },
+ {
+  "id": "calle-atusparias",
+  "nombre": "Calle Atusparias",
+  "tipo": "interior",
+  "tramos": 4
+ },
+ {
+  "id": "jiron-gonzalo-pizarro",
+  "nombre": "Jirón Gonzalo Pizarro",
+  "tipo": "interior",
+  "tramos": 3
+ },
+ {
+  "id": "avenida-saenz-pena",
+  "nombre": "Avenida Sáenz Peña",
+  "tipo": "limite",
+  "tramos": 8
+ },
+ {
+  "id": "calle-cacique-collique",
+  "nombre": "Calle Cacique Collique",
+  "tipo": "interior",
+  "tramos": 1
+ },
+ {
+  "id": "calle-chongoyape",
+  "nombre": "Calle Chongoyape",
+  "tipo": "interior",
+  "tramos": 1
+ },
+ {
+  "id": "calle-carlos-castaneda-iparraguirre",
+  "nombre": "Calle Carlos Castañeda Iparraguirre",
+  "tipo": "interior",
+  "tramos": 3
+ },
+ {
+  "id": "calle-tupac-amaru",
+  "nombre": "Calle Túpac Amaru",
+  "tipo": "limite",
+  "tramos": 3
+ },
+ {
+  "id": "calle-jose-carlos-mariategui",
+  "nombre": "Calle José Carlos Mariátegui",
+  "tipo": "interior",
+  "tramos": 3
+ },
+ {
+  "id": "pasaje-peru",
+  "nombre": "Pasaje Perú",
+  "tipo": "interior",
+  "tramos": 1
+ },
+ {
+  "id": "pasaje-san-martin",
+  "nombre": "Pasaje San Martín",
+  "tipo": "interior",
+  "tramos": 1
+ },
+ {
+  "id": "calle-caminos-del-inca",
+  "nombre": "Calle Caminos del Inca",
+  "tipo": "interior",
+  "tramos": 2
+ },
+ {
+  "id": "jiron-hernando-de-soto",
+  "nombre": "Jirón Hernando de Soto",
+  "tipo": "interior",
+  "tramos": 2
+ },
+ {
+  "id": "calle-union",
+  "nombre": "Calle Unión",
+  "tipo": "interior",
+  "tramos": 4
+ },
+ {
+  "id": "calle-virrey-toledo",
+  "nombre": "Calle Virrey Toledo",
+  "tipo": "limite",
+  "tramos": 5
+ }
+]

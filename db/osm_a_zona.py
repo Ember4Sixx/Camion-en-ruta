@@ -7,11 +7,12 @@ Calles del proyecto   : las 16 de CALLES_PROYECTO (más abajo). Cualquier otra c
 
 Entrada : exportación JSON de Overpass (ver db/consulta_overpass.txt), con geometría.
 Salida  : data/zona.geojson      polígono del perímetro
-          data/calles.geojson    TRAMOS de calle (LineString), con id, nombre, calle, carril, ruta, tipo, orden.
+          data/tramos.geojson    TRAMOS (LineString), con id, nombre, calle, calle_id, carril, k, ruta, tipo, orden.
                                  Cada calle se corta donde otras la cruzan (db/tramos.py) y las avenidas de doble vía
                                  tienen una línea independiente por carril ("sentido este", "sentido oeste"…).
+          data/calles.json       catálogo: una fila por calle (id, nombre, tipo, cuántos tramos tiene)
           data/horarios.json     la ruta SIN horario (el horario oficial se carga cuando se confirme)
-          db/zona.sql            limpia los datos anteriores y carga zonas, rutas, calles y ruta_calles en Supabase
+          db/zona.sql            limpia los datos anteriores y carga zonas, rutas, calles, tramos y ruta_tramos en Supabase
           data/calles_sin_nombre.txt   cantidad de tramos sin nombre que quedaron fuera
           data/calles_no_encontradas.txt  calles del proyecto que NO aparecieron dentro de la zona (si hay)
 
@@ -21,7 +22,7 @@ Uso:
     python db/osm_a_zona.py data/osm_jlo.json --salida otra_carpeta   (para probar sin pisar data/)
 
 El ORDEN de recorrido que genera es PROVISIONAL (de norte a sur). Cámbienlo por el
-recorrido real del camión editando la columna `orden` de ruta_calles o la propiedad `orden` en calles.geojson.
+recorrido real del camión editando la columna `orden` de ruta_tramos o la propiedad `orden` en tramos.geojson.
 """
 import argparse
 import itertools
@@ -361,8 +362,8 @@ def main():
         tipo = "limite" if t["calle"] in nombre_lim_zona else "interior"
         geom = {"type": "LineString", "coordinates": t["coords"]}
         features.append({"type": "Feature",
-                         "properties": {"id": t["id"], "nombre": t["nombre"], "calle": t["calle"],
-                                        "carril": t["carril"] or "", "ruta": a.ruta, "tipo": tipo, "orden": i},
+                         "properties": {"id": t["id"], "nombre": t["nombre"], "calle": t["calle"], "calle_id": slug(t["calle"]),
+                                        "carril": t["carril"] or "", "k": t["k"], "ruta": a.ruta, "tipo": tipo, "orden": i},
                          "geometry": geom})
         filas_ruta.append((t["id"], i))
 
@@ -375,11 +376,15 @@ def main():
                                            "limites": [x.strip() for x in a.limites.split(",")]},
          "geometry": {"type": "Polygon", "coordinates": [ll_poly + [ll_poly[0]]]}}]}
     (base / "data/zona.geojson").write_text(json.dumps(zona, ensure_ascii=False, indent=1), encoding="utf-8")
-    calles = {"type": "FeatureCollection",
-              "_aviso": "Calles extraídas de OpenStreetMap con db/osm_a_zona.py. El orden de recorrido (orden) es PROVISIONAL.",
-              "features": features}
-    (base / "data/calles.geojson").write_text(json.dumps(calles, ensure_ascii=False, indent=1), encoding="utf-8")
+    tramos_geo = {"type": "FeatureCollection",
+                  "_aviso": "Tramos extraídos de OpenStreetMap con db/osm_a_zona.py. El orden de recorrido (orden) es PROVISIONAL.",
+                  "features": features}
+    (base / "data/tramos.geojson").write_text(json.dumps(tramos_geo, ensure_ascii=False, indent=1), encoding="utf-8")
     nombres_zona = list(dict.fromkeys(f["properties"]["calle"] for f in features))   # una vez cada calle
+    catalogo = [{"id": slug(n), "nombre": n,
+                 "tipo": "limite" if n in nombre_lim_zona else "interior",
+                 "tramos": sum(1 for f in features if f["properties"]["calle"] == n)} for n in nombres_zona]
+    (base / "data/calles.json").write_text(json.dumps(catalogo, ensure_ascii=False, indent=1), encoding="utf-8")
     (base / "data/horarios.json").write_text(json.dumps(
         {"nota": "El horario oficial de esta zona aún está pendiente de confirmar con la municipalidad.",
          "rutas": [{"ruta": a.ruta, "dias": "—", "horario": "—", "calles": nombres_zona,
@@ -391,28 +396,34 @@ def main():
     (base / "data/calles_sin_nombre.txt").write_text(f"{sin_nombre} tramos sin nombre en OSM quedaron fuera.\n", encoding="utf-8")
 
     # SQL para Supabase
-    sql = ["-- Generado por db/osm_a_zona.py (zona delimitada + calles interiores).",
-           "-- Ejecutar DESPUÉS de db/schema.sql. REEMPLAZA los datos anteriores de zonas, rutas, calles y ruta_calles",
-           "-- (incluidos los de ejemplo). No toca horarios de la ruta cargada ni la tabla posicion_camion.", "",
+    sql = ["-- Generado por db/osm_a_zona.py (zona delimitada + calles y tramos).",
+           "-- Ejecutar DESPUÉS de db/schema.sql. REEMPLAZA los datos anteriores de zonas, rutas, calles, tramos y ruta_tramos",
+           "-- (el avance guardado de hoy también se borra: depende de los tramos). No toca horarios ni posicion_camion.", "",
            "begin;", "",
-           "delete from zonas;", "delete from ruta_calles;", "delete from calles;",
+           "delete from zonas;", "delete from ruta_tramos;", "delete from avance_tramos;",
+           "delete from tramos;", "delete from calles;",
            f"delete from rutas where id <> {q(a.ruta)};", "",
            "insert into zonas (id, nombre, geom) values",
            f"  ({q('zona-1')}, {q('Zona de recolección')}, {q(json.dumps(zona['features'][0]['geometry']))}::jsonb)",
            "on conflict (id) do update set geom = excluded.geom;", "",
            "insert into rutas (id, nombre) values", f"  ({q(a.ruta)}, {q(a.ruta)})", "on conflict (id) do nothing;", "",
-           "insert into calles (id, nombre, geom) values"]
-    sql.append(",\n".join(f"  ({q(f['properties']['id'])}, {q(f['properties']['nombre'])}, {q(json.dumps(f['geometry']))}::jsonb)" for f in features))
-    sql.append("on conflict (id) do update set nombre = excluded.nombre, geom = excluded.geom;\n")
-    sql.append("insert into ruta_calles (ruta_id, calle_id, orden) values")
-    sql.append(",\n".join(f"  ({q(a.ruta)}, {q(c)}, {o})" for c, o in filas_ruta))
-    sql.append("on conflict (ruta_id, calle_id) do update set orden = excluded.orden;\n")
+           "-- Calles (una fila por calle)",
+           "insert into calles (id, nombre, tipo) values"]
+    sql.append(",\n".join(f"  ({q(c['id'])}, {q(c['nombre'])}, {q(c['tipo'])})" for c in catalogo) + ";\n")
+    sql.append("-- Tramos (los pedazos de cada calle)")
+    sql.append("insert into tramos (id, calle_id, nombre, carril, k, geom) values")
+    sql.append(",\n".join(
+        f"  ({q(f['properties']['id'])}, {q(f['properties']['calle_id'])}, {q(f['properties']['nombre'])}, "
+        f"{q(f['properties']['carril'])}, {f['properties']['k']}, {q(json.dumps(f['geometry']))}::jsonb)" for f in features) + ";\n")
+    sql.append("-- Orden de recorrido (PROVISIONAL)")
+    sql.append("insert into ruta_tramos (ruta_id, tramo_id, orden) values")
+    sql.append(",\n".join(f"  ({q(a.ruta)}, {q(c)}, {o})" for c, o in filas_ruta) + ";\n")
     sql.append("commit;")
     (base / "db/zona.sql").write_text("\n".join(sql) + "\n", encoding="utf-8")
 
     lim = sorted({f['properties']['calle'] for f in features if f['properties']['tipo'] == 'limite'})
     print(f"Calles límite incluidas: {lim}")
-    print(f"Tramos de calle dentro de la zona: {len(features)}, de {len(nombres_zona)} calles")
+    print(f"Calles dentro de la zona: {len(nombres_zona)} -> {len(features)} tramos")
     for c in nombres_zona:
         ts = [f for f in features if f["properties"]["calle"] == c]
         print(f"  {c}: {len(ts)} tramo(s)" + (f" · carriles: {sorted({f['properties']['carril'] for f in ts if f['properties']['carril']})}"

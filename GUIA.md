@@ -10,7 +10,7 @@ Esta guía lleva el proyecto desde la versión con archivos locales hasta una ve
         │ escribe su posición                ▲ lee y se actualiza solo
         ▼                                    │
  ┌─────────────────────────  Supabase  ─────────────────────────┐
- │ zonas · rutas · calles · ruta_calles · horarios              │
+ │ zonas · rutas · calles · tramos · ruta_tramos · horarios     │
  │ posicion_camion (lat/lng)                                    │
  └───────────────────────────────────────────────────────────────┘
                                    │
@@ -38,7 +38,7 @@ Cada ruta tiene sus calles en orden (1, 2, 3…). Solo hay que saber en qué cal
 La fase y el `orden_actual` salen de dos fuentes (se calculan en `js/data-source.js`, no se guardan en la base de datos):
 
 1. **horario:** se reparte el horario de la tabla `horarios` en partes iguales entre las calles. Es una estimación y la página lo avisa; no la presenten como tiempo real. Si no hay horario cargado, todas las calles quedan en gris.
-2. **gps (avance real):** si `gpsActivo` está en `true`, manda lo que el camión **recorrió de verdad**, no el orden de la lista. La app del conductor (`conductor/`) divide cada calle en puntos de control cada 8 m, marca los que el camión pasa a menos de 15 m y lo guarda en la tabla `avance_calles`:
+2. **gps (avance real):** si `gpsActivo` está en `true`, manda lo que el camión **recorrió de verdad**, no el orden de la lista. La app del conductor (`conductor/`) divide cada calle en puntos de control cada 8 m, marca los que el camión pasa a menos de 15 m y lo guarda en la tabla `avance_tramos`:
    - **verde**: el camión está ahora en esa calle;
    - **negro**: la recorrió en un 80 % o más y ya salió (si solo cruzó una esquina, sigue gris);
    - **gris**: todavía no la recorre.
@@ -88,13 +88,13 @@ Abre http://localhost:8000. Con `fuente: "json"` todo funciona sin base de datos
    python db/osm_a_zona.py data/osm_jlo.json
    ```
 3. El programa busca las 4 calles del perímetro por nombre, calcula las 4 esquinas, dibuja el cuadrado y se queda **solo con las 16 calles del proyecto** que quedan adentro (cortando las que se salen). Imprime los nombres que tiene cada calle en OSM: **léanlos y confirmen que son las correctas**.
-4. Escribe: `data/zona.geojson` (el perímetro), `data/calles.geojson`, `data/horarios.json` (sin horario, hasta que se confirme) y `db/zona.sql` (para la base de datos, paso 3). Si alguna calle del proyecto no quedó dentro de la zona, la lista en `data/calles_no_encontradas.txt` y la avisa en pantalla.
+4. Escribe: `data/zona.geojson` (el perímetro), `data/tramos.geojson` y `data/calles.json` (los tramos y el catálogo de calles), `data/horarios.json` (sin horario, hasta que se confirme) y `db/zona.sql` (para la base de datos, paso 3). Si alguna calle del proyecto no quedó dentro de la zona, la lista en `data/calles_no_encontradas.txt` y la avisa en pantalla.
 5. Abran la página en local (paso 2): el perímetro sale con borde punteado y las calles dentro, con su nombre al pasar el cursor. Comparen con Google Maps o con una visita a la zona.
 
 Límites a tener en cuenta:
 - Una calle que en OpenStreetMap tiene otro nombre (o no tiene nombre) no aparece: corrijan el nombre en OSM o agreguen esa variante en `consulta_overpass.txt` y en `CALLES_PROYECTO`.
 - Una calle que queda **fuera del perímetro** (por ejemplo, al norte de Virrey Toledo si esa es la calle de arriba) se descarta y se avisa en `calles_no_encontradas.txt`. Si pasa con calles que sí deben estar, revisen cuáles son las 4 calles del perímetro.
-- El **orden de recorrido** que genera es provisional (de norte a sur). El orden real del camión hay que definirlo con quien conoce la ruta y cambiarlo en `ruta_calles.orden`.
+- El **orden de recorrido** que genera es provisional (de norte a sur). El orden real del camión hay que definirlo con quien conoce la ruta y cambiarlo en `ruta_tramos.orden`.
 - Los lados del cuadrado se calculan con las esquinas de las 4 calles; si alguna es curva, el contorno punteado es una aproximación y la calle real se dibuja encima.
 
 ## Paso 3 · Crear la base de datos (Supabase)
@@ -103,7 +103,7 @@ Límites a tener en cuenta:
 2. En el proyecto: **SQL Editor → New query**. Pega todo `db/schema.sql` y ejecuta. Esto crea las tablas, las reglas de seguridad y activa el tiempo real. *(Si la base ya existía con la tabla `recorridos`, ejecuten en cambio `db/migracion_01_quitar_recorridos.sql`.)*
 3. Carga las calles y la ruta: pega `db/zona.sql` (paso 2B) en el SQL Editor y ejecuta. Reemplaza los datos anteriores de zona, rutas, calles y orden.
 4. Carga el horario oficial cuando la municipalidad lo confirme: edita `db/horarios.sql` (`dias`: 0 domingo … 6 sábado) y ejecútalo. Mientras no haya horario, las calles se muestran en gris y la página avisa que el horario está pendiente.
-5. Revisa en **Table Editor** que `zonas`, `rutas`, `calles` y `ruta_calles` tengan filas.
+5. Revisa en **Table Editor** que `zonas`, `rutas`, `calles`, `tramos` y `ruta_tramos` tengan filas.
 
 ## Paso 4 · Conectar la página a la base de datos
 
@@ -136,9 +136,9 @@ Es la base del sistema y no requiere que nadie toque botones: la página calcula
 ## Paso 8 · GPS
 
 **Fase A: teléfono en el camión (sin comprar equipos).**
-1. En Supabase, SQL Editor: ejecuten `db/migracion_02_avance_calles.sql` (crea la tabla `avance_calles`). Las bases nuevas ya la tienen en `db/schema.sql`.
+1. En Supabase, SQL Editor: ejecuten `db/migracion_02_avance_calles.sql` y después `db/migracion_03_calles_y_tramos.sql` (crean `avance_tramos` y separan `calles` y `tramos`). Las bases nuevas ya lo tienen en `db/schema.sql`.
 2. Pongan `gpsActivo: true` en `js/config.js`.
-3. En el teléfono del camión, abre la app del conductor **publicada**: `https://USUARIO.github.io/camion-en-ruta/conductor/` (el navegador solo permite ubicación con HTTPS). Inicia sesión, elige la ruta y toca **Iniciar recorrido**. Cada 5 segundos guarda la posición en `posicion_camion` y el avance de las calles en `avance_calles`. En "Avance por calle" se ve el porcentaje recorrido de cada calle, y el botón "Borrar el avance de hoy" sirve para empezar de cero en las pruebas.
+3. En el teléfono del camión, abre la app del conductor **publicada**: `https://USUARIO.github.io/camion-en-ruta/conductor/` (el navegador solo permite ubicación con HTTPS). Inicia sesión, elige la ruta y toca **Iniciar recorrido**. Cada 5 segundos guarda la posición en `posicion_camion` y el avance de las calles en `avance_tramos`. En "Avance por calle" se ve el porcentaje recorrido de cada calle, y el botón "Borrar el avance de hoy" sirve para empezar de cero en las pruebas.
 4. El camión 🚛 aparece en el mapa y las calles cambian de color según lo recorrido. Si la posición deja de llegar por más de `gpsVigenciaSegundos`, el camión desaparece del mapa.
    El botón **Compartir ubicación** de `admin.html` solo manda la posición (dibuja el camión, pero no colorea calles); para colorear usen la app del conductor.
 4. Necesitan permiso del conductor y de quien administre el camión para usar su ubicación. Mantener la pantalla encendida y la página abierta es necesario; los navegadores pausan la ubicación en segundo plano.
@@ -158,7 +158,7 @@ Es la base del sistema y no requiere que nadie toque botones: la página calcula
 | Integrante | Archivos principales |
 |---|---|
 | 1. Investigación y contenido | `index.html` (secciones ODS 12 y cuidado, fuentes) |
-| 2. Mapa y delimitación | `data/calles.geojson`, `js/map.js`, `centro` y `zoom` en `js/config.js` |
+| 2. Mapa y delimitación | `data/tramos.geojson`, `js/map.js`, `centro` y `zoom` en `js/config.js` |
 | 3. Programación | `js/estado.js`, `js/data-source.js`, `js/main.js` |
 | 4. Datos y seguimiento | `db/`, Supabase, `admin.html`, horarios |
 | 5. Diseño, pruebas y publicación | `css/styles.css`, pruebas en celulares, GitHub Pages |
@@ -167,7 +167,7 @@ Es la base del sistema y no requiere que nadie toque botones: la página calcula
 
 - Los horarios oficiales de la zona: no se encontró un horario público de recolección para estas calles; hay que pedirlo a la municipalidad.
 - Las calles salen de OpenStreetMap: comparar el resultado con la zona real.
-- El orden real de recorrido del camión (`ruta_calles.orden`).
+- El orden real de recorrido del camión (`ruta_tramos.orden`).
 - Probar el GPS en un teléfono real con la página publicada (HTTPS).
 - Antes de entregar: `modoDemo: false` y `datosDemostracion: false`.
 
@@ -175,21 +175,23 @@ Es la base del sistema y no requiere que nadie toque botones: la página calcula
 
 ## Tramos, carriles y cómo cambiar rutas, orden y horarios
 
-**Tramos.** `db/osm_a_zona.py` ya no guarda cada calle completa: la corta en **tramos** donde otra calle la cruza o termina en ella (módulo `db/tramos.py`). Cada tramo es una fila de la tabla `calles` con su propio `id` y nombre, por ejemplo `calle-union-2` = «Calle Unión · entre San Martín y José Carlos Mariátegui». Así el mapa puede iluminar solo la parte por donde pasa el camión. Una calle sin cruces dentro de la zona queda en un solo tramo.
+**Tramos.** `db/osm_a_zona.py` ya no guarda cada calle completa: la corta en **tramos** donde otra calle la cruza o termina en ella (módulo `db/tramos.py`). Cada tramo es una fila de la tabla `tramos` (y la calle completa es una fila de la tabla `calles`); el tramo tiene su propio `id` y nombre, por ejemplo `calle-union-2` = «Calle Unión · entre San Martín y José Carlos Mariátegui». Así el mapa puede iluminar solo la parte por donde pasa el camión. Una calle sin cruces dentro de la zona queda en un solo tramo.
 
 **Carriles.** Las avenidas de doble vía (hoy Av. México y Av. Sáenz Peña) tienen una línea independiente por carril, nombrada por su sentido de marcha («sentido este», «sentido norte»…), tomado de `oneway` en OpenStreetMap. La app del conductor solo marca como recorrido el carril por el que va el camión.
+
+**Dos tablas: `calles` y `tramos`.** `calles` es el catálogo: una fila por calle del proyecto (`id`, `nombre`, `tipo` = `limite` si cierra el perímetro o `interior`). `tramos` tiene los pedazos de cada calle (`calle_id` apunta a `calles`, más `nombre`, `carril`, `k` y `geom`) y es lo que se dibuja y se ilumina. Una calle sin cruces con otras del proyecto tiene un solo tramo. La lista lateral de la página muestra **una fila por calle** (la de la tabla `calles`) y, al abrirla, sus tramos; el mapa pinta cada tramo por separado. `ruta_tramos` guarda el orden de recorrido y `avance_tramos` el avance real del camión, ambos por tramo.
 
 **Qué archivo/tabla se toca para…**
 
 | Quiero… | Dónde |
 |---|---|
-| Cambiar el **orden** en que se iluminan los tramos | Supabase > Table Editor > `ruta_calles`, columna `orden` (no puede repetirse dentro de una ruta). Mientras no hay GPS, el amarillo son los siguientes `proximas` tramos en ese orden. |
+| Cambiar el **orden** en que se iluminan los tramos | Supabase > Table Editor > `ruta_tramos`, columna `orden` (no puede repetirse dentro de una ruta). Mientras no hay GPS, el amarillo son los siguientes `proximas` tramos en ese orden. |
 | Cuántos tramos siguientes salen en amarillo | Tabla `rutas`, columna `proximas` |
-| Crear una **ruta nueva** | Una fila en `rutas` (`id`, `nombre`) y, por cada tramo que recorre, una fila en `ruta_calles` (`ruta_id`, `calle_id`, `orden`). |
+| Crear una **ruta nueva** | Una fila en `rutas` (`id`, `nombre`) y, por cada tramo que recorre, una fila en `ruta_tramos` (`ruta_id`, `tramo_id`, `orden`). |
 | Agregar o cambiar **horarios** | Tabla `horarios` (`ruta_id`, `dias` con 0 = domingo … 6 = sábado, `hora_inicio`, `hora_fin`). Plantilla: `db/horarios.sql`. Una fila por turno. |
 | Cambiar qué calles forman la zona | `CALLES_PROYECTO` en `db/osm_a_zona.py` y volver a generar |
 | Cambiar los colores | `js/config.js` (`estados`) y `css/styles.css` (`--estado-*`) |
 
-**Ojo:** `db/zona.sql` BORRA y vuelve a cargar `ruta_calles`. Si ya ajustaste el orden o creaste rutas a mano, no lo ejecutes otra vez sin guardar antes esos cambios.
+**Ojo:** `db/zona.sql` BORRA y vuelve a cargar `calles`, `tramos` y `ruta_tramos` (y el avance de hoy). Si ya ajustaste el orden o creaste rutas a mano, no lo ejecutes otra vez sin guardar antes esos cambios.
 
 Pruebas: `node tests/pruebas.js` y `python tests/pruebas_tramos.py`.

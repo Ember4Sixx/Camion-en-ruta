@@ -2,8 +2,8 @@
    Camión En Ruta · app del conductor
    1. Lee el GPS del celular y guarda la posición del camión en la
       tabla `posicion_camion` (una fila por ruta).
-   2. Anota qué partes de cada calle recorrió de verdad el camión y lo
-      guarda en la tabla `avance_calles` (una fila por calle). Con eso
+   2. Anota qué partes de cada tramo recorrió de verdad el camión y lo
+      guarda en la tabla `avance_tramos` (una fila por tramo). Con eso
       el mapa pinta:  verde = el camión está ahí,
                       negro = la recorrió casi completa y ya salió,
                       gris  = todavía no.
@@ -147,12 +147,12 @@
     actualId = null;
     ultimoPunto = null;
 
-    const rc = await sb.from("ruta_calles").select("calle_id,orden").eq("ruta_id", rutaId);
+    const rc = await sb.from("ruta_tramos").select("tramo_id,orden").eq("ruta_id", rutaId);
     if (rc.error) throw new Error("No se pudieron cargar las calles de la ruta: " + rc.error.message);
-    const ids = rc.data.map((x) => x.calle_id);
+    const ids = rc.data.map((x) => x.tramo_id);
     if (!ids.length) throw new Error("Esta ruta no tiene calles cargadas.");
 
-    const cs = await sb.from("calles").select("id,nombre,geom").in("id", ids);
+    const cs = await sb.from("tramos").select("id,nombre,geom").in("id", ids);   // cada tramo es una "calle" para el avance
     if (cs.error) throw new Error("No se pudieron cargar las calles: " + cs.error.message);
     calles = cs.data.map((c) => {
       const lineas = lineasDe(c.geom);
@@ -161,14 +161,14 @@
     }).sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
 
     // Lo de días anteriores se borra; lo de hoy se continúa.
-    const borrar = await sb.from("avance_calles").delete().eq("ruta_id", rutaId).lt("actualizado", inicioDeHoy());
-    if (borrar.error) throw new Error("Falta crear la tabla avance_calles en Supabase (archivo db/migracion_02_avance_calles.sql).");
-    const av = await sb.from("avance_calles").select("calle_id,estado,tramos").eq("ruta_id", rutaId);
+    const borrar = await sb.from("avance_tramos").delete().eq("ruta_id", rutaId).lt("actualizado", inicioDeHoy());
+    if (borrar.error) throw new Error("Falta crear la tabla avance_tramos en Supabase (archivo db/migracion_03_calles_y_tramos.sql).");
+    const av = await sb.from("avance_tramos").select("tramo_id,estado,puntos").eq("ruta_id", rutaId);
     if (av.error) throw new Error("No se pudo leer el avance: " + av.error.message);
     av.data.forEach((f) => {
-      const c = calles.find((x) => x.id === f.calle_id);
+      const c = calles.find((x) => x.id === f.tramo_id);
       if (!c) return;
-      if (f.tramos && f.tramos.length === c.visitados.length) c.visitados = f.tramos.split("").map((x) => (x === "1" ? 1 : 0));
+      if (f.puntos && f.puntos.length === c.visitados.length) c.visitados = f.puntos.split("").map((x) => (x === "1" ? 1 : 0));
       c.estado = Estado.estadoPorAvance(false, Estado.fraccion(c.visitados), UMBRAL_COMPLETA);
       if (c.estado !== f.estado) c.cambio = true; // por ejemplo, quedó "verde" de antes
     });
@@ -219,16 +219,16 @@
     guardando = true;
     cambiadas.forEach((c) => { c.cambio = false; });
     const ahora = new Date().toISOString();
-    const { error } = await sb.from("avance_calles").upsert(
+    const { error } = await sb.from("avance_tramos").upsert(
       cambiadas.map((c) => ({
         ruta_id: rutaId,
-        calle_id: c.id,
+        tramo_id: c.id,
         estado: c.estado,
         avance: Math.round(Estado.fraccion(c.visitados) * 100) / 100,
-        tramos: c.visitados.join(""),
+        puntos: c.visitados.join(""),
         actualizado: ahora
       })),
-      { onConflict: "ruta_id,calle_id" }
+      { onConflict: "ruta_id,tramo_id" }
     );
     guardando = false;
     if (error) {
@@ -263,7 +263,7 @@
     if (recorriendo()) return msg("Primero detén el recorrido.", true);
     if (!rutaId) return;
     if (!confirm("¿Borrar el avance de hoy de esta ruta? Todas sus calles volverán a gris en el mapa.")) return;
-    const { error } = await sb.from("avance_calles").delete().eq("ruta_id", rutaId);
+    const { error } = await sb.from("avance_tramos").delete().eq("ruta_id", rutaId);
     if (error) return msg("No se pudo borrar: " + error.message, true);
     calles.forEach((c) => { c.visitados.fill(0); c.estado = "gris"; c.cambio = false; });
     pintarAvance();

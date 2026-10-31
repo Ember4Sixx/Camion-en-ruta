@@ -253,13 +253,13 @@
   }
 
   /**
-   * Colores de una ruta a partir de lo guardado en la tabla `avance_calles`.
-   * callesRuta: [{id}] ; filas: [{calle_id, estado}] ; vigente: hay posición reciente del camión.
+   * Colores de una ruta a partir de lo guardado en la tabla `avance_tramos`.
+   * callesRuta: [{id}] (cada elemento es un tramo) ; filas: [{tramo_id, estado}] ; vigente: hay posición reciente del camión.
    * Si la posición ya no es reciente, una calle "verde" se muestra gris (no se sabe si sigue ahí).
    */
   function estadosPorAvance(callesRuta, filas, vigente) {
     var porCalle = {};
-    (filas || []).forEach(function (f) { porCalle[f.calle_id] = f.estado; });
+    (filas || []).forEach(function (f) { porCalle[f.tramo_id] = f.estado; });
     var out = {};
     callesRuta.forEach(function (c) {
       var e = porCalle[c.id] || "gris";

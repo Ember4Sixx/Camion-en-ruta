@@ -78,11 +78,11 @@
       async function cargarRutas() {
         const [rutas, rc] = await Promise.all([
           sb.from("rutas").select("id,nombre").order("nombre"),
-          sb.from("ruta_calles").select("ruta_id")
+          sb.from("ruta_tramos").select("ruta_id")
         ]);
         if (rutas.error || rc.error) return msg((rutas.error || rc.error).message, true);
         infoRutas = {};
-        rutas.data.forEach((r) => { infoRutas[r.id] = { nombre: r.nombre, nCalles: rc.data.filter((x) => x.ruta_id === r.id).length }; });
+        rutas.data.forEach((r) => { infoRutas[r.id] = { nombre: r.nombre, nTramos: rc.data.filter((x) => x.ruta_id === r.id).length }; });
         const sel = $("#ruta");
         sel.textContent = "";
         rutas.data.forEach((r) => { const o = document.createElement("option"); o.value = r.id; o.textContent = r.nombre; sel.append(o); });
@@ -91,7 +91,7 @@
 
       function pintar() {
         const r = infoRutas[rutaId];
-        $("#estado-actual").textContent = r ? r.nombre + " · " + r.nCalles + " calles" : "Sin ruta";
+        $("#estado-actual").textContent = r ? r.nombre + " · " + r.nTramos + " tramos" : "Sin ruta";
       }
 
       $("#login").addEventListener("submit", async (e) => {

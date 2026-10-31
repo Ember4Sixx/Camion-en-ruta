@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Pruebas de data/calles.geojson y data/zona.geojson (tramos y carriles).
+Pruebas de data/tramos.geojson, data/calles.json y data/zona.geojson (tramos, carriles y las dos tablas).
 Uso:  python tests/pruebas_tramos.py        (desde la carpeta del proyecto)
 """
 import json
@@ -9,7 +9,8 @@ import sys
 from pathlib import Path
 
 raiz = Path(__file__).resolve().parent.parent
-calles = json.loads((raiz / "data/calles.geojson").read_text(encoding="utf-8"))["features"]
+calles = json.loads((raiz / "data/tramos.geojson").read_text(encoding="utf-8"))["features"]
+catalogo = json.loads((raiz / "data/calles.json").read_text(encoding="utf-8"))
 zona = json.loads((raiz / "data/zona.geojson").read_text(encoding="utf-8"))["features"][0]["geometry"]["coordinates"][0]
 ok = 0
 
@@ -28,9 +29,19 @@ m = lambda p: (p[0] * KX, p[1] * KY)
 largo = lambda l: sum(math.dist(m(l[i]), m(l[i + 1])) for i in range(len(l) - 1))
 P = lambda f: f["properties"]
 
-print("calles.geojson · tramos y carriles")
+print("tramos.geojson · tramos y carriles")
 ids = [P(f)["id"] for f in calles]
 prueba("ids únicos", len(ids) == len(set(ids)))
+
+# las dos tablas: calles (catálogo) y tramos
+cat = {c["id"]: c for c in catalogo}
+prueba("calles.json: una fila por calle, sin repetidas", len(cat) == len(catalogo))
+prueba("cada tramo apunta a una calle del catálogo y su nombre coincide", all(P(f)["calle_id"] in cat and cat[P(f)["calle_id"]]["nombre"] == P(f)["calle"] for f in calles))
+prueba("cada calle del catálogo tiene al menos un tramo y su cuenta es correcta",
+       all(c["tramos"] == sum(1 for f in calles if P(f)["calle_id"] == c["id"]) >= 1 for c in catalogo))
+sql = (raiz / "db/zona.sql").read_text(encoding="utf-8")
+prueba("zona.sql carga calles, tramos y ruta_tramos", all(x in sql for x in ("insert into calles", "insert into tramos", "insert into ruta_tramos")))
+prueba("zona.sql tiene un insert por calle y por tramo", sql.count("'::jsonb)") >= len(calles))
 prueba("órdenes 1..N sin repetir", sorted(P(f)["orden"] for f in calles) == list(range(1, len(calles) + 1)))
 prueba("todo es LineString con 2+ puntos", all(f["geometry"]["type"] == "LineString" and len(f["geometry"]["coordinates"]) >= 2 for f in calles))
 prueba("ningún tramo es un pedacito (mínimo 20 m)", all(largo(f["geometry"]["coordinates"]) >= 20 for f in calles),

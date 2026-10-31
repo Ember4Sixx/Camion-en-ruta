@@ -19,14 +19,16 @@ camion-en-ruta/
 │   ├── data-source.js   Único archivo que lee datos (JSON o Supabase)
 │   ├── map.js           Mapa Leaflet
 │   └── main.js          Lista de calles, horarios, panel demo, tiempo real
-├── tests/pruebas.js     Pruebas de la lógica (node tests/pruebas.js)
+├── tests/               Pruebas: node tests/pruebas.js · python tests/pruebas_tramos.py
 ├── data/                Datos del modo "json" (se generan con db/osm_a_zona.py)
 └── db/
     ├── schema.sql       Tablas, seguridad y tiempo real (Supabase)
-    ├── consulta_overpass.txt  Consulta para bajar de OpenStreetMap las 16 calles del proyecto
+    ├── consulta_overpass.txt  Consulta para bajar de OpenStreetMap las calles de la zona
     ├── osm_a_zona.py    Delimita el perímetro (Sáenz Peña, México, Virrey Toledo, Túpac Amaru) y deja las calles de adentro
-    ├── geojson_a_sql.py Convierte un calles.geojson hecho a mano en SQL
+    ├── tramos.py        Corta las calles en tramos y separa los carriles de las avenidas de doble vía
+    ├── geojson_a_sql.py Convierte un tramos.geojson hecho a mano en SQL
     ├── migracion_01_quitar_recorridos.sql  Para bases creadas con el esquema anterior
+    ├── migracion_03_calles_y_tramos.sql    Separa `calles` (catálogo) y `tramos` (pedazos)
     └── horarios.sql     Plantilla para cargar el horario oficial (sin datos)
 ```
 

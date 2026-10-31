@@ -25,7 +25,7 @@
   $("#anio").textContent = new Date().getFullYear();
   $("#aviso-datos").hidden = !cfg.datosDemostracion;
 
-  // ---------- Lista lateral (una fila por calle; sus tramos se despliegan) ----------
+  // ---------- Lista lateral: una fila por CALLE (tabla `calles`); sus tramos (tabla `tramos`) se despliegan ----------
   const abiertas = new Set();   // calles desplegadas: se conservan cuando la lista se vuelve a dibujar
 
   function crearBadge(estado, texto) {
@@ -40,7 +40,7 @@
     ul.textContent = "";
     const grupos = new Map();   // nombre de la calle -> sus tramos
     calles.features.forEach((f) => {
-      const base = Estado.nombreBase(f.properties.nombre);
+      const base = f.properties.calle || Estado.nombreBase(f.properties.nombre);   // la calle completa
       if (!grupos.has(base)) grupos.set(base, []);
       grupos.get(base).push(f);
     });

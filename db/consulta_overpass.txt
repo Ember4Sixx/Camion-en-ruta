@@ -1,21 +1,16 @@
 // Consulta para https://overpass-turbo.eu  (OpenStreetMap)
-// Trae SOLO las calles del proyecto (las 16) dentro del distrito José Leonardo Ortiz.
+// Trae TODAS las vías con nombre en un recuadro que cubre la zona ampliada (con margen).
+// Se trae todo (y no solo las 32 calles) para poder ver cómo se llama cada calle en OpenStreetMap,
+// por ejemplo "Los Quipus" o "Jirón El Cabildo", y emparejarla con la lista del proyecto.
+//
 // 1) Pégala en el cuadro de texto de la izquierda.
-// 2) Toca "Ejecutar".
+// 2) Toca "Ejecutar" (arriba a la izquierda).
 // 3) Menú "Exportar" > "datos" > "descargar como JSON sin procesar" (raw OSM data).
 // 4) Guarda el archivo como data/osm_jlo.json y ejecuta:  python db/osm_a_zona.py data/osm_jlo.json
 //
-// El filtro por nombre ignora mayúsculas (",i"). Si el script avisa que una calle "NO ENCONTRADA",
-// busquen en https://www.openstreetmap.org cómo se llama exactamente en el mapa y agreguen esa variante aquí.
+// El recuadro está en el orden (sur, oeste, norte, este). Si alguna calle del proyecto queda fuera,
+// agranden un poco los números.
 
-[out:json][timeout:120];
-area["boundary"="administrative"]["name"="José Leonardo Ortiz"]->.jlo;
-(
-  way(area.jlo)["highway"]["name"~"Sáenz Peña|Saenz Pe|México|Mexico|Cacique Cinto|Cacique Collique|Caminos del Inca|Virrey Toledo|Gonzalo Pizarro|Hernando de Soto|Chongoyape|Castañeda Iparraguirre|Atusparia|Perú|Peru|Mariátegui|Mariategui|Unión|Union|San Martín|San Martin|Túpac Amaru|Tupac Amaru",i];
-);
+[out:json][timeout:180];
+way["highway"]["name"](-6.7650,-79.8480,-6.7480,-79.8250);
 out geom;
-
-// Si "area" no encuentra el distrito, reemplacen el bloque de arriba por un recuadro
-// (sur, oeste, norte, este; ajusten alrededor de la zona):
-//   way["highway"]["name"~"...mismos nombres...",i](-6.780,-79.860,-6.740,-79.815);
-//   out geom;
