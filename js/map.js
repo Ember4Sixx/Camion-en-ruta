@@ -28,9 +28,14 @@
     if (b.isValid()) mapa.fitBounds(b.pad(0.1));
   }
 
-  function estilo(estado) {
+  // Los carriles de una avenida de doble vía están a ~8 m uno del otro: van más finos y con extremos rectos
+  // para que se vean como dos líneas independientes. El nombre del tramo trae "· sentido …" (db/tramos.py).
+  const esCarril = (id) => /· sentido /.test(nombrePorId[id] || "");
+
+  function estilo(estado, id) {
     const e = cfg.estados[estado] || cfg.estados.gris;
-    return { color: e.color, weight: 7, opacity: 0.95, lineCap: "round" };
+    const carril = esCarril(id);
+    return { color: e.color, weight: carril ? 4 : 7, opacity: 0.95, lineCap: carril ? "butt" : "round" };
   }
 
   function textoPopup(id) {
@@ -47,7 +52,7 @@
   function pintarCalles(geojson, estados) {
     if (capaCalles) capaCalles.remove();
     capaCalles = L.geoJSON(geojson, {
-      style: (f) => estilo((estados && estados[f.properties.id]) || "gris"),
+      style: (f) => { nombrePorId[f.properties.id] = f.properties.nombre; return estilo((estados && estados[f.properties.id]) || "gris", f.properties.id); },
       onEachFeature: (f, capa) => {
         const id = f.properties.id;
         capasPorId[id] = capa;
@@ -67,7 +72,7 @@
     Object.keys(capasPorId).forEach((id) => {
       const nuevo = estados[id] || "gris";
       estadoPorId[id] = nuevo;
-      capasPorId[id].setStyle(estilo(nuevo));
+      capasPorId[id].setStyle(estilo(nuevo, id));
     });
   }
 

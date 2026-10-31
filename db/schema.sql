@@ -54,6 +54,19 @@ create table posicion_camion (
   actualizado  timestamptz not null default now()
 );
 
+-- Avance REAL del camión por calle (lo escribe la app del conductor, carpeta conductor/).
+-- estado: 'verde' = el camión está ahí, 'negro' = la recorrió casi completa, 'gris' = aún no.
+-- El mapa solo usa las filas de hoy. Ver db/migracion_02_avance_calles.sql.
+create table avance_calles (
+  ruta_id      text not null references rutas(id)  on delete cascade,
+  calle_id     text not null references calles(id) on delete cascade,
+  estado       text not null default 'gris' check (estado in ('gris', 'verde', 'negro')),
+  avance       real not null default 0,
+  tramos       text not null default '',
+  actualizado  timestamptz not null default now(),
+  primary key (ruta_id, calle_id)
+);
+
 -- ---------- Seguridad (RLS) ----------
 -- Cualquiera puede LEER (la página es pública). Solo usuarios con sesión pueden ESCRIBIR.
 alter table zonas           enable row level security;
@@ -62,6 +75,7 @@ alter table calles          enable row level security;
 alter table ruta_calles     enable row level security;
 alter table horarios        enable row level security;
 alter table posicion_camion enable row level security;
+alter table avance_calles   enable row level security;
 
 create policy "lectura publica" on zonas           for select using (true);
 create policy "lectura publica" on rutas           for select using (true);
@@ -69,6 +83,7 @@ create policy "lectura publica" on calles          for select using (true);
 create policy "lectura publica" on ruta_calles     for select using (true);
 create policy "lectura publica" on horarios        for select using (true);
 create policy "lectura publica" on posicion_camion for select using (true);
+create policy "lectura publica" on avance_calles   for select using (true);
 
 create policy "escritura con sesion" on zonas           for all to authenticated using (true) with check (true);
 create policy "escritura con sesion" on rutas           for all to authenticated using (true) with check (true);
@@ -76,7 +91,9 @@ create policy "escritura con sesion" on calles          for all to authenticated
 create policy "escritura con sesion" on ruta_calles     for all to authenticated using (true) with check (true);
 create policy "escritura con sesion" on horarios        for all to authenticated using (true) with check (true);
 create policy "escritura con sesion" on posicion_camion for all to authenticated using (true) with check (true);
+create policy "escritura con sesion" on avance_calles   for all to authenticated using (true) with check (true);
 
 -- ---------- Tiempo real ----------
 -- Hace que Supabase avise a la página cuando cambia la posición del camión.
 alter publication supabase_realtime add table posicion_camion;
+alter publication supabase_realtime add table avance_calles;

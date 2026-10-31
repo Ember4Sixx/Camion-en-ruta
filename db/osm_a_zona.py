@@ -7,7 +7,9 @@ Calles del proyecto   : las 16 de CALLES_PROYECTO (más abajo). Cualquier otra c
 
 Entrada : exportación JSON de Overpass (ver db/consulta_overpass.txt), con geometría.
 Salida  : data/zona.geojson      polígono del perímetro
-          data/calles.geojson    una calle por nombre (LineString o MultiLineString), con id, nombre, ruta, tipo, orden
+          data/calles.geojson    TRAMOS de calle (LineString), con id, nombre, calle, carril, ruta, tipo, orden.
+                                 Cada calle se corta donde otras la cruzan (db/tramos.py) y las avenidas de doble vía
+                                 tienen una línea independiente por carril ("sentido este", "sentido oeste"…).
           data/horarios.json     la ruta SIN horario (el horario oficial se carga cuando se confirme)
           db/zona.sql            limpia los datos anteriores y carga zonas, rutas, calles y ruta_calles en Supabase
           data/calles_sin_nombre.txt   cantidad de tramos sin nombre que quedaron fuera
@@ -30,6 +32,9 @@ import sys
 import unicodedata
 from collections import defaultdict
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from tramos import construir_tramos  # noqa: E402  (seccionado en tramos y carriles)
 
 TOL_M = 15  # tolerancia (m) para considerar que un punto está sobre el borde de la zona
 
@@ -173,6 +178,8 @@ def main():
     ap.add_argument("--ruta", default="Ruta 1")
     ap.add_argument("--tramo-minimo", type=float, default=30.0,
                     help="metros: se descartan los trozos recortados más cortos (calles que solo rozan la zona)")
+    ap.add_argument("--tramo-corte-min", type=float, default=25.0,
+                    help="metros: no se corta una calle si el tramo resultante quedaría más corto que esto")
     ap.add_argument("--tolerancia", type=float, default=TOL_M,
                     help="metros de tolerancia para considerar que una calle está sobre el borde de la zona")
     a = ap.parse_args()
@@ -192,6 +199,7 @@ def main():
     variantes = defaultdict(set)                     # nombre oficial -> nombres distintos que tiene en OSM
     tramos = []  # (nombre, [(x,y)...], [(lng,lat)...], osm_id)
     sin_nombre = 0
+    sentido_via = {}   # id OSM -> 1 si es de un solo sentido (lista ya en el sentido de la marcha), 0 si no
     for e in elems:
         nom = (e.get("tags") or {}).get("name")
         if not nom:
@@ -201,6 +209,10 @@ def main():
             continue
         variantes[canon[clave(nom)]].add(nom)
         ll = [(p["lon"], p["lat"]) for p in e["geometry"]]
+        ow = (e.get("tags") or {}).get("oneway")
+        if ow == "-1":
+            ll = ll[::-1]                      # se deja en el sentido real de la marcha
+        sentido_via[e["id"]] = 1 if ow in ("yes", "true", "1", "-1") else 0
         tramos.append((nom, [P.xy(*p) for p in ll], ll, e["id"]))
 
     # --- localizar las 4 calles límite ---
@@ -285,6 +297,7 @@ def main():
                    for q1, q2 in zip(run, run[1:]))
 
     por_nombre = defaultdict(list)
+    sentido_corrida = {}   # id(corrida) -> sentido de la vía
     for nom, xy, ll, oid in tramos:
         run = []
         for i in range(len(xy) - 1):
@@ -305,9 +318,11 @@ def main():
                 else:
                     if len(run) >= 2 and largo_m(run) >= a.tramo_minimo:
                         por_nombre[canon[clave(nom)]].append(run)
+                        sentido_corrida[id(run)] = sentido_via[oid]
                     run = []
         if len(run) >= 2 and largo_m(run) >= a.tramo_minimo:
             por_nombre[canon[clave(nom)]].append(run)
+            sentido_corrida[id(run)] = sentido_via[oid]
 
     nombre_lim_zona = set()
     for k, comp in zip(claves, combo):
@@ -322,21 +337,34 @@ def main():
         pts = [pt for l in lineas for pt in l]
         return sum(p[1] for p in pts) / len(pts)
 
-    ordenadas = sorted(por_nombre.items(), key=lambda kv: -centro_lat(kv[1]))
-    usados = defaultdict(int)
+    # --- seccionar en tramos entre intersecciones y separar carriles (db/tramos.py) ---
+    piezas = construir_tramos(
+        {nom: [{"ll": r, "sentido": sentido_corrida[id(r)]} for r in lineas] for nom, lineas in por_nombre.items()},
+        P, tramo_min=a.tramo_corte_min)
+
+    # Orden de recorrido PROVISIONAL. Las calles van de norte a sur y, dentro de cada una, los tramos en el sentido
+    # de la marcha. Los carriles "de regreso" de las avenidas de doble vía se dejan al final de la ruta, para que
+    # el amarillo ("próximas N calles") no ilumine los dos carriles a la vez.
+    lat_calle = {nom: centro_lat(lineas) for nom, lineas in por_nombre.items()}
+    cadenas_calle = defaultdict(set)
+    for t in piezas:
+        cadenas_calle[t["calle"]].add((t["cadena"], t["carril"] or ""))
+    primer_carril = {c: min(v)[0] for c, v in cadenas_calle.items()}   # cadena que va en la 1.ª pasada
+
+    def clave_orden(t):
+        vuelta = 1 if (t["cadena"] != primer_carril[t["calle"]] and t["carril"]) else 0
+        return (vuelta, -lat_calle[t["calle"]], t["cadena"], t["k"])
+
+    piezas.sort(key=clave_orden)
     features, filas_ruta = [], []
-    for i, (nom, lineas) in enumerate(ordenadas, start=1):
-        cid = slug(nom)
-        usados[cid] += 1
-        if usados[cid] > 1:
-            cid += f"-{usados[cid]}"
-        tipo = "limite" if nom in nombre_lim_zona else "interior"
-        geom = ({"type": "LineString", "coordinates": [[x, y] for x, y in lineas[0]]} if len(lineas) == 1
-                else {"type": "MultiLineString", "coordinates": [[[x, y] for x, y in l] for l in lineas]})
+    for i, t in enumerate(piezas, start=1):
+        tipo = "limite" if t["calle"] in nombre_lim_zona else "interior"
+        geom = {"type": "LineString", "coordinates": t["coords"]}
         features.append({"type": "Feature",
-                         "properties": {"id": cid, "nombre": nom, "ruta": a.ruta, "tipo": tipo, "orden": i},
+                         "properties": {"id": t["id"], "nombre": t["nombre"], "calle": t["calle"],
+                                        "carril": t["carril"] or "", "ruta": a.ruta, "tipo": tipo, "orden": i},
                          "geometry": geom})
-        filas_ruta.append((cid, i))
+        filas_ruta.append((t["id"], i))
 
     base = Path(a.salida)
     (base / "data").mkdir(parents=True, exist_ok=True)
@@ -351,7 +379,7 @@ def main():
               "_aviso": "Calles extraídas de OpenStreetMap con db/osm_a_zona.py. El orden de recorrido (orden) es PROVISIONAL.",
               "features": features}
     (base / "data/calles.geojson").write_text(json.dumps(calles, ensure_ascii=False, indent=1), encoding="utf-8")
-    nombres_zona = [f["properties"]["nombre"] for f in features]
+    nombres_zona = list(dict.fromkeys(f["properties"]["calle"] for f in features))   # una vez cada calle
     (base / "data/horarios.json").write_text(json.dumps(
         {"nota": "El horario oficial de esta zona aún está pendiente de confirmar con la municipalidad.",
          "rutas": [{"ruta": a.ruta, "dias": "—", "horario": "—", "calles": nombres_zona,
@@ -366,6 +394,7 @@ def main():
     sql = ["-- Generado por db/osm_a_zona.py (zona delimitada + calles interiores).",
            "-- Ejecutar DESPUÉS de db/schema.sql. REEMPLAZA los datos anteriores de zonas, rutas, calles y ruta_calles",
            "-- (incluidos los de ejemplo). No toca horarios de la ruta cargada ni la tabla posicion_camion.", "",
+           "begin;", "",
            "delete from zonas;", "delete from ruta_calles;", "delete from calles;",
            f"delete from rutas where id <> {q(a.ruta)};", "",
            "insert into zonas (id, nombre, geom) values",
@@ -378,11 +407,16 @@ def main():
     sql.append("insert into ruta_calles (ruta_id, calle_id, orden) values")
     sql.append(",\n".join(f"  ({q(a.ruta)}, {q(c)}, {o})" for c, o in filas_ruta))
     sql.append("on conflict (ruta_id, calle_id) do update set orden = excluded.orden;\n")
+    sql.append("commit;")
     (base / "db/zona.sql").write_text("\n".join(sql) + "\n", encoding="utf-8")
 
-    lim = [f['properties']['nombre'] for f in features if f['properties']['tipo'] == 'limite']
+    lim = sorted({f['properties']['calle'] for f in features if f['properties']['tipo'] == 'limite'})
     print(f"Calles límite incluidas: {lim}")
-    print(f"Calles dentro de la zona: {len(features)} (interiores: {len(features) - len(lim)})")
+    print(f"Tramos de calle dentro de la zona: {len(features)}, de {len(nombres_zona)} calles")
+    for c in nombres_zona:
+        ts = [f for f in features if f["properties"]["calle"] == c]
+        print(f"  {c}: {len(ts)} tramo(s)" + (f" · carriles: {sorted({f['properties']['carril'] for f in ts if f['properties']['carril']})}"
+                                              if any(f["properties"]["carril"] for f in ts) else ""))
     print(f"Tramos sin nombre fuera de la lista: {sin_nombre}")
     print("Nombres que tienen en OSM las calles del proyecto (revisen que sean las correctas):")
     for n in CALLES_PROYECTO:

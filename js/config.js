@@ -39,7 +39,7 @@ window.APP_CONFIG = {
 
   // GPS del camión (fuente supabase). En true: se dibuja el camión en el mapa y los colores
   // de las calles salen de su posición; en false, los colores salen solo del horario.
-  gpsActivo: false,
+     gpsActivo: true,
 
   // Segundos máximos de antigüedad de la posición del camión para considerarla vigente.
   // Si es más vieja, no se dibuja el camión y los colores vuelven a calcularse por horario.
@@ -47,7 +47,7 @@ window.APP_CONFIG = {
 
   // Textos y colores de los 4 estados. Los colores deben coincidir con css/styles.css.
   estados: {
-    gris:     { etiqueta: "Aún no pasa",   descripcion: "El camión todavía no ha pasado",  color: "#8a8f98" },
+    gris:     { etiqueta: "Aún no pasa",   descripcion: "El camión todavía no ha pasado",  color: "#a9aeb6" },
     amarillo: { etiqueta: "Próximo",       descripcion: "El camión está próximo",          color: "#f2c200" },
     verde:    { etiqueta: "Recolectando",  descripcion: "El camión está recolectando",     color: "#2e9e5b" },
     negro:    { etiqueta: "Finalizado",    descripcion: "La recolección ha finalizado",    color: "#1a1a1a" }

@@ -12,7 +12,7 @@
   --borde: #d6e2da;
 
   /* Colores de estado de recolección (deben coincidir con js/config.js) */
-  --estado-gris: #8a8f98;
+  --estado-gris: #a9aeb6;
   --estado-amarillo: #f2c200;
   --estado-verde: #2e9e5b;
   --estado-negro: #1a1a1a;
@@ -110,7 +110,7 @@ p { margin: 0 0 1em; }
 .street-btn { display: flex; width: 100%; justify-content: space-between; align-items: center; gap: .6rem; background: none; border: 0; font: inherit; text-align: left; padding: .65rem .2rem; cursor: pointer; }
 .street-btn:hover { background: var(--fondo-alt); }
 .badge { font-size: .78rem; font-weight: 700; padding: .15rem .6rem; border-radius: 999px; white-space: nowrap; }
-.badge-gris { background: var(--estado-gris); color: #fff; }
+.badge-gris { background: var(--estado-gris); color: #1a1a1a; }
 .badge-amarillo { background: var(--estado-amarillo); color: #1a1a1a; }
 .badge-verde { background: var(--estado-verde); color: #fff; }
 .badge-negro { background: var(--estado-negro); color: #fff; }

@@ -13,10 +13,12 @@
      camion()    -> { lat, lng, actualizado } o null (null si la posición es vieja)
      suscribir(cb) (opcional) -> llama cb() cuando llega una posición nueva del camión
 
-   Cómo se calcula el estado de cada ruta (no hay tabla de "recorridos"):
+   Cómo se calcula el estado de cada ruta:
      1. Base: se estima con la hora y la tabla `horarios` (Estado.estimarPorHorario).
-     2. Si hay una posición del camión reciente (cfg.gpsActivo y no más vieja que
-        cfg.gpsVigenciaSegundos), manda el GPS: se busca la calle más cercana de la ruta.
+     2. Con GPS (cfg.gpsActivo): manda el AVANCE REAL que guarda la app del conductor en la
+        tabla `avance_calles` (qué calles recorrió de verdad hoy). Verde = el camión está ahí,
+        negro = la recorrió casi completa, gris = aún no. No se usa el orden de las calles ni
+        se marca amarillo, porque el orden oficial de la ruta todavía no se conoce.
    ========================================================== */
 (function () {
   const cfg = window.APP_CONFIG;
@@ -32,31 +34,18 @@
   // Un Feature puede traer LineString o MultiLineString: siempre devolvemos una lista de tramos.
   const lineasDe = (g) => (g.type === "MultiLineString" ? g.coordinates : [g.coordinates]);
 
-  // Último orden conocido por ruta (en memoria del navegador) para que el camión no "retroceda" por GPS.
-  const ultimoOrden = {};
-
-  // Combina horario + GPS para una ruta. Devuelve { fase, orden, origen, gpsActualizado }.
-  //   callesRuta: [{id, orden}] ; lineasPorCalle: { id: [tramos] } ; horariosRuta: [{dias, hora_inicio, hora_fin}]
-  //   pos: {lat, lng, actualizado} o undefined
-  function estadoDeRuta(ahora, rutaId, callesRuta, lineasPorCalle, horariosRuta, pos) {
+  // Estimación por horario de una ruta. Devuelve { fase, orden, origen }.
+  //   callesRuta: [{id, orden}] ; horariosRuta: [{dias, hora_inicio, hora_fin}]
+  function estadoPorHorario(ahora, callesRuta, horariosRuta) {
     const e = Estado.estimarPorHorario(ahora, horariosRuta, callesRuta.length, cfg.avisoMinutos);
-    let res = { fase: e.fase, orden: e.orden, origen: "horario", gpsActualizado: null };
-
-    const fresca = pos && ahora - new Date(pos.actualizado) <= vigenciaMs();
-    if (!cfg.gpsActivo || !fresca) { delete ultimoOrden[rutaId]; return res; }
-
-    const g = Estado.indicePorGPS(
-      { lat: pos.lat, lng: pos.lng },
-      callesRuta.map((c) => ({ id: c.id, orden: c.orden, lineas: lineasPorCalle[c.id] || [] })),
-      ultimoOrden[rutaId] || 0, cfg.umbralGpsMetros);
-
-    if (g) ultimoOrden[rutaId] = g.orden;
-    if (ultimoOrden[rutaId]) {
-      // Si el camión se salió un momento de la ruta, se conserva la última calle conocida.
-      res = { fase: "en_curso", orden: ultimoOrden[rutaId], origen: "gps", gpsActualizado: pos.actualizado };
-    }
-    return res;
+    return { fase: e.fase, orden: e.orden, origen: "horario" };
   }
+
+  // Fecha local "AAAA-MM-DD" (el avance de las calles vale solo para el día de hoy).
+  const diaLocal = (d) => {
+    const x = new Date(d);
+    return x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0");
+  };
 
   function resumir(estados, origenes, gpsFechas) {
     const fechas = gpsFechas.filter(Boolean).sort();
@@ -83,7 +72,7 @@
           .filter((f) => f.properties.ruta === r.ruta)
           .sort((a, b) => (a.properties.orden || 0) - (b.properties.orden || 0));
         const callesRuta = feats.map((f, i) => ({ id: f.properties.id, orden: f.properties.orden || i + 1 }));
-        const e = estadoDeRuta(ahora, r.ruta, callesRuta, {}, r.programa || [], null);
+        const e = estadoPorHorario(ahora, callesRuta, r.programa || []);
         Object.assign(estados, Estado.estadosDeRuta(callesRuta, e.fase, e.orden, r.proximas));
         origenes.add(e.origen);
       });
@@ -137,18 +126,33 @@
       async estados() {
         const s = await cargarEstaticos();
         const pos = chk(await sb.from("posicion_camion").select("*"));
-        const lineasPorCalle = {};
-        s.calles.forEach((c) => { lineasPorCalle[c.id] = lineasDe(c.geom); });
+        let avance = [];
+        if (cfg.gpsActivo) {
+          // Si la tabla aún no existe (falta db/migracion_02_avance_calles.sql), se sigue sin ella.
+          const r = await sb.from("avance_calles").select("ruta_id,calle_id,estado,actualizado");
+          if (r.error) console.warn("Sin tabla avance_calles:", r.error.message);
+          else avance = r.data || [];
+        }
 
         const ahora = new Date();
+        const hoy = diaLocal(ahora);
         const estados = {}, origenes = new Set(), gpsFechas = [];
         s.rutas.forEach((ruta) => {
           const callesRuta = callesDeRuta(s, ruta.id).map((x) => ({ id: x.calle_id, orden: x.orden }));
-          const e = estadoDeRuta(ahora, ruta.id, callesRuta, lineasPorCalle,
-            s.horarios.filter((h) => h.ruta_id === ruta.id), pos.find((p) => p.ruta_id === ruta.id));
-          Object.assign(estados, Estado.estadosDeRuta(callesRuta, e.fase, e.orden, ruta.proximas));
-          origenes.add(e.origen);
-          gpsFechas.push(e.gpsActualizado);
+          const p = pos.find((x) => x.ruta_id === ruta.id);
+          const fresca = !!p && ahora - new Date(p.actualizado) <= vigenciaMs();
+          const filasHoy = avance.filter((f) => f.ruta_id === ruta.id && diaLocal(f.actualizado) === hoy);
+
+          if (cfg.gpsActivo && (filasHoy.length || fresca)) {
+            // Avance real del camión (lo escribe la app del conductor).
+            Object.assign(estados, Estado.estadosPorAvance(callesRuta, filasHoy, fresca));
+            origenes.add("gps");
+            gpsFechas.push(fresca ? p.actualizado : filasHoy.map((f) => f.actualizado).sort().pop());
+          } else {
+            const e = estadoPorHorario(ahora, callesRuta, s.horarios.filter((h) => h.ruta_id === ruta.id));
+            Object.assign(estados, Estado.estadosDeRuta(callesRuta, e.fase, e.orden, ruta.proximas));
+            origenes.add(e.origen);
+          }
         });
         return resumir(estados, origenes, gpsFechas);
       },
@@ -173,7 +177,8 @@
               ruta: r.nombre,
               dias: hs.map((h) => h.dias.map((d) => DIAS[d]).join(", ")).join(" / ") || "—",
               horario: hs.map((h) => h.hora_inicio.slice(0, 5) + " – " + h.hora_fin.slice(0, 5)).join(" / ") || "—",
-              calles: callesDeRuta(s, r.id).map((x) => nombre[x.calle_id])
+              // Cada calle una sola vez (sus tramos se llaman "Calle X · entre A y B").
+              calles: [...new Set(callesDeRuta(s, r.id).map((x) => String(nombre[x.calle_id]).split(" · ")[0]))]
             };
           })
         };
@@ -186,10 +191,11 @@
         return { lat: r[0].lat, lng: r[0].lng, actualizado: r[0].actualizado };
       },
 
-      // Tiempo real: Supabase avisa cuando cambia la posición del camión.
+      // Tiempo real: Supabase avisa cuando cambia la posición del camión o el avance de las calles.
       suscribir(callback) {
         sb.channel("camion-en-ruta")
           .on("postgres_changes", { event: "*", schema: "public", table: "posicion_camion" }, callback)
+          .on("postgres_changes", { event: "*", schema: "public", table: "avance_calles" }, callback)
           .subscribe();
       }
     };

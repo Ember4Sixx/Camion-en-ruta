@@ -1,0 +1,17 @@
+{
+  "name": "Camión En Ruta · Conductor",
+  "short_name": "Conductor",
+  "description": "Envía la ubicación del camión recolector al mapa de Camión En Ruta.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f1f7f3",
+  "theme_color": "#14532d",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

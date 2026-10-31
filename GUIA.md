@@ -38,7 +38,11 @@ Cada ruta tiene sus calles en orden (1, 2, 3…). Solo hay que saber en qué cal
 La fase y el `orden_actual` salen de dos fuentes (se calculan en `js/data-source.js`, no se guardan en la base de datos):
 
 1. **horario:** se reparte el horario de la tabla `horarios` en partes iguales entre las calles. Es una estimación y la página lo avisa; no la presenten como tiempo real. Si no hay horario cargado, todas las calles quedan en gris.
-2. **gps:** si `gpsActivo` está en `true` y hay una posición del camión de hace menos de `gpsVigenciaSegundos` (120 por defecto), manda el GPS: se busca la calle más cercana de la ruta (si está a menos de `umbralGpsMetros`, 40 m por defecto). El orden nunca retrocede mientras llegue GPS vigente. Si la posición se vuelve vieja, se vuelve al horario.
+2. **gps (avance real):** si `gpsActivo` está en `true`, manda lo que el camión **recorrió de verdad**, no el orden de la lista. La app del conductor (`conductor/`) divide cada calle en puntos de control cada 8 m, marca los que el camión pasa a menos de 15 m y lo guarda en la tabla `avance_calles`:
+   - **verde**: el camión está ahora en esa calle;
+   - **negro**: la recorrió en un 80 % o más y ya salió (si solo cruzó una esquina, sigue gris);
+   - **gris**: todavía no la recorre.
+   Con GPS **no se usa amarillo**, porque sin el orden oficial de la ruta no se sabe qué calle sigue. Si la posición del camión tiene más de `gpsVigenciaSegundos` (120), el camión no se dibuja y la calle que estaba en verde se muestra gris; lo terminado sigue en negro. El avance solo vale para el día de hoy.
 
 Las pruebas de esta lógica están en `tests/pruebas.js` (`node tests/pruebas.js`). Si cambian el algoritmo, vuelvan a correrlas.
 
@@ -132,14 +136,16 @@ Es la base del sistema y no requiere que nadie toque botones: la página calcula
 ## Paso 8 · GPS
 
 **Fase A: teléfono en el camión (sin comprar equipos).**
-1. Pongan `gpsActivo: true` en `js/config.js`.
-2. En el teléfono del camión, abre la página `admin.html` **publicada** (el navegador solo permite ubicación con HTTPS), inicia sesión, elige la ruta y toca **Compartir ubicación**. Guarda la posición en `posicion_camion` cada 5 segundos.
-3. El camión 🚛 aparece en el mapa y las calles cambian de color según la calle más cercana. Si la posición deja de llegar por más de `gpsVigenciaSegundos`, el camión desaparece del mapa y los colores vuelven al horario.
+1. En Supabase, SQL Editor: ejecuten `db/migracion_02_avance_calles.sql` (crea la tabla `avance_calles`). Las bases nuevas ya la tienen en `db/schema.sql`.
+2. Pongan `gpsActivo: true` en `js/config.js`.
+3. En el teléfono del camión, abre la app del conductor **publicada**: `https://USUARIO.github.io/camion-en-ruta/conductor/` (el navegador solo permite ubicación con HTTPS). Inicia sesión, elige la ruta y toca **Iniciar recorrido**. Cada 5 segundos guarda la posición en `posicion_camion` y el avance de las calles en `avance_calles`. En "Avance por calle" se ve el porcentaje recorrido de cada calle, y el botón "Borrar el avance de hoy" sirve para empezar de cero en las pruebas.
+4. El camión 🚛 aparece en el mapa y las calles cambian de color según lo recorrido. Si la posición deja de llegar por más de `gpsVigenciaSegundos`, el camión desaparece del mapa.
+   El botón **Compartir ubicación** de `admin.html` solo manda la posición (dibuja el camión, pero no colorea calles); para colorear usen la app del conductor.
 4. Necesitan permiso del conductor y de quien administre el camión para usar su ubicación. Mantener la pantalla encendida y la página abierta es necesario; los navegadores pausan la ubicación en segundo plano.
 
 **Fase B: dispositivo GPS dedicado.** Si la municipalidad ya tiene GPS en los camiones, hay que preguntarles si comparten esos datos. Se conectaría escribiendo la posición en la tabla `posicion_camion` desde un servicio propio; la página no necesita cambios.
 
-**Limitaciones de la Fase A.** El cálculo de la calle se hace en el navegador de cada visitante y el último orden conocido vive solo en la memoria de ese navegador; con señal imprecisa el camión puede "saltar" entre calles cercanas y dos visitantes pueden ver cosas distintas. Para algo más estable, el siguiente paso es calcular la calle actual en un servicio propio (por ejemplo, una Edge Function de Supabase) y guardarla en una tabla.
+**Limitaciones de la Fase A.** El avance lo calcula el teléfono del conductor, así que solo cuenta mientras la app está abierta y en primer plano. Las lecturas del GPS con precisión peor que 35 m no cuentan para el avance. Si el camión recorre una calle por partes en distintos momentos, el avance se va sumando durante el día.
 
 ## Paso 9 · Publicar y poner dominio
 
@@ -164,3 +170,26 @@ Es la base del sistema y no requiere que nadie toque botones: la página calcula
 - El orden real de recorrido del camión (`ruta_calles.orden`).
 - Probar el GPS en un teléfono real con la página publicada (HTTPS).
 - Antes de entregar: `modoDemo: false` y `datosDemostracion: false`.
+
+---
+
+## Tramos, carriles y cómo cambiar rutas, orden y horarios
+
+**Tramos.** `db/osm_a_zona.py` ya no guarda cada calle completa: la corta en **tramos** donde otra calle la cruza o termina en ella (módulo `db/tramos.py`). Cada tramo es una fila de la tabla `calles` con su propio `id` y nombre, por ejemplo `calle-union-2` = «Calle Unión · entre San Martín y José Carlos Mariátegui». Así el mapa puede iluminar solo la parte por donde pasa el camión. Una calle sin cruces dentro de la zona queda en un solo tramo.
+
+**Carriles.** Las avenidas de doble vía (hoy Av. México y Av. Sáenz Peña) tienen una línea independiente por carril, nombrada por su sentido de marcha («sentido este», «sentido norte»…), tomado de `oneway` en OpenStreetMap. La app del conductor solo marca como recorrido el carril por el que va el camión.
+
+**Qué archivo/tabla se toca para…**
+
+| Quiero… | Dónde |
+|---|---|
+| Cambiar el **orden** en que se iluminan los tramos | Supabase > Table Editor > `ruta_calles`, columna `orden` (no puede repetirse dentro de una ruta). Mientras no hay GPS, el amarillo son los siguientes `proximas` tramos en ese orden. |
+| Cuántos tramos siguientes salen en amarillo | Tabla `rutas`, columna `proximas` |
+| Crear una **ruta nueva** | Una fila en `rutas` (`id`, `nombre`) y, por cada tramo que recorre, una fila en `ruta_calles` (`ruta_id`, `calle_id`, `orden`). |
+| Agregar o cambiar **horarios** | Tabla `horarios` (`ruta_id`, `dias` con 0 = domingo … 6 = sábado, `hora_inicio`, `hora_fin`). Plantilla: `db/horarios.sql`. Una fila por turno. |
+| Cambiar qué calles forman la zona | `CALLES_PROYECTO` en `db/osm_a_zona.py` y volver a generar |
+| Cambiar los colores | `js/config.js` (`estados`) y `css/styles.css` (`--estado-*`) |
+
+**Ojo:** `db/zona.sql` BORRA y vuelve a cargar `ruta_calles`. Si ya ajustaste el orden o creaste rutas a mano, no lo ejecutes otra vez sin guardar antes esos cambios.
+
+Pruebas: `node tests/pruebas.js` y `python tests/pruebas_tramos.py`.
