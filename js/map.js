@@ -84,6 +84,20 @@
     document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  // Encuadra varios tramos a la vez (una calle completa, para la lista agrupada).
+  function enfocarCalles(ids) {
+    let b = null;
+    ids.forEach((id) => {
+      const capa = capasPorId[id];
+      if (!capa) return;
+      const cb = capa.getBounds();
+      b = b ? b.extend(cb) : L.latLngBounds(cb.getSouthWest(), cb.getNorthEast());
+    });
+    if (!b) return;
+    mapa.fitBounds(b.pad(0.4));
+    document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   function mostrarCamion(pos) {
     if (!pos) { if (marcadorCamion) { marcadorCamion.remove(); marcadorCamion = null; } return; }
     const ll = [pos.lat, pos.lng];
@@ -97,5 +111,5 @@
     }
   }
 
-  window.AppMap = { iniciar, pintarZona, pintarCalles, actualizarEstados, enfocarCalle, mostrarCamion };
+  window.AppMap = { iniciar, pintarZona, pintarCalles, actualizarEstados, enfocarCalle, enfocarCalles, mostrarCamion };
 })();

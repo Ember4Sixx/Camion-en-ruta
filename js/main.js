@@ -25,25 +25,83 @@
   $("#anio").textContent = new Date().getFullYear();
   $("#aviso-datos").hidden = !cfg.datosDemostracion;
 
-  // ---------- Lista lateral ----------
+  // ---------- Lista lateral (una fila por calle; sus tramos se despliegan) ----------
+  const abiertas = new Set();   // calles desplegadas: se conservan cuando la lista se vuelve a dibujar
+
+  function crearBadge(estado, texto) {
+    const badge = document.createElement("span");
+    badge.className = "badge badge-" + estado;
+    badge.textContent = texto;
+    return badge;
+  }
+
   function renderLista(fecha, origen) {
     const ul = $("#lista-calles");
     ul.textContent = "";
+    const grupos = new Map();   // nombre de la calle -> sus tramos
     calles.features.forEach((f) => {
-      const id = f.properties.id;
-      const est = cfg.estados[estados[id] || "gris"];
+      const base = Estado.nombreBase(f.properties.nombre);
+      if (!grupos.has(base)) grupos.set(base, []);
+      grupos.get(base).push(f);
+    });
+
+    grupos.forEach((feats, base) => {
       const li = document.createElement("li");
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "street-btn";
+      if (feats.length === 1) {                         // calle de un solo tramo: botón directo
+        const id = feats[0].properties.id;
+        const e = estados[id] || "gris";
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "street-btn";
+        const nombre = document.createElement("span");
+        nombre.textContent = base;
+        btn.append(nombre, crearBadge(e, cfg.estados[e].etiqueta));
+        btn.addEventListener("click", () => AppMap.enfocarCalle(id));
+        li.append(btn);
+        ul.append(li);
+        return;
+      }
+
+      const res = Estado.resumenGrupo(feats.map((f) => estados[f.properties.id] || "gris"));
+      const det = document.createElement("details");
+      det.className = "street-group";
+      det.open = abiertas.has(base);
+      det.addEventListener("toggle", () => { if (det.open) abiertas.add(base); else abiertas.delete(base); });
+
+      const sum = document.createElement("summary");
+      sum.className = "street-btn street-sum";
       const nombre = document.createElement("span");
-      nombre.textContent = f.properties.nombre;
-      const badge = document.createElement("span");
-      badge.className = "badge badge-" + (estados[id] || "gris");
-      badge.textContent = est.etiqueta;
-      btn.append(nombre, badge);
-      btn.addEventListener("click", () => AppMap.enfocarCalle(id));
-      li.append(btn);
+      nombre.textContent = base;
+      const cuenta = document.createElement("small");
+      cuenta.className = "street-count";
+      cuenta.textContent = feats.length + " tramos";
+      nombre.append(" ", cuenta);
+      const etiqueta = res.estado === "parcial"
+        ? res.negros + " de " + res.total + " terminados"
+        : cfg.estados[res.estado].etiqueta;
+      sum.append(nombre, crearBadge(res.estado, etiqueta));
+      det.append(sum);
+
+      const ver = document.createElement("button");
+      ver.type = "button";
+      ver.className = "street-btn street-sub street-all";
+      ver.textContent = "Ver toda la calle en el mapa";
+      ver.addEventListener("click", () => AppMap.enfocarCalles(feats.map((f) => f.properties.id)));
+      det.append(ver);
+
+      feats.forEach((f) => {
+        const id = f.properties.id;
+        const e = estados[id] || "gris";
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "street-btn street-sub";
+        const detalle = document.createElement("span");
+        detalle.textContent = f.properties.nombre.split(" · ").slice(1).join(" · ") || f.properties.nombre;
+        btn.append(detalle, crearBadge(e, cfg.estados[e].etiqueta));
+        btn.addEventListener("click", () => AppMap.enfocarCalle(id));
+        det.append(btn);
+      });
+      li.append(det);
       ul.append(li);
     });
     if (fecha !== undefined) {

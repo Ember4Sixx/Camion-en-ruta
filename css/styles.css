@@ -111,6 +111,16 @@ p { margin: 0 0 1em; }
 .street-btn:hover { background: var(--fondo-alt); }
 .badge { font-size: .78rem; font-weight: 700; padding: .15rem .6rem; border-radius: 999px; white-space: nowrap; }
 .badge-gris { background: var(--estado-gris); color: #1a1a1a; }
+.badge-parcial { background: var(--estado-gris); color: #1a1a1a; box-shadow: inset 0 0 0 2px var(--estado-negro); }
+/* Calles con varios tramos: fila que se despliega */
+.street-group > summary { list-style: none; }
+.street-group > summary::-webkit-details-marker { display: none; }
+.street-sum::before { content: "▸"; margin-right: .1rem; transition: transform .15s; }
+.street-group[open] > .street-sum::before { transform: rotate(90deg); }
+.street-sum > span:first-child { flex: 1; }
+.street-count { opacity: .65; font-weight: 400; }
+.street-sub { padding-left: 1.4rem; font-size: .9rem; border-top: 1px dashed var(--borde); }
+.street-all { color: var(--verde-marca); font-weight: 600; }
 .badge-amarillo { background: var(--estado-amarillo); color: #1a1a1a; }
 .badge-verde { background: var(--estado-verde); color: #fff; }
 .badge-negro { background: var(--estado-negro); color: #fff; }

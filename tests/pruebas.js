@@ -138,6 +138,20 @@ prueba("calle actual: en el carril este no se queda en el oeste", () => {
   assert.strictEqual(Estado.calleActual(q, calles, "oeste", 40, 4), "este");
 });
 
+console.log("\nlista agrupada por calle");
+prueba("nombreBase quita el detalle del tramo", () => {
+  assert.strictEqual(Estado.nombreBase("Calle Unión · entre San Martín y Perú"), "Calle Unión");
+  assert.strictEqual(Estado.nombreBase("Avenida México · sentido este · entre A y B"), "Avenida México");
+  assert.strictEqual(Estado.nombreBase("Pasaje Perú"), "Pasaje Perú");
+});
+prueba("resumenGrupo: prioridad verde > amarillo > negro > parcial > gris", () => {
+  const r = (l) => Estado.resumenGrupo(l);
+  assert.strictEqual(r(["gris", "negro", "verde"]).estado, "verde");
+  assert.strictEqual(r(["gris", "amarillo", "negro"]).estado, "amarillo");
+  assert.strictEqual(r(["negro", "negro"]).estado, "negro");
+  assert.deepStrictEqual(r(["negro", "gris", "gris"]), { estado: "parcial", negros: 1, total: 3 });
+  assert.strictEqual(r(["gris", "gris"]).estado, "gris");
+});
 console.log("data-source.js (Supabase simulado)");
 global.APP_CONFIG = { fuente: "supabase", supabase: { url: "x", anonKey: "y" }, avisoMinutos: 15,
   umbralGpsMetros: 40, gpsActivo: true, gpsVigenciaSegundos: 120 };

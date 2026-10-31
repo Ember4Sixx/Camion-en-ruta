@@ -226,6 +226,26 @@
     return ds.filter(function (x) { return x.d <= radio && x.d <= dmin + margen; }).map(function (x) { return x.id; });
   }
 
+  /** Nombre de la calle sin el detalle del tramo: "Calle Unión · entre A y B" -> "Calle Unión". */
+  function nombreBase(nombre) { return String(nombre).split(" · ")[0]; }
+
+  /**
+   * Resume los estados de los tramos de una calle (para la lista agrupada de la página).
+   * Prioridad: verde (el camión está en algún tramo) > amarillo > negro (todos terminados) >
+   * parcial (algunos terminados) > gris. Devuelve { estado, negros, total }.
+   */
+  function resumenGrupo(estados) {
+    var c = { gris: 0, amarillo: 0, verde: 0, negro: 0 };
+    estados.forEach(function (e) { c[e] = (c[e] || 0) + 1; });
+    var total = estados.length, estado;
+    if (c.verde) estado = "verde";
+    else if (c.amarillo) estado = "amarillo";
+    else if (total && c.negro === total) estado = "negro";
+    else if (c.negro) estado = "parcial";
+    else estado = "gris";
+    return { estado: estado, negros: c.negro, total: total };
+  }
+
   /** Estado de una calle según su avance. enCalle: el camión está ahora en ella. */
   function estadoPorAvance(enCalle, avance, umbralCompleta) {
     if (enCalle) return "verde";
@@ -254,7 +274,7 @@
     estadosDeRuta: estadosDeRuta, estimarPorHorario: estimarPorHorario, indicePorGPS: indicePorGPS,
     distanciaM: distanciaM, distanciaACalle: distanciaACalle, muestrearCalle: muestrearCalle,
     puntosEntre: puntosEntre, marcarCercanos: marcarCercanos, fraccion: fraccion,
-    calleActual: calleActual, callesParaMarcar: callesParaMarcar, estadoPorAvance: estadoPorAvance, estadosPorAvance: estadosPorAvance
+    calleActual: calleActual, callesParaMarcar: callesParaMarcar, nombreBase: nombreBase, resumenGrupo: resumenGrupo, estadoPorAvance: estadoPorAvance, estadosPorAvance: estadosPorAvance
   };
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   root.Estado = API;
