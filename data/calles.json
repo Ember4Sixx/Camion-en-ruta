@@ -3,19 +3,13 @@
   "id": "avenida-mexico",
   "nombre": "Avenida México",
   "tipo": "limite",
-  "tramos": 12
+  "tramos": 18
  },
  {
   "id": "calle-cacique-cinto",
   "nombre": "Calle Cacique Cinto",
   "tipo": "interior",
-  "tramos": 1
- },
- {
-  "id": "calle-atusparias",
-  "nombre": "Calle Atusparias",
-  "tipo": "interior",
-  "tramos": 4
+  "tramos": 2
  },
  {
   "id": "jiron-gonzalo-pizarro",
@@ -24,28 +18,28 @@
   "tramos": 3
  },
  {
-  "id": "avenida-saenz-pena",
-  "nombre": "Avenida Sáenz Peña",
+  "id": "avenida-jose-balta",
+  "nombre": "Avenida José Balta",
   "tipo": "limite",
-  "tramos": 8
+  "tramos": 6
+ },
+ {
+  "id": "calle-conquista",
+  "nombre": "Calle Conquista",
+  "tipo": "interior",
+  "tramos": 2
+ },
+ {
+  "id": "calle-atusparias",
+  "nombre": "Calle Atusparias",
+  "tipo": "interior",
+  "tramos": 4
  },
  {
   "id": "calle-cacique-collique",
   "nombre": "Calle Cacique Collique",
   "tipo": "interior",
-  "tramos": 1
- },
- {
-  "id": "calle-chongoyape",
-  "nombre": "Calle Chongoyape",
-  "tipo": "interior",
-  "tramos": 1
- },
- {
-  "id": "calle-carlos-castaneda-iparraguirre",
-  "nombre": "Calle Carlos Castañeda Iparraguirre",
-  "tipo": "interior",
-  "tramos": 3
+  "tramos": 2
  },
  {
   "id": "calle-tupac-amaru",
@@ -66,6 +60,12 @@
   "tramos": 1
  },
  {
+  "id": "jiron-hernando-de-soto",
+  "nombre": "Jirón Hernando de Soto",
+  "tipo": "interior",
+  "tramos": 2
+ },
+ {
   "id": "pasaje-san-martin",
   "nombre": "Pasaje San Martín",
   "tipo": "interior",
@@ -75,13 +75,19 @@
   "id": "calle-caminos-del-inca",
   "nombre": "Calle Caminos del Inca",
   "tipo": "interior",
-  "tramos": 2
+  "tramos": 3
  },
  {
-  "id": "jiron-hernando-de-soto",
-  "nombre": "Jirón Hernando de Soto",
-  "tipo": "interior",
-  "tramos": 2
+  "id": "calle-los-proceres",
+  "nombre": "Calle Los Próceres",
+  "tipo": "limite",
+  "tramos": 7
+ },
+ {
+  "id": "avenida-saenz-pena",
+  "nombre": "Avenida Sáenz Peña",
+  "tipo": "limite",
+  "tramos": 12
  },
  {
   "id": "calle-union",
@@ -93,6 +99,96 @@
   "id": "calle-virrey-toledo",
   "nombre": "Calle Virrey Toledo",
   "tipo": "limite",
-  "tramos": 5
+  "tramos": 12
+ },
+ {
+  "id": "calle-carlos-castaneda-iparraguirre",
+  "nombre": "Calle Carlos Castañeda Iparraguirre",
+  "tipo": "limite",
+  "tramos": 4
+ },
+ {
+  "id": "calle-chongoyape",
+  "nombre": "Calle Chongoyape",
+  "tipo": "limite",
+  "tramos": 6
+ },
+ {
+  "id": "pardo-y-miguel",
+  "nombre": "Pardo y Miguel",
+  "tipo": "interior",
+  "tramos": 2
+ },
+ {
+  "id": "los-quipus",
+  "nombre": "Los Quipus",
+  "tipo": "interior",
+  "tramos": 2
+ },
+ {
+  "id": "jiron-el-cabildo",
+  "nombre": "Jirón El Cabildo",
+  "tipo": "interior",
+  "tramos": 1
+ },
+ {
+  "id": "jiron-el-intendente",
+  "nombre": "Jirón El Intendente",
+  "tipo": "interior",
+  "tramos": 1
+ },
+ {
+  "id": "jiron-el-corregidor",
+  "nombre": "Jirón El Corregidor",
+  "tipo": "interior",
+  "tramos": 1
+ },
+ {
+  "id": "filantropo",
+  "nombre": "Filántropo",
+  "tipo": "interior",
+  "tramos": 2
+ },
+ {
+  "id": "m-orellana",
+  "nombre": "M. Orellana",
+  "tipo": "interior",
+  "tramos": 1
+ },
+ {
+  "id": "los-curacas",
+  "nombre": "Los Curacas",
+  "tipo": "limite",
+  "tramos": 1
+ },
+ {
+  "id": "santiago-cassinelli",
+  "nombre": "Santiago Cassinelli",
+  "tipo": "interior",
+  "tramos": 2
+ },
+ {
+  "id": "calle-horacio-patino",
+  "nombre": "Calle Horacio Patiño",
+  "tipo": "interior",
+  "tramos": 4
+ },
+ {
+  "id": "calle-los-libertadores",
+  "nombre": "Calle Los Libertadores",
+  "tipo": "interior",
+  "tramos": 4
+ },
+ {
+  "id": "enrique-de-la-piedra",
+  "nombre": "Enrique de la Piedra",
+  "tipo": "limite",
+  "tramos": 2
+ },
+ {
+  "id": "calle-cruz-de-chalpon",
+  "nombre": "Calle Cruz de Chalpón",
+  "tipo": "limite",
+  "tramos": 3
  }
 ]

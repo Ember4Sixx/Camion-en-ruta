@@ -5,7 +5,7 @@
 window.APP_CONFIG = {
   // Centro y zoom inicial del mapa (José Leonardo Ortiz, Chiclayo).
   // AJUSTAR cuando el equipo delimite la zona real.
-  centro: [-6.7585, -79.8365],
+  centro: [-6.7583, -79.8335],
   zoom: 16,
 
   // Muestra el aviso amarillo "Datos de demostración". Ponlo en false

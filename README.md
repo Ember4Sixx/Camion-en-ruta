@@ -24,7 +24,7 @@ camion-en-ruta/
 └── db/
     ├── schema.sql       Tablas, seguridad y tiempo real (Supabase)
     ├── consulta_overpass.txt  Consulta para bajar de OpenStreetMap las calles de la zona
-    ├── osm_a_zona.py    Delimita el perímetro (Sáenz Peña, México, Virrey Toledo, Túpac Amaru) y deja las calles de adentro
+    ├── osm_a_zona.py    Delimita el perímetro (8 calles límite: México, Túpac Amaru, Virrey Toledo, Castañeda, Cruz de Chalpón, Próceres, Curacas, José Balta) y deja las 32 calles del proyecto que quedan adentro
     ├── tramos.py        Corta las calles en tramos y separa los carriles de las avenidas de doble vía
     ├── geojson_a_sql.py Convierte un tramos.geojson hecho a mano en SQL
     ├── migracion_01_quitar_recorridos.sql  Para bases creadas con el esquema anterior

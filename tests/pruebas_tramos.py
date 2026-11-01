@@ -4,6 +4,7 @@ Pruebas de data/tramos.geojson, data/calles.json y data/zona.geojson (tramos, ca
 Uso:  python tests/pruebas_tramos.py        (desde la carpeta del proyecto)
 """
 import json
+import re
 import math
 import sys
 from pathlib import Path
@@ -67,10 +68,12 @@ for calle in ("Avenida México", "Avenida Sáenz Peña"):
 
 # Av. Sáenz Peña se corta en las calles que la cruzan
 sp = [P(f)["nombre"] for f in calles if P(f)["calle"] == "Avenida Sáenz Peña" and P(f)["carril"] == "sentido sur"]
-prueba("Sáenz Peña (sentido sur) se corta en Cacique Cinto, Cacique Collique y Caminos del Inca", len(sp) == 4, str(sp))
+# (en la zona ampliada la avenida se cruza además con Virrey Toledo, Los Libertadores y Cruz de Chalpón)
+prueba("Sáenz Peña (sentido sur) se corta en Cacique Cinto, Cacique Collique y Caminos del Inca",
+       all(any(n in t for t in sp) for n in ("Cacique Cinto", "Cacique Collique", "Caminos del Inca")) and len(sp) >= 4, str(sp))
 
 # cada calle con más de un tramo lleva sufijo -1, -2…
-prueba("ids de tramos: calle-N", all(P(f)["id"][-2] == "-" and P(f)["id"][-1].isdigit() for f in calles if " · " in P(f)["nombre"]))
+prueba("ids de tramos: calle-N", all(re.search(r"-\d+$", P(f)["id"]) for f in calles if " · " in P(f)["nombre"]))
 
 # todo dentro de la zona (con 2 m de tolerancia respecto del borde)
 def dentro(p, poly):

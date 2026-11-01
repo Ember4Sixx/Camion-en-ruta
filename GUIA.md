@@ -87,15 +87,15 @@ Abre http://localhost:8000. Con `fuente: "json"` todo funciona sin base de datos
    ```
    python db/osm_a_zona.py data/osm_jlo.json
    ```
-3. El programa busca las 4 calles del perímetro por nombre, calcula las 4 esquinas, dibuja el cuadrado y se queda **solo con las 16 calles del proyecto** que quedan adentro (cortando las que se salen). Imprime los nombres que tiene cada calle en OSM: **léanlos y confirmen que son las correctas**.
+3. El programa busca las 8 calles del perímetro por nombre (en el orden en que rodean la zona), calcula las 8 esquinas, dibuja el contorno siguiendo el trazo de cada calle y se queda **solo con las 32 calles del proyecto** que quedan adentro (cortando las que se salen). Imprime los nombres que tiene cada calle en OSM: **léanlos y confirmen que son las correctas**.
 4. Escribe: `data/zona.geojson` (el perímetro), `data/tramos.geojson` y `data/calles.json` (los tramos y el catálogo de calles), `data/horarios.json` (sin horario, hasta que se confirme) y `db/zona.sql` (para la base de datos, paso 3). Si alguna calle del proyecto no quedó dentro de la zona, la lista en `data/calles_no_encontradas.txt` y la avisa en pantalla.
 5. Abran la página en local (paso 2): el perímetro sale con borde punteado y las calles dentro, con su nombre al pasar el cursor. Comparen con Google Maps o con una visita a la zona.
 
 Límites a tener en cuenta:
 - Una calle que en OpenStreetMap tiene otro nombre (o no tiene nombre) no aparece: corrijan el nombre en OSM o agreguen esa variante en `consulta_overpass.txt` y en `CALLES_PROYECTO`.
-- Una calle que queda **fuera del perímetro** (por ejemplo, al norte de Virrey Toledo si esa es la calle de arriba) se descarta y se avisa en `calles_no_encontradas.txt`. Si pasa con calles que sí deben estar, revisen cuáles son las 4 calles del perímetro.
+- Una calle que queda **fuera del perímetro** (por ejemplo, al norte de Virrey Toledo si esa es la calle de arriba) se descarta y se avisa en `calles_no_encontradas.txt`. Si pasa con calles que sí deben estar, revisen las calles del perímetro y su orden (`--limites`).
 - El **orden de recorrido** que genera es provisional (de norte a sur). El orden real del camión hay que definirlo con quien conoce la ruta y cambiarlo en `ruta_tramos.orden`.
-- Los lados del cuadrado se calculan con las esquinas de las 4 calles; si alguna es curva, el contorno punteado es una aproximación y la calle real se dibuja encima.
+- Cada lado del contorno sigue el trazo de su calle límite; Sáenz Peña, Chongoyape y Enrique de la Piedra quedan dentro del contorno pero se marcan también como calles límite.
 
 ## Paso 3 · Crear la base de datos (Supabase)
 

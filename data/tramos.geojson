@@ -6,7 +6,7 @@
    "type": "Feature",
    "properties": {
     "id": "avenida-mexico-sentido-este-1",
-    "nombre": "Avenida México · sentido este · entre Sáenz Peña y Gonzalo Pizarro",
+    "nombre": "Avenida México · sentido este · entre José Balta y Conquista",
     "calle": "Avenida México",
     "calle_id": "avenida-mexico",
     "carril": "sentido este",
@@ -19,16 +19,113 @@
     "type": "LineString",
     "coordinates": [
      [
+      -79.8368264,
+      -6.7558844
+     ],
+     [
+      -79.8367896,
+      -6.7558888
+     ],
+     [
+      -79.8367888,
+      -6.7558889
+     ],
+     [
+      -79.8367477,
+      -6.7558938
+     ],
+     [
+      -79.8362537,
+      -6.7559528
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-mexico-sentido-este-2",
+    "nombre": "Avenida México · sentido este · entre Conquista y Los Próceres",
+    "calle": "Avenida México",
+    "calle_id": "avenida-mexico",
+    "carril": "sentido este",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 2
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8362537,
+      -6.7559528
+     ],
+     [
+      -79.8359527,
+      -6.7559871
+     ],
+     [
+      -79.8357568,
+      -6.7560095
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-mexico-sentido-este-3",
+    "nombre": "Avenida México · sentido este · entre Los Próceres y Sáenz Peña",
+    "calle": "Avenida México",
+    "calle_id": "avenida-mexico",
+    "carril": "sentido este",
+    "k": 3,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 3
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8357568,
+      -6.7560095
+     ],
+     [
+      -79.8357546,
+      -6.7560097
+     ],
+     [
+      -79.8338137,
+      -6.7562263
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-mexico-sentido-este-4",
+    "nombre": "Avenida México · sentido este · entre Sáenz Peña y Gonzalo Pizarro",
+    "calle": "Avenida México",
+    "calle_id": "avenida-mexico",
+    "carril": "sentido este",
+    "k": 4,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 4
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
       -79.8338137,
       -6.7562263
      ],
      [
-      -79.8337457,
-      -6.756234
-     ],
-     [
-      -79.833744,
-      -6.7562342
+      -79.8337358,
+      -6.7562351
      ],
      [
       -79.8337195,
@@ -44,89 +141,8 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "avenida-mexico-sentido-este-2",
-    "nombre": "Avenida México · sentido este · entre Gonzalo Pizarro y Hernando de Soto",
-    "calle": "Avenida México",
-    "calle_id": "avenida-mexico",
-    "carril": "sentido este",
-    "k": 2,
-    "ruta": "Ruta 1",
-    "tipo": "limite",
-    "orden": 2
-   },
-   "geometry": {
-    "type": "LineString",
-    "coordinates": [
-     [
-      -79.8325091,
-      -6.7563739
-     ],
-     [
-      -79.8319303,
-      -6.7564372
-     ]
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "properties": {
-    "id": "avenida-mexico-sentido-este-3",
-    "nombre": "Avenida México · sentido este · entre Hernando de Soto y Chongoyape",
-    "calle": "Avenida México",
-    "calle_id": "avenida-mexico",
-    "carril": "sentido este",
-    "k": 3,
-    "ruta": "Ruta 1",
-    "tipo": "limite",
-    "orden": 3
-   },
-   "geometry": {
-    "type": "LineString",
-    "coordinates": [
-     [
-      -79.8319303,
-      -6.7564372
-     ],
-     [
-      -79.8314292,
-      -6.756492
-     ]
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "properties": {
-    "id": "avenida-mexico-sentido-este-4",
-    "nombre": "Avenida México · sentido este · entre Chongoyape y Carlos Castañeda Iparraguirre",
-    "calle": "Avenida México",
-    "calle_id": "avenida-mexico",
-    "carril": "sentido este",
-    "k": 4,
-    "ruta": "Ruta 1",
-    "tipo": "limite",
-    "orden": 4
-   },
-   "geometry": {
-    "type": "LineString",
-    "coordinates": [
-     [
-      -79.8314292,
-      -6.756492
-     ],
-     [
-      -79.8310513,
-      -6.756527
-     ]
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "properties": {
     "id": "avenida-mexico-sentido-este-5",
-    "nombre": "Avenida México · sentido este · entre Carlos Castañeda Iparraguirre y José Carlos Mariátegui",
+    "nombre": "Avenida México · sentido este · entre Gonzalo Pizarro y Hernando de Soto",
     "calle": "Avenida México",
     "calle_id": "avenida-mexico",
     "carril": "sentido este",
@@ -139,8 +155,101 @@
     "type": "LineString",
     "coordinates": [
      [
+      -79.8325091,
+      -6.7563739
+     ],
+     [
+      -79.8322664,
+      -6.7564004
+     ],
+     [
+      -79.8319303,
+      -6.7564372
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-mexico-sentido-este-6",
+    "nombre": "Avenida México · sentido este · entre Hernando de Soto y Chongoyape",
+    "calle": "Avenida México",
+    "calle_id": "avenida-mexico",
+    "carril": "sentido este",
+    "k": 6,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 6
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8319303,
+      -6.7564372
+     ],
+     [
+      -79.8317586,
+      -6.756456
+     ],
+     [
+      -79.8314292,
+      -6.756492
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-mexico-sentido-este-7",
+    "nombre": "Avenida México · sentido este · entre Chongoyape y Carlos Castañeda Iparraguirre",
+    "calle": "Avenida México",
+    "calle_id": "avenida-mexico",
+    "carril": "sentido este",
+    "k": 7,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 7
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8314292,
+      -6.756492
+     ],
+     [
       -79.8310513,
       -6.756527
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-mexico-sentido-este-8",
+    "nombre": "Avenida México · sentido este · entre Carlos Castañeda Iparraguirre y José Carlos Mariátegui",
+    "calle": "Avenida México",
+    "calle_id": "avenida-mexico",
+    "carril": "sentido este",
+    "k": 8,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 8
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8310513,
+      -6.756527
+     ],
+     [
+      -79.8304136,
+      -6.7565946
      ],
      [
       -79.8301877,
@@ -152,15 +261,15 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "avenida-mexico-sentido-este-6",
+    "id": "avenida-mexico-sentido-este-9",
     "nombre": "Avenida México · sentido este · entre José Carlos Mariátegui y Túpac Amaru",
     "calle": "Avenida México",
     "calle_id": "avenida-mexico",
     "carril": "sentido este",
-    "k": 6,
+    "k": 9,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 6
+    "orden": 9
    },
    "geometry": {
     "type": "LineString",
@@ -174,16 +283,16 @@
       -6.7566189
      ],
      [
+      -79.8298452,
+      -6.7566553
+     ],
+     [
       -79.8293662,
       -6.7567069
      ],
      [
-      -79.8293657,
-      -6.756707
-     ],
-     [
-      -79.8293654,
-      -6.756707
+      -79.8293659,
+      -6.7567069
      ]
     ]
    }
@@ -191,15 +300,46 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "calle-cacique-cinto",
-    "nombre": "Calle Cacique Cinto",
+    "id": "calle-cacique-cinto-1",
+    "nombre": "Calle Cacique Cinto · entre Los Próceres y Sáenz Peña",
     "calle": "Calle Cacique Cinto",
     "calle_id": "calle-cacique-cinto",
     "carril": "",
     "k": 1,
     "ruta": "Ruta 1",
     "tipo": "interior",
-    "orden": 7
+    "orden": 10
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.835802,
+      -6.756486
+     ],
+     [
+      -79.8357021,
+      -6.7564973
+     ],
+     [
+      -79.8338714,
+      -6.7567038
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-cacique-cinto-2",
+    "nombre": "Calle Cacique Cinto · entre Sáenz Peña y Gonzalo Pizarro",
+    "calle": "Calle Cacique Cinto",
+    "calle_id": "calle-cacique-cinto",
+    "carril": "",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 11
    },
    "geometry": {
     "type": "LineString",
@@ -209,128 +349,12 @@
       -6.7567038
      ],
      [
-      -79.8337874,
-      -6.7567133
-     ],
-     [
       -79.8337764,
       -6.7567145
      ],
      [
       -79.8325583,
       -6.7568429
-     ]
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "properties": {
-    "id": "calle-atusparias-1",
-    "nombre": "Calle Atusparias · entre Túpac Amaru y San Martín",
-    "calle": "Calle Atusparias",
-    "calle_id": "calle-atusparias",
-    "carril": "",
-    "k": 1,
-    "ruta": "Ruta 1",
-    "tipo": "interior",
-    "orden": 8
-   },
-   "geometry": {
-    "type": "LineString",
-    "coordinates": [
-     [
-      -79.8294042,
-      -6.7571606
-     ],
-     [
-      -79.8294194,
-      -6.7571589
-     ],
-     [
-      -79.8298166,
-      -6.7571149
-     ]
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "properties": {
-    "id": "calle-atusparias-2",
-    "nombre": "Calle Atusparias · entre San Martín y José Carlos Mariátegui",
-    "calle": "Calle Atusparias",
-    "calle_id": "calle-atusparias",
-    "carril": "",
-    "k": 2,
-    "ruta": "Ruta 1",
-    "tipo": "interior",
-    "orden": 9
-   },
-   "geometry": {
-    "type": "LineString",
-    "coordinates": [
-     [
-      -79.8298166,
-      -6.7571149
-     ],
-     [
-      -79.8302288,
-      -6.7570692
-     ]
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "properties": {
-    "id": "calle-atusparias-3",
-    "nombre": "Calle Atusparias · entre José Carlos Mariátegui y Perú",
-    "calle": "Calle Atusparias",
-    "calle_id": "calle-atusparias",
-    "carril": "",
-    "k": 3,
-    "ruta": "Ruta 1",
-    "tipo": "interior",
-    "orden": 10
-   },
-   "geometry": {
-    "type": "LineString",
-    "coordinates": [
-     [
-      -79.8302288,
-      -6.7570692
-     ],
-     [
-      -79.8306727,
-      -6.7570204
-     ]
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "properties": {
-    "id": "calle-atusparias-4",
-    "nombre": "Calle Atusparias · entre Perú y Carlos Castañeda Iparraguirre",
-    "calle": "Calle Atusparias",
-    "calle_id": "calle-atusparias",
-    "carril": "",
-    "k": 4,
-    "ruta": "Ruta 1",
-    "tipo": "interior",
-    "orden": 11
-   },
-   "geometry": {
-    "type": "LineString",
-    "coordinates": [
-     [
-      -79.8306727,
-      -6.7570204
-     ],
-     [
-      -79.831114,
-      -6.7569719
      ]
     ]
    }
@@ -419,10 +443,10 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "avenida-saenz-pena-sentido-sur-1",
-    "nombre": "Avenida Sáenz Peña · sentido sur · entre México y Cacique Cinto",
-    "calle": "Avenida Sáenz Peña",
-    "calle_id": "avenida-saenz-pena",
+    "id": "avenida-jose-balta-sentido-sur-1",
+    "nombre": "Avenida José Balta · sentido sur · entre México y Virrey Toledo",
+    "calle": "Avenida José Balta",
+    "calle_id": "avenida-jose-balta",
     "carril": "sentido sur",
     "k": 1,
     "ruta": "Ruta 1",
@@ -433,16 +457,36 @@
     "type": "LineString",
     "coordinates": [
      [
-      -79.833737,
-      -6.7561572
+      -79.836818,
+      -6.7558182
      ],
      [
-      -79.8338137,
-      -6.7562263
+      -79.8368224,
+      -6.7558528
      ],
      [
-      -79.8338714,
-      -6.7567038
+      -79.8368263,
+      -6.7558838
+     ],
+     [
+      -79.8368264,
+      -6.7558844
+     ],
+     [
+      -79.8368265,
+      -6.7558853
+     ],
+     [
+      -79.8369156,
+      -6.7567069
+     ],
+     [
+      -79.8370108,
+      -6.7575758
+     ],
+     [
+      -79.8370339,
+      -6.7577861
      ]
     ]
    }
@@ -450,10 +494,10 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "avenida-saenz-pena-sentido-sur-2",
-    "nombre": "Avenida Sáenz Peña · sentido sur · entre Cacique Cinto y Cacique Collique",
-    "calle": "Avenida Sáenz Peña",
-    "calle_id": "avenida-saenz-pena",
+    "id": "avenida-jose-balta-sentido-sur-2",
+    "nombre": "Avenida José Balta · sentido sur · entre Virrey Toledo y Los Quipus",
+    "calle": "Avenida José Balta",
+    "calle_id": "avenida-jose-balta",
     "carril": "sentido sur",
     "k": 2,
     "ruta": "Ruta 1",
@@ -464,12 +508,16 @@
     "type": "LineString",
     "coordinates": [
      [
-      -79.8338714,
-      -6.7567038
+      -79.8370339,
+      -6.7577861
      ],
      [
-      -79.8339281,
-      -6.7571727
+      -79.8371074,
+      -6.7584569
+     ],
+     [
+      -79.8371477,
+      -6.7588484
      ]
     ]
    }
@@ -477,10 +525,10 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "avenida-saenz-pena-sentido-sur-3",
-    "nombre": "Avenida Sáenz Peña · sentido sur · entre Cacique Collique y Caminos del Inca",
-    "calle": "Avenida Sáenz Peña",
-    "calle_id": "avenida-saenz-pena",
+    "id": "avenida-jose-balta-sentido-sur-3",
+    "nombre": "Avenida José Balta · sentido sur · entre Los Quipus y Los Curacas",
+    "calle": "Avenida José Balta",
+    "calle_id": "avenida-jose-balta",
     "carril": "sentido sur",
     "k": 3,
     "ruta": "Ruta 1",
@@ -491,12 +539,16 @@
     "type": "LineString",
     "coordinates": [
      [
-      -79.8339281,
-      -6.7571727
+      -79.8371477,
+      -6.7588484
      ],
      [
-      -79.8339744,
-      -6.7576691
+      -79.8371959,
+      -6.7593172
+     ],
+     [
+      -79.8371959,
+      -6.7593174
      ]
     ]
    }
@@ -504,30 +556,26 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "avenida-saenz-pena-sentido-sur-4",
-    "nombre": "Avenida Sáenz Peña · sentido sur · entre Caminos del Inca y Virrey Toledo",
-    "calle": "Avenida Sáenz Peña",
-    "calle_id": "avenida-saenz-pena",
-    "carril": "sentido sur",
-    "k": 4,
+    "id": "calle-conquista-1",
+    "nombre": "Calle Conquista · entre México y Virrey Toledo",
+    "calle": "Calle Conquista",
+    "calle_id": "calle-conquista",
+    "carril": "",
+    "k": 1,
     "ruta": "Ruta 1",
-    "tipo": "limite",
+    "tipo": "interior",
     "orden": 18
    },
    "geometry": {
     "type": "LineString",
     "coordinates": [
      [
-      -79.8339744,
-      -6.7576691
+      -79.8362537,
+      -6.7559528
      ],
      [
-      -79.8340208,
-      -6.7581545
-     ],
-     [
-      -79.8340208,
-      -6.7581549
+      -79.8364679,
+      -6.7578453
      ]
     ]
    }
@@ -535,12 +583,12 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "calle-cacique-collique",
-    "nombre": "Calle Cacique Collique",
-    "calle": "Calle Cacique Collique",
-    "calle_id": "calle-cacique-collique",
+    "id": "calle-conquista-2",
+    "nombre": "Calle Conquista · entre Virrey Toledo y Los Quipus",
+    "calle": "Calle Conquista",
+    "calle_id": "calle-conquista",
     "carril": "",
-    "k": 1,
+    "k": 2,
     "ruta": "Ruta 1",
     "tipo": "interior",
     "orden": 19
@@ -549,12 +597,174 @@
     "type": "LineString",
     "coordinates": [
      [
-      -79.8339281,
-      -6.7571727
+      -79.8364679,
+      -6.7578453
      ],
      [
-      -79.8338301,
-      -6.7571838
+      -79.8364717,
+      -6.7578789
+     ],
+     [
+      -79.8365706,
+      -6.7589067
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-atusparias-1",
+    "nombre": "Calle Atusparias · entre Túpac Amaru y San Martín",
+    "calle": "Calle Atusparias",
+    "calle_id": "calle-atusparias",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 20
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8294042,
+      -6.7571606
+     ],
+     [
+      -79.8298166,
+      -6.7571149
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-atusparias-2",
+    "nombre": "Calle Atusparias · entre San Martín y José Carlos Mariátegui",
+    "calle": "Calle Atusparias",
+    "calle_id": "calle-atusparias",
+    "carril": "",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 21
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8298166,
+      -6.7571149
+     ],
+     [
+      -79.8302288,
+      -6.7570692
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-atusparias-3",
+    "nombre": "Calle Atusparias · entre José Carlos Mariátegui y Perú",
+    "calle": "Calle Atusparias",
+    "calle_id": "calle-atusparias",
+    "carril": "",
+    "k": 3,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 22
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8302288,
+      -6.7570692
+     ],
+     [
+      -79.8306727,
+      -6.7570204
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-atusparias-4",
+    "nombre": "Calle Atusparias · entre Perú y Carlos Castañeda Iparraguirre",
+    "calle": "Calle Atusparias",
+    "calle_id": "calle-atusparias",
+    "carril": "",
+    "k": 4,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 23
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8306727,
+      -6.7570204
+     ],
+     [
+      -79.831114,
+      -6.7569719
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-cacique-collique-1",
+    "nombre": "Calle Cacique Collique · entre Los Próceres y Sáenz Peña",
+    "calle": "Calle Cacique Collique",
+    "calle_id": "calle-cacique-collique",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 24
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8358546,
+      -6.7569755
+     ],
+     [
+      -79.8339281,
+      -6.7571727
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-cacique-collique-2",
+    "nombre": "Calle Cacique Collique · entre Sáenz Peña y Gonzalo Pizarro",
+    "calle": "Calle Cacique Collique",
+    "calle_id": "calle-cacique-collique",
+    "carril": "",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 25
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8339281,
+      -6.7571727
      ],
      [
       -79.8338286,
@@ -570,138 +780,6 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "calle-chongoyape",
-    "nombre": "Calle Chongoyape",
-    "calle": "Calle Chongoyape",
-    "calle_id": "calle-chongoyape",
-    "carril": "",
-    "k": 1,
-    "ruta": "Ruta 1",
-    "tipo": "interior",
-    "orden": 20
-   },
-   "geometry": {
-    "type": "LineString",
-    "coordinates": [
-     [
-      -79.8316511,
-      -6.7584226
-     ],
-     [
-      -79.8316504,
-      -6.7584162
-     ],
-     [
-      -79.8314292,
-      -6.756492
-     ],
-     [
-      -79.8314177,
-      -6.7564124
-     ],
-     [
-      -79.8314173,
-      -6.7564091
-     ]
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "properties": {
-    "id": "calle-carlos-castaneda-iparraguirre-1",
-    "nombre": "Calle Carlos Castañeda Iparraguirre · entre Virrey Toledo y Unión",
-    "calle": "Calle Carlos Castañeda Iparraguirre",
-    "calle_id": "calle-carlos-castaneda-iparraguirre",
-    "carril": "",
-    "k": 1,
-    "ruta": "Ruta 1",
-    "tipo": "interior",
-    "orden": 21
-   },
-   "geometry": {
-    "type": "LineString",
-    "coordinates": [
-     [
-      -79.8312755,
-      -6.7584688
-     ],
-     [
-      -79.8312743,
-      -6.7584575
-     ],
-     [
-      -79.8312261,
-      -6.7580108
-     ]
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "properties": {
-    "id": "calle-carlos-castaneda-iparraguirre-2",
-    "nombre": "Calle Carlos Castañeda Iparraguirre · entre Unión y Atusparias",
-    "calle": "Calle Carlos Castañeda Iparraguirre",
-    "calle_id": "calle-carlos-castaneda-iparraguirre",
-    "carril": "",
-    "k": 2,
-    "ruta": "Ruta 1",
-    "tipo": "interior",
-    "orden": 22
-   },
-   "geometry": {
-    "type": "LineString",
-    "coordinates": [
-     [
-      -79.8312261,
-      -6.7580108
-     ],
-     [
-      -79.831114,
-      -6.7569719
-     ]
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "properties": {
-    "id": "calle-carlos-castaneda-iparraguirre-3",
-    "nombre": "Calle Carlos Castañeda Iparraguirre · entre Atusparias y México",
-    "calle": "Calle Carlos Castañeda Iparraguirre",
-    "calle_id": "calle-carlos-castaneda-iparraguirre",
-    "carril": "",
-    "k": 3,
-    "ruta": "Ruta 1",
-    "tipo": "interior",
-    "orden": 23
-   },
-   "geometry": {
-    "type": "LineString",
-    "coordinates": [
-     [
-      -79.831114,
-      -6.7569719
-     ],
-     [
-      -79.8310513,
-      -6.756527
-     ],
-     [
-      -79.8310408,
-      -6.7564515
-     ],
-     [
-      -79.8310406,
-      -6.75645
-     ]
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "properties": {
     "id": "calle-tupac-amaru-1",
     "nombre": "Calle Túpac Amaru · entre Virrey Toledo y Unión",
     "calle": "Calle Túpac Amaru",
@@ -710,7 +788,7 @@
     "k": 1,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 24
+    "orden": 26
    },
    "geometry": {
     "type": "LineString",
@@ -737,7 +815,7 @@
     "k": 2,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 25
+    "orden": 27
    },
    "geometry": {
     "type": "LineString",
@@ -745,6 +823,10 @@
      [
       -79.8295404,
       -6.7581953
+     ],
+     [
+      -79.8294714,
+      -6.7576713
      ],
      [
       -79.8294042,
@@ -764,7 +846,7 @@
     "k": 3,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 26
+    "orden": 28
    },
    "geometry": {
     "type": "LineString",
@@ -774,12 +856,12 @@
       -6.7571606
      ],
      [
-      -79.8293674,
-      -6.7567212
-     ],
-     [
       -79.8293662,
       -6.7567069
+     ],
+     [
+      -79.8293622,
+      -6.7566752
      ],
      [
       -79.8293569,
@@ -799,7 +881,7 @@
     "k": 1,
     "ruta": "Ruta 1",
     "tipo": "interior",
-    "orden": 27
+    "orden": 29
    },
    "geometry": {
     "type": "LineString",
@@ -807,10 +889,6 @@
      [
       -79.830392,
       -6.7585611
-     ],
-     [
-      -79.8303914,
-      -6.7585544
      ],
      [
       -79.8303533,
@@ -830,7 +908,7 @@
     "k": 2,
     "ruta": "Ruta 1",
     "tipo": "interior",
-    "orden": 28
+    "orden": 30
    },
    "geometry": {
     "type": "LineString",
@@ -857,7 +935,7 @@
     "k": 3,
     "ruta": "Ruta 1",
     "tipo": "interior",
-    "orden": 29
+    "orden": 31
    },
    "geometry": {
     "type": "LineString",
@@ -869,10 +947,6 @@
      [
       -79.8301838,
       -6.7566189
-     ],
-     [
-      -79.8301796,
-      -6.7565435
      ],
      [
       -79.8301795,
@@ -892,7 +966,7 @@
     "k": 1,
     "ruta": "Ruta 1",
     "tipo": "interior",
-    "orden": 30
+    "orden": 32
    },
    "geometry": {
     "type": "LineString",
@@ -911,95 +985,6 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "pasaje-san-martin",
-    "nombre": "Pasaje San Martín",
-    "calle": "Pasaje San Martín",
-    "calle_id": "pasaje-san-martin",
-    "carril": "",
-    "k": 1,
-    "ruta": "Ruta 1",
-    "tipo": "interior",
-    "orden": 31
-   },
-   "geometry": {
-    "type": "LineString",
-    "coordinates": [
-     [
-      -79.8298166,
-      -6.7571149
-     ],
-     [
-      -79.8299499,
-      -6.7581492
-     ]
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "properties": {
-    "id": "calle-caminos-del-inca-1",
-    "nombre": "Calle Caminos del Inca · entre Sáenz Peña y Gonzalo Pizarro",
-    "calle": "Calle Caminos del Inca",
-    "calle_id": "calle-caminos-del-inca",
-    "carril": "",
-    "k": 1,
-    "ruta": "Ruta 1",
-    "tipo": "interior",
-    "orden": 32
-   },
-   "geometry": {
-    "type": "LineString",
-    "coordinates": [
-     [
-      -79.8339744,
-      -6.7576691
-     ],
-     [
-      -79.8338758,
-      -6.75768
-     ],
-     [
-      -79.8338751,
-      -6.7576801
-     ],
-     [
-      -79.8326603,
-      -6.7578157
-     ]
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "properties": {
-    "id": "calle-caminos-del-inca-2",
-    "nombre": "Calle Caminos del Inca · entre Gonzalo Pizarro y Hernando de Soto",
-    "calle": "Calle Caminos del Inca",
-    "calle_id": "calle-caminos-del-inca",
-    "carril": "",
-    "k": 2,
-    "ruta": "Ruta 1",
-    "tipo": "interior",
-    "orden": 33
-   },
-   "geometry": {
-    "type": "LineString",
-    "coordinates": [
-     [
-      -79.8326603,
-      -6.7578157
-     ],
-     [
-      -79.832086,
-      -6.7578798
-     ]
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "properties": {
     "id": "jiron-hernando-de-soto-1",
     "nombre": "Jirón Hernando de Soto · entre Virrey Toledo y Caminos del Inca",
     "calle": "Jirón Hernando de Soto",
@@ -1008,7 +993,7 @@
     "k": 1,
     "ruta": "Ruta 1",
     "tipo": "interior",
-    "orden": 34
+    "orden": 33
    },
    "geometry": {
     "type": "LineString",
@@ -1016,10 +1001,6 @@
      [
       -79.8321381,
       -6.7583628
-     ],
-     [
-      -79.8321381,
-      -6.7583627
      ],
      [
       -79.832086,
@@ -1039,7 +1020,7 @@
     "k": 2,
     "ruta": "Ruta 1",
     "tipo": "interior",
-    "orden": 35
+    "orden": 34
    },
    "geometry": {
     "type": "LineString",
@@ -1058,10 +1039,37 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "calle-union-1",
-    "nombre": "Calle Unión · entre Túpac Amaru y San Martín",
-    "calle": "Calle Unión",
-    "calle_id": "calle-union",
+    "id": "pasaje-san-martin",
+    "nombre": "Pasaje San Martín",
+    "calle": "Pasaje San Martín",
+    "calle_id": "pasaje-san-martin",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 35
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8298166,
+      -6.7571149
+     ],
+     [
+      -79.8299499,
+      -6.7581492
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-caminos-del-inca-1",
+    "nombre": "Calle Caminos del Inca · hasta Sáenz Peña",
+    "calle": "Calle Caminos del Inca",
+    "calle_id": "calle-caminos-del-inca",
     "carril": "",
     "k": 1,
     "ruta": "Ruta 1",
@@ -1072,12 +1080,464 @@
     "type": "LineString",
     "coordinates": [
      [
-      -79.8295404,
-      -6.7581953
+      -79.8350541,
+      -6.75755
      ],
      [
-      -79.8295426,
-      -6.7581951
+      -79.8339744,
+      -6.7576691
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-caminos-del-inca-2",
+    "nombre": "Calle Caminos del Inca · entre Sáenz Peña y Gonzalo Pizarro",
+    "calle": "Calle Caminos del Inca",
+    "calle_id": "calle-caminos-del-inca",
+    "carril": "",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 37
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8339744,
+      -6.7576691
+     ],
+     [
+      -79.8338758,
+      -6.75768
+     ],
+     [
+      -79.8326603,
+      -6.7578157
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-caminos-del-inca-3",
+    "nombre": "Calle Caminos del Inca · entre Gonzalo Pizarro y Hernando de Soto",
+    "calle": "Calle Caminos del Inca",
+    "calle_id": "calle-caminos-del-inca",
+    "carril": "",
+    "k": 3,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 38
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8326603,
+      -6.7578157
+     ],
+     [
+      -79.832086,
+      -6.7578798
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-los-proceres-1-1",
+    "nombre": "Calle Los Próceres · entre Los Quipus y Virrey Toledo",
+    "calle": "Calle Los Próceres",
+    "calle_id": "calle-los-proceres",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 39
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8360773,
+      -6.7589564
+     ],
+     [
+      -79.8359567,
+      -6.7579348
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-los-proceres-1-2",
+    "nombre": "Calle Los Próceres · entre Virrey Toledo y Cacique Collique",
+    "calle": "Calle Los Próceres",
+    "calle_id": "calle-los-proceres",
+    "carril": "",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 40
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8359567,
+      -6.7579348
+     ],
+     [
+      -79.8359047,
+      -6.7574823
+     ],
+     [
+      -79.8358546,
+      -6.7569755
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-los-proceres-1-3",
+    "nombre": "Calle Los Próceres · entre Cacique Collique y Cacique Cinto",
+    "calle": "Calle Los Próceres",
+    "calle_id": "calle-los-proceres",
+    "carril": "",
+    "k": 3,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 41
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8358546,
+      -6.7569755
+     ],
+     [
+      -79.835802,
+      -6.756486
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-los-proceres-1-4",
+    "nombre": "Calle Los Próceres · entre Cacique Cinto y México",
+    "calle": "Calle Los Próceres",
+    "calle_id": "calle-los-proceres",
+    "carril": "",
+    "k": 4,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 42
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.835802,
+      -6.756486
+     ],
+     [
+      -79.8357546,
+      -6.7560097
+     ],
+     [
+      -79.8357491,
+      -6.7559422
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-los-proceres-2-1",
+    "nombre": "Calle Los Próceres · entre Cruz de Chalpón y Los Libertadores",
+    "calle": "Calle Los Próceres",
+    "calle_id": "calle-los-proceres",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 43
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8362571,
+      -6.7605078
+     ],
+     [
+      -79.8361812,
+      -6.7598365
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-los-proceres-2-2",
+    "nombre": "Calle Los Próceres · entre Los Libertadores y Los Curacas",
+    "calle": "Calle Los Próceres",
+    "calle_id": "calle-los-proceres",
+    "carril": "",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 44
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8361812,
+      -6.7598365
+     ],
+     [
+      -79.8361337,
+      -6.7594344
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-los-proceres-2-3",
+    "nombre": "Calle Los Próceres · entre Los Curacas y Los Quipus",
+    "calle": "Calle Los Próceres",
+    "calle_id": "calle-los-proceres",
+    "carril": "",
+    "k": 3,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 45
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8361337,
+      -6.7594344
+     ],
+     [
+      -79.8360773,
+      -6.7589564
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-saenz-pena-sentido-sur-1",
+    "nombre": "Avenida Sáenz Peña · sentido sur · entre México y Cacique Cinto",
+    "calle": "Avenida Sáenz Peña",
+    "calle_id": "avenida-saenz-pena",
+    "carril": "sentido sur",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 46
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.833737,
+      -6.7561572
+     ],
+     [
+      -79.833767,
+      -6.7561842
+     ],
+     [
+      -79.8338137,
+      -6.7562263
+     ],
+     [
+      -79.8338714,
+      -6.7567038
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-saenz-pena-sentido-sur-2",
+    "nombre": "Avenida Sáenz Peña · sentido sur · entre Cacique Cinto y Cacique Collique",
+    "calle": "Avenida Sáenz Peña",
+    "calle_id": "avenida-saenz-pena",
+    "carril": "sentido sur",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 47
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8338714,
+      -6.7567038
+     ],
+     [
+      -79.8339281,
+      -6.7571727
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-saenz-pena-sentido-sur-3",
+    "nombre": "Avenida Sáenz Peña · sentido sur · entre Cacique Collique y Caminos del Inca",
+    "calle": "Avenida Sáenz Peña",
+    "calle_id": "avenida-saenz-pena",
+    "carril": "sentido sur",
+    "k": 3,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 48
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8339281,
+      -6.7571727
+     ],
+     [
+      -79.8339744,
+      -6.7576691
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-saenz-pena-sentido-sur-4",
+    "nombre": "Avenida Sáenz Peña · sentido sur · entre Caminos del Inca y Virrey Toledo",
+    "calle": "Avenida Sáenz Peña",
+    "calle_id": "avenida-saenz-pena",
+    "carril": "sentido sur",
+    "k": 4,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 49
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8339744,
+      -6.7576691
+     ],
+     [
+      -79.8340208,
+      -6.7581545
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-saenz-pena-sentido-sur-5",
+    "nombre": "Avenida Sáenz Peña · sentido sur · entre Virrey Toledo y Los Libertadores",
+    "calle": "Avenida Sáenz Peña",
+    "calle_id": "avenida-saenz-pena",
+    "carril": "sentido sur",
+    "k": 5,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 50
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8340208,
+      -6.7581545
+     ],
+     [
+      -79.8341572,
+      -6.7592869
+     ],
+     [
+      -79.8342435,
+      -6.7600582
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-saenz-pena-sentido-sur-6",
+    "nombre": "Avenida Sáenz Peña · sentido sur · entre Los Libertadores y Cruz de Chalpón",
+    "calle": "Avenida Sáenz Peña",
+    "calle_id": "avenida-saenz-pena",
+    "carril": "sentido sur",
+    "k": 6,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 51
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8342435,
+      -6.7600582
+     ],
+     [
+      -79.8343203,
+      -6.760828
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-union-1",
+    "nombre": "Calle Unión · entre Túpac Amaru y San Martín",
+    "calle": "Calle Unión",
+    "calle_id": "calle-union",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 52
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8295404,
+      -6.7581953
      ],
      [
       -79.8299499,
@@ -1097,7 +1557,7 @@
     "k": 2,
     "ruta": "Ruta 1",
     "tipo": "interior",
-    "orden": 37
+    "orden": 53
    },
    "geometry": {
     "type": "LineString",
@@ -1124,7 +1584,7 @@
     "k": 3,
     "ruta": "Ruta 1",
     "tipo": "interior",
-    "orden": 38
+    "orden": 54
    },
    "geometry": {
     "type": "LineString",
@@ -1151,7 +1611,7 @@
     "k": 4,
     "ruta": "Ruta 1",
     "tipo": "interior",
-    "orden": 39
+    "orden": 55
    },
    "geometry": {
     "type": "LineString",
@@ -1171,14 +1631,176 @@
    "type": "Feature",
    "properties": {
     "id": "calle-virrey-toledo-1",
-    "nombre": "Calle Virrey Toledo · entre Sáenz Peña y Hernando de Soto",
+    "nombre": "Calle Virrey Toledo",
     "calle": "Calle Virrey Toledo",
     "calle_id": "calle-virrey-toledo",
     "carril": "",
     "k": 1,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 40
+    "orden": 56
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8369411,
+      -6.7577963
+     ],
+     [
+      -79.8364679,
+      -6.7578453
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-virrey-toledo-2-1",
+    "nombre": "Calle Virrey Toledo · entre Conquista y Los Próceres",
+    "calle": "Calle Virrey Toledo",
+    "calle_id": "calle-virrey-toledo",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 57
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8364717,
+      -6.7578789
+     ],
+     [
+      -79.8359567,
+      -6.7579348
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-virrey-toledo-2-2",
+    "nombre": "Calle Virrey Toledo · entre Los Próceres y El Cabildo",
+    "calle": "Calle Virrey Toledo",
+    "calle_id": "calle-virrey-toledo",
+    "carril": "",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 58
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8359567,
+      -6.7579348
+     ],
+     [
+      -79.8354835,
+      -6.7579924
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-virrey-toledo-2-3",
+    "nombre": "Calle Virrey Toledo · entre El Cabildo y El Intendente",
+    "calle": "Calle Virrey Toledo",
+    "calle_id": "calle-virrey-toledo",
+    "carril": "",
+    "k": 3,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 59
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8354835,
+      -6.7579924
+     ],
+     [
+      -79.8349938,
+      -6.758052
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-virrey-toledo-2-4",
+    "nombre": "Calle Virrey Toledo · entre El Intendente y El Corregidor",
+    "calle": "Calle Virrey Toledo",
+    "calle_id": "calle-virrey-toledo",
+    "carril": "",
+    "k": 4,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 60
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8349938,
+      -6.758052
+     ],
+     [
+      -79.834511,
+      -6.7581029
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-virrey-toledo-2-5",
+    "nombre": "Calle Virrey Toledo · entre El Corregidor y Sáenz Peña",
+    "calle": "Calle Virrey Toledo",
+    "calle_id": "calle-virrey-toledo",
+    "carril": "",
+    "k": 5,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 61
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.834511,
+      -6.7581029
+     ],
+     [
+      -79.8340208,
+      -6.7581545
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-virrey-toledo-2-6",
+    "nombre": "Calle Virrey Toledo · entre Sáenz Peña y Horacio Patiño",
+    "calle": "Calle Virrey Toledo",
+    "calle_id": "calle-virrey-toledo",
+    "carril": "",
+    "k": 6,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 62
    },
    "geometry": {
     "type": "LineString",
@@ -1194,6 +1816,29 @@
      [
       -79.8334417,
       -6.7582261
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-virrey-toledo-2-7",
+    "nombre": "Calle Virrey Toledo · entre Horacio Patiño y Hernando de Soto",
+    "calle": "Calle Virrey Toledo",
+    "calle_id": "calle-virrey-toledo",
+    "carril": "",
+    "k": 7,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 63
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8334417,
+      -6.7582261
      ],
      [
       -79.8321381,
@@ -1205,15 +1850,15 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "calle-virrey-toledo-2",
+    "id": "calle-virrey-toledo-2-8",
     "nombre": "Calle Virrey Toledo · entre Hernando de Soto y Chongoyape",
     "calle": "Calle Virrey Toledo",
     "calle_id": "calle-virrey-toledo",
     "carril": "",
-    "k": 2,
+    "k": 8,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 41
+    "orden": 64
    },
    "geometry": {
     "type": "LineString",
@@ -1232,15 +1877,15 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "calle-virrey-toledo-3",
+    "id": "calle-virrey-toledo-2-9",
     "nombre": "Calle Virrey Toledo · entre Chongoyape y Carlos Castañeda Iparraguirre",
     "calle": "Calle Virrey Toledo",
     "calle_id": "calle-virrey-toledo",
     "carril": "",
-    "k": 3,
+    "k": 9,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 42
+    "orden": 65
    },
    "geometry": {
     "type": "LineString",
@@ -1259,15 +1904,15 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "calle-virrey-toledo-4",
+    "id": "calle-virrey-toledo-2-10",
     "nombre": "Calle Virrey Toledo · entre Carlos Castañeda Iparraguirre y José Carlos Mariátegui",
     "calle": "Calle Virrey Toledo",
     "calle_id": "calle-virrey-toledo",
     "carril": "",
-    "k": 4,
+    "k": 10,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 43
+    "orden": 66
    },
    "geometry": {
     "type": "LineString",
@@ -1286,15 +1931,15 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "calle-virrey-toledo-5",
+    "id": "calle-virrey-toledo-2-11",
     "nombre": "Calle Virrey Toledo · entre José Carlos Mariátegui y Túpac Amaru",
     "calle": "Calle Virrey Toledo",
     "calle_id": "calle-virrey-toledo",
     "carril": "",
-    "k": 5,
+    "k": 11,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 44
+    "orden": 67
    },
    "geometry": {
     "type": "LineString",
@@ -1313,6 +1958,1090 @@
   {
    "type": "Feature",
    "properties": {
+    "id": "calle-carlos-castaneda-iparraguirre-1",
+    "nombre": "Calle Carlos Castañeda Iparraguirre · entre Enrique de la Piedra y Virrey Toledo",
+    "calle": "Calle Carlos Castañeda Iparraguirre",
+    "calle_id": "calle-carlos-castaneda-iparraguirre",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 68
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8314801,
+      -6.7604013
+     ],
+     [
+      -79.831456,
+      -6.7601909
+     ],
+     [
+      -79.8314387,
+      -6.7600286
+     ],
+     [
+      -79.8314077,
+      -6.7597381
+     ],
+     [
+      -79.8313198,
+      -6.7588944
+     ],
+     [
+      -79.8312755,
+      -6.7584688
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-carlos-castaneda-iparraguirre-2",
+    "nombre": "Calle Carlos Castañeda Iparraguirre · entre Virrey Toledo y Unión",
+    "calle": "Calle Carlos Castañeda Iparraguirre",
+    "calle_id": "calle-carlos-castaneda-iparraguirre",
+    "carril": "",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 69
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8312755,
+      -6.7584688
+     ],
+     [
+      -79.8312261,
+      -6.7580108
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-carlos-castaneda-iparraguirre-3",
+    "nombre": "Calle Carlos Castañeda Iparraguirre · entre Unión y Atusparias",
+    "calle": "Calle Carlos Castañeda Iparraguirre",
+    "calle_id": "calle-carlos-castaneda-iparraguirre",
+    "carril": "",
+    "k": 3,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 70
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8312261,
+      -6.7580108
+     ],
+     [
+      -79.831114,
+      -6.7569719
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-carlos-castaneda-iparraguirre-4",
+    "nombre": "Calle Carlos Castañeda Iparraguirre · entre Atusparias y México",
+    "calle": "Calle Carlos Castañeda Iparraguirre",
+    "calle_id": "calle-carlos-castaneda-iparraguirre",
+    "carril": "",
+    "k": 4,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 71
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.831114,
+      -6.7569719
+     ],
+     [
+      -79.8310513,
+      -6.756527
+     ],
+     [
+      -79.8310408,
+      -6.7564515
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-chongoyape-1",
+    "nombre": "Calle Chongoyape · entre Cruz de Chalpón y Enrique de la Piedra",
+    "calle": "Calle Chongoyape",
+    "calle_id": "calle-chongoyape",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 72
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8319039,
+      -6.7607689
+     ],
+     [
+      -79.8318717,
+      -6.7603613
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-chongoyape-2",
+    "nombre": "Calle Chongoyape · entre Enrique de la Piedra y Santiago Cassinelli",
+    "calle": "Calle Chongoyape",
+    "calle_id": "calle-chongoyape",
+    "carril": "",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 73
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8318717,
+      -6.7603613
+     ],
+     [
+      -79.831816,
+      -6.7598718
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-chongoyape-3",
+    "nombre": "Calle Chongoyape · entre Santiago Cassinelli y M. Orellana",
+    "calle": "Calle Chongoyape",
+    "calle_id": "calle-chongoyape",
+    "carril": "",
+    "k": 3,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 74
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.831816,
+      -6.7598718
+     ],
+     [
+      -79.8317613,
+      -6.759391
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-chongoyape-4",
+    "nombre": "Calle Chongoyape · entre M. Orellana y Pardo y Miguel",
+    "calle": "Calle Chongoyape",
+    "calle_id": "calle-chongoyape",
+    "carril": "",
+    "k": 4,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 75
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8317613,
+      -6.759391
+     ],
+     [
+      -79.831706,
+      -6.7589049
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-chongoyape-5",
+    "nombre": "Calle Chongoyape · entre Pardo y Miguel y Virrey Toledo",
+    "calle": "Calle Chongoyape",
+    "calle_id": "calle-chongoyape",
+    "carril": "",
+    "k": 5,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 76
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.831706,
+      -6.7589049
+     ],
+     [
+      -79.8316511,
+      -6.7584226
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-chongoyape-6",
+    "nombre": "Calle Chongoyape · entre Virrey Toledo y México",
+    "calle": "Calle Chongoyape",
+    "calle_id": "calle-chongoyape",
+    "carril": "",
+    "k": 6,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 77
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8316511,
+      -6.7584226
+     ],
+     [
+      -79.8314292,
+      -6.756492
+     ],
+     [
+      -79.8314177,
+      -6.7564124
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "pardo-y-miguel-1",
+    "nombre": "Pardo y Miguel · entre Horacio Patiño y Filántropo",
+    "calle": "Pardo y Miguel",
+    "calle_id": "pardo-y-miguel",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 78
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8334862,
+      -6.7587118
+     ],
+     [
+      -79.8327634,
+      -6.7587902
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "pardo-y-miguel-2",
+    "nombre": "Pardo y Miguel · entre Filántropo y Chongoyape",
+    "calle": "Pardo y Miguel",
+    "calle_id": "pardo-y-miguel",
+    "carril": "",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 79
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8327634,
+      -6.7587902
+     ],
+     [
+      -79.831706,
+      -6.7589049
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "los-quipus-1",
+    "nombre": "Los Quipus · entre Los Próceres y Conquista",
+    "calle": "Los Quipus",
+    "calle_id": "los-quipus",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 80
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8360773,
+      -6.7589564
+     ],
+     [
+      -79.8365706,
+      -6.7589067
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "los-quipus-2",
+    "nombre": "Los Quipus · entre Conquista y José Balta",
+    "calle": "Los Quipus",
+    "calle_id": "los-quipus",
+    "carril": "",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 81
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8365706,
+      -6.7589067
+     ],
+     [
+      -79.8370684,
+      -6.7588566
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "jiron-el-cabildo",
+    "nombre": "Jirón El Cabildo",
+    "calle": "Jirón El Cabildo",
+    "calle_id": "jiron-el-cabildo",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 82
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8356847,
+      -6.7598934
+     ],
+     [
+      -79.8356134,
+      -6.7591041
+     ],
+     [
+      -79.8354835,
+      -6.7579924
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "jiron-el-intendente",
+    "nombre": "Jirón El Intendente",
+    "calle": "Jirón El Intendente",
+    "calle_id": "jiron-el-intendente",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 83
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8352083,
+      -6.7599479
+     ],
+     [
+      -79.8349938,
+      -6.758052
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "jiron-el-corregidor",
+    "nombre": "Jirón El Corregidor",
+    "calle": "Jirón El Corregidor",
+    "calle_id": "jiron-el-corregidor",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 84
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.834726,
+      -6.760003
+     ],
+     [
+      -79.834511,
+      -6.7581029
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "filantropo-1",
+    "nombre": "Filántropo · entre Santiago Cassinelli y M. Orellana",
+    "calle": "Filántropo",
+    "calle_id": "filantropo",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 85
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8328488,
+      -6.7597581
+     ],
+     [
+      -79.8328065,
+      -6.7592782
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "filantropo-2",
+    "nombre": "Filántropo · entre M. Orellana y Pardo y Miguel",
+    "calle": "Filántropo",
+    "calle_id": "filantropo",
+    "carril": "",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 86
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8328065,
+      -6.7592782
+     ],
+     [
+      -79.8327634,
+      -6.7587902
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "m-orellana",
+    "nombre": "M. Orellana",
+    "calle": "M. Orellana",
+    "calle_id": "m-orellana",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 87
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8328065,
+      -6.7592782
+     ],
+     [
+      -79.8317613,
+      -6.759391
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "los-curacas",
+    "nombre": "Los Curacas",
+    "calle": "Los Curacas",
+    "calle_id": "los-curacas",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 88
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8371167,
+      -6.759326
+     ],
+     [
+      -79.8370246,
+      -6.7593339
+     ],
+     [
+      -79.8366262,
+      -6.7593801
+     ],
+     [
+      -79.8361337,
+      -6.7594344
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "santiago-cassinelli-1",
+    "nombre": "Santiago Cassinelli · entre Horacio Patiño y Filántropo",
+    "calle": "Santiago Cassinelli",
+    "calle_id": "santiago-cassinelli",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 89
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8336029,
+      -6.7596751
+     ],
+     [
+      -79.8328488,
+      -6.7597581
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "santiago-cassinelli-2",
+    "nombre": "Santiago Cassinelli · entre Filántropo y Chongoyape",
+    "calle": "Santiago Cassinelli",
+    "calle_id": "santiago-cassinelli",
+    "carril": "",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 90
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8328488,
+      -6.7597581
+     ],
+     [
+      -79.831816,
+      -6.7598718
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-horacio-patino-1",
+    "nombre": "Calle Horacio Patiño · entre Cruz de Chalpón y Enrique de la Piedra",
+    "calle": "Calle Horacio Patiño",
+    "calle_id": "calle-horacio-patino",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 91
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8336446,
+      -6.7607662
+     ],
+     [
+      -79.8336849,
+      -6.7605238
+     ],
+     [
+      -79.8336795,
+      -6.7604332
+     ],
+     [
+      -79.8336601,
+      -6.760148
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-horacio-patino-2",
+    "nombre": "Calle Horacio Patiño · entre Enrique de la Piedra y Santiago Cassinelli",
+    "calle": "Calle Horacio Patiño",
+    "calle_id": "calle-horacio-patino",
+    "carril": "",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 92
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8336601,
+      -6.760148
+     ],
+     [
+      -79.8336029,
+      -6.7596751
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-horacio-patino-3",
+    "nombre": "Calle Horacio Patiño · entre Santiago Cassinelli y Pardo y Miguel",
+    "calle": "Calle Horacio Patiño",
+    "calle_id": "calle-horacio-patino",
+    "carril": "",
+    "k": 3,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 93
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8336029,
+      -6.7596751
+     ],
+     [
+      -79.8334862,
+      -6.7587118
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-horacio-patino-4",
+    "nombre": "Calle Horacio Patiño · entre Pardo y Miguel y Virrey Toledo",
+    "calle": "Calle Horacio Patiño",
+    "calle_id": "calle-horacio-patino",
+    "carril": "",
+    "k": 4,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 94
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8334862,
+      -6.7587118
+     ],
+     [
+      -79.8334417,
+      -6.7582261
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-los-libertadores-1",
+    "nombre": "Calle Los Libertadores · entre Sáenz Peña y El Corregidor",
+    "calle": "Calle Los Libertadores",
+    "calle_id": "calle-los-libertadores",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 95
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8342435,
+      -6.7600582
+     ],
+     [
+      -79.834726,
+      -6.760003
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-los-libertadores-2",
+    "nombre": "Calle Los Libertadores · entre El Corregidor y El Intendente",
+    "calle": "Calle Los Libertadores",
+    "calle_id": "calle-los-libertadores",
+    "carril": "",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 96
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.834726,
+      -6.760003
+     ],
+     [
+      -79.8352083,
+      -6.7599479
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-los-libertadores-3",
+    "nombre": "Calle Los Libertadores · entre El Intendente y El Cabildo",
+    "calle": "Calle Los Libertadores",
+    "calle_id": "calle-los-libertadores",
+    "carril": "",
+    "k": 3,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 97
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8352083,
+      -6.7599479
+     ],
+     [
+      -79.8356847,
+      -6.7598934
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-los-libertadores-4",
+    "nombre": "Calle Los Libertadores · entre El Cabildo y Los Próceres",
+    "calle": "Calle Los Libertadores",
+    "calle_id": "calle-los-libertadores",
+    "carril": "",
+    "k": 4,
+    "ruta": "Ruta 1",
+    "tipo": "interior",
+    "orden": 98
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8356847,
+      -6.7598934
+     ],
+     [
+      -79.8357494,
+      -6.759886
+     ],
+     [
+      -79.8361812,
+      -6.7598365
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "enrique-de-la-piedra-1",
+    "nombre": "Enrique de la Piedra · entre Horacio Patiño y Chongoyape",
+    "calle": "Enrique de la Piedra",
+    "calle_id": "enrique-de-la-piedra",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 99
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8336601,
+      -6.760148
+     ],
+     [
+      -79.8318717,
+      -6.7603613
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "enrique-de-la-piedra-2",
+    "nombre": "Enrique de la Piedra · entre Chongoyape y Carlos Castañeda Iparraguirre",
+    "calle": "Enrique de la Piedra",
+    "calle_id": "enrique-de-la-piedra",
+    "carril": "",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 100
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8318717,
+      -6.7603613
+     ],
+     [
+      -79.8314801,
+      -6.7604013
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-cruz-de-chalpon-1",
+    "nombre": "Calle Cruz de Chalpón",
+    "calle": "Calle Cruz de Chalpón",
+    "calle_id": "calle-cruz-de-chalpon",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 101
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8362571,
+      -6.7605078
+     ],
+     [
+      -79.8358272,
+      -6.7605785
+     ],
+     [
+      -79.8343203,
+      -6.760828
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-cruz-de-chalpon-2-1",
+    "nombre": "Calle Cruz de Chalpón · entre Sáenz Peña y Horacio Patiño",
+    "calle": "Calle Cruz de Chalpón",
+    "calle_id": "calle-cruz-de-chalpon",
+    "carril": "",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 102
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8343203,
+      -6.760828
+     ],
+     [
+      -79.8342865,
+      -6.7608317
+     ],
+     [
+      -79.8342074,
+      -6.7608402
+     ],
+     [
+      -79.8340738,
+      -6.7608568
+     ],
+     [
+      -79.8340137,
+      -6.7608505
+     ],
+     [
+      -79.833945,
+      -6.7608434
+     ],
+     [
+      -79.8337409,
+      -6.7607909
+     ],
+     [
+      -79.8336446,
+      -6.7607662
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "calle-cruz-de-chalpon-2-2",
+    "nombre": "Calle Cruz de Chalpón · entre Horacio Patiño y Chongoyape",
+    "calle": "Calle Cruz de Chalpón",
+    "calle_id": "calle-cruz-de-chalpon",
+    "carril": "",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 103
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8336446,
+      -6.7607662
+     ],
+     [
+      -79.8334676,
+      -6.7607182
+     ],
+     [
+      -79.8333067,
+      -6.7606943
+     ],
+     [
+      -79.8331806,
+      -6.7606863
+     ],
+     [
+      -79.8329733,
+      -6.7606888
+     ],
+     [
+      -79.8329687,
+      -6.7606889
+     ],
+     [
+      -79.8325546,
+      -6.7607196
+     ],
+     [
+      -79.8324692,
+      -6.7607259
+     ],
+     [
+      -79.8319443,
+      -6.7607658
+     ],
+     [
+      -79.8319165,
+      -6.7607679
+     ],
+     [
+      -79.8319039,
+      -6.7607689
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
     "id": "avenida-mexico-sentido-oeste-1",
     "nombre": "Avenida México · sentido oeste · entre Túpac Amaru y José Carlos Mariátegui",
     "calle": "Avenida México",
@@ -1321,7 +3050,7 @@
     "k": 1,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 45
+    "orden": 104
    },
    "geometry": {
     "type": "LineString",
@@ -1329,6 +3058,18 @@
      [
       -79.8293569,
       -6.7566329
+     ],
+     [
+      -79.8293575,
+      -6.7566328
+     ],
+     [
+      -79.8293579,
+      -6.7566328
+     ],
+     [
+      -79.8301751,
+      -6.7565414
      ],
      [
       -79.8301795,
@@ -1348,7 +3089,7 @@
     "k": 2,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 46
+    "orden": 105
    },
    "geometry": {
     "type": "LineString",
@@ -1356,10 +3097,6 @@
      [
       -79.8301795,
       -6.7565409
-     ],
-     [
-      -79.8307331,
-      -6.7564834
      ],
      [
       -79.8310408,
@@ -1379,7 +3116,7 @@
     "k": 3,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 47
+    "orden": 106
    },
    "geometry": {
     "type": "LineString",
@@ -1389,7 +3126,11 @@
       -6.7564515
      ],
      [
-      -79.8314176,
+      -79.8310434,
+      -6.7564512
+     ],
+     [
+      -79.8314177,
       -6.7564124
      ]
     ]
@@ -1406,18 +3147,18 @@
     "k": 4,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 48
+    "orden": 107
    },
    "geometry": {
     "type": "LineString",
     "coordinates": [
      [
-      -79.8314176,
+      -79.8314177,
       -6.7564124
      ],
      [
-      -79.8314177,
-      -6.7564124
+      -79.8314212,
+      -6.7564121
      ],
      [
       -79.8318395,
@@ -1441,7 +3182,7 @@
     "k": 5,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 49
+    "orden": 108
    },
    "geometry": {
     "type": "LineString",
@@ -1472,7 +3213,7 @@
     "k": 6,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 50
+    "orden": 109
    },
    "geometry": {
     "type": "LineString",
@@ -1486,10 +3227,6 @@
       -6.7562714
      ],
      [
-      -79.8331437,
-      -6.7562216
-     ],
-     [
       -79.8332193,
       -6.7562123
      ],
@@ -1498,12 +3235,12 @@
       -6.7562
      ],
      [
-      -79.8333644,
-      -6.7561977
-     ],
-     [
       -79.8336156,
       -6.7561724
+     ],
+     [
+      -79.8337099,
+      -6.7561606
      ],
      [
       -79.833737,
@@ -1515,15 +3252,311 @@
   {
    "type": "Feature",
    "properties": {
+    "id": "avenida-mexico-sentido-oeste-7",
+    "nombre": "Avenida México · sentido oeste · entre Sáenz Peña y Los Próceres",
+    "calle": "Avenida México",
+    "calle_id": "avenida-mexico",
+    "carril": "sentido oeste",
+    "k": 7,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 110
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.833737,
+      -6.7561572
+     ],
+     [
+      -79.8338057,
+      -6.75615
+     ],
+     [
+      -79.8342247,
+      -6.7561062
+     ],
+     [
+      -79.834728,
+      -6.7560496
+     ],
+     [
+      -79.8352382,
+      -6.7559967
+     ],
+     [
+      -79.8357474,
+      -6.7559424
+     ],
+     [
+      -79.8357491,
+      -6.7559422
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-mexico-sentido-oeste-8",
+    "nombre": "Avenida México · sentido oeste · entre Los Próceres y Conquista",
+    "calle": "Avenida México",
+    "calle_id": "avenida-mexico",
+    "carril": "sentido oeste",
+    "k": 8,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 111
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8357491,
+      -6.7559422
+     ],
+     [
+      -79.8362462,
+      -6.7558863
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-mexico-sentido-oeste-9",
+    "nombre": "Avenida México · sentido oeste · entre Conquista y José Balta",
+    "calle": "Avenida México",
+    "calle_id": "avenida-mexico",
+    "carril": "sentido oeste",
+    "k": 9,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 112
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8362462,
+      -6.7558863
+     ],
+     [
+      -79.8362478,
+      -6.7558861
+     ],
+     [
+      -79.8367392,
+      -6.7558254
+     ],
+     [
+      -79.8367397,
+      -6.7558253
+     ],
+     [
+      -79.8367415,
+      -6.7558251
+     ],
+     [
+      -79.8367826,
+      -6.7558214
+     ],
+     [
+      -79.836818,
+      -6.7558182
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-jose-balta-sentido-norte-1",
+    "nombre": "Avenida José Balta · sentido norte · entre Los Curacas y Los Quipus",
+    "calle": "Avenida José Balta",
+    "calle_id": "avenida-jose-balta",
+    "carril": "sentido norte",
+    "k": 1,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 113
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8371167,
+      -6.759326
+     ],
+     [
+      -79.8371165,
+      -6.7593244
+     ],
+     [
+      -79.8370684,
+      -6.7588566
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-jose-balta-sentido-norte-2",
+    "nombre": "Avenida José Balta · sentido norte · entre Los Quipus y Virrey Toledo",
+    "calle": "Avenida José Balta",
+    "calle_id": "avenida-jose-balta",
+    "carril": "sentido norte",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 114
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8370684,
+      -6.7588566
+     ],
+     [
+      -79.8370282,
+      -6.7584662
+     ],
+     [
+      -79.8369411,
+      -6.7577963
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-jose-balta-sentido-norte-3",
+    "nombre": "Avenida José Balta · sentido norte · entre Virrey Toledo y México",
+    "calle": "Avenida José Balta",
+    "calle_id": "avenida-jose-balta",
+    "carril": "sentido norte",
+    "k": 3,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 115
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8369411,
+      -6.7577963
+     ],
+     [
+      -79.8368445,
+      -6.7567149
+     ],
+     [
+      -79.8367477,
+      -6.7558938
+     ],
+     [
+      -79.8367477,
+      -6.7558936
+     ],
+     [
+      -79.836744,
+      -6.7558623
+     ],
+     [
+      -79.8367397,
+      -6.7558253
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
     "id": "avenida-saenz-pena-sentido-norte-1",
-    "nombre": "Avenida Sáenz Peña · sentido norte · entre Virrey Toledo y Caminos del Inca",
+    "nombre": "Avenida Sáenz Peña · sentido norte · entre Cruz de Chalpón y Los Libertadores",
     "calle": "Avenida Sáenz Peña",
     "calle_id": "avenida-saenz-pena",
     "carril": "sentido norte",
     "k": 1,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 51
+    "orden": 116
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8342077,
+      -6.7608427
+     ],
+     [
+      -79.8342074,
+      -6.7608402
+     ],
+     [
+      -79.8342072,
+      -6.7608372
+     ],
+     [
+      -79.8341449,
+      -6.7600678
+     ],
+     [
+      -79.8341448,
+      -6.7600662
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-saenz-pena-sentido-norte-2",
+    "nombre": "Avenida Sáenz Peña · sentido norte · entre Los Libertadores y Virrey Toledo",
+    "calle": "Avenida Sáenz Peña",
+    "calle_id": "avenida-saenz-pena",
+    "carril": "sentido norte",
+    "k": 2,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 117
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -79.8341448,
+      -6.7600662
+     ],
+     [
+      -79.8340836,
+      -6.7593104
+     ],
+     [
+      -79.8339192,
+      -6.7581671
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": "avenida-saenz-pena-sentido-norte-3",
+    "nombre": "Avenida Sáenz Peña · sentido norte · entre Virrey Toledo y Caminos del Inca",
+    "calle": "Avenida Sáenz Peña",
+    "calle_id": "avenida-saenz-pena",
+    "carril": "sentido norte",
+    "k": 3,
+    "ruta": "Ruta 1",
+    "tipo": "limite",
+    "orden": 118
    },
    "geometry": {
     "type": "LineString",
@@ -1542,15 +3575,15 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "avenida-saenz-pena-sentido-norte-2",
+    "id": "avenida-saenz-pena-sentido-norte-4",
     "nombre": "Avenida Sáenz Peña · sentido norte · entre Caminos del Inca y Cacique Collique",
     "calle": "Avenida Sáenz Peña",
     "calle_id": "avenida-saenz-pena",
     "carril": "sentido norte",
-    "k": 2,
+    "k": 4,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 52
+    "orden": 119
    },
    "geometry": {
     "type": "LineString",
@@ -1560,10 +3593,6 @@
       -6.75768
      ],
      [
-      -79.8338598,
-      -6.7575123
-     ],
-     [
       -79.8338286,
       -6.757184
      ]
@@ -1573,15 +3602,15 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "avenida-saenz-pena-sentido-norte-3",
+    "id": "avenida-saenz-pena-sentido-norte-5",
     "nombre": "Avenida Sáenz Peña · sentido norte · entre Cacique Collique y Cacique Cinto",
     "calle": "Avenida Sáenz Peña",
     "calle_id": "avenida-saenz-pena",
     "carril": "sentido norte",
-    "k": 3,
+    "k": 5,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 53
+    "orden": 120
    },
    "geometry": {
     "type": "LineString",
@@ -1600,15 +3629,15 @@
   {
    "type": "Feature",
    "properties": {
-    "id": "avenida-saenz-pena-sentido-norte-4",
+    "id": "avenida-saenz-pena-sentido-norte-6",
     "nombre": "Avenida Sáenz Peña · sentido norte · entre Cacique Cinto y México",
     "calle": "Avenida Sáenz Peña",
     "calle_id": "avenida-saenz-pena",
     "carril": "sentido norte",
-    "k": 4,
+    "k": 6,
     "ruta": "Ruta 1",
     "tipo": "limite",
-    "orden": 54
+    "orden": 121
    },
    "geometry": {
     "type": "LineString",
@@ -1618,8 +3647,16 @@
       -6.7567145
      ],
      [
+      -79.8337196,
+      -6.7562375
+     ],
+     [
       -79.8337195,
       -6.756237
+     ],
+     [
+      -79.8337261,
+      -6.7562071
      ],
      [
       -79.833737,

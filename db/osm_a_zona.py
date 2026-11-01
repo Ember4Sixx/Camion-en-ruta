@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """
-Delimita la zona (el "cuadrado") formada por 4 calles y extrae SOLO las calles del proyecto que quedan dentro.
+Delimita la zona de recolección y extrae SOLO las calles del proyecto que quedan dentro.
 
-Perímetro por defecto : Sáenz Peña, México, Virrey Toledo y Túpac Amaru.
-Calles del proyecto   : las 16 de CALLES_PROYECTO (más abajo). Cualquier otra calle de OSM se ignora.
+Perímetro por defecto : 8 calles límite, en orden (cada una se cruza con la siguiente y la última con la primera):
+                        México, Túpac Amaru, Virrey Toledo, Carlos Castañeda, Cruz de Chalpón, Próceres, Curacas, José Balta.
+                        Es un contorno escalonado de 8 esquinas. Además, Sáenz Peña, Chongoyape y Enrique de la Piedra
+                        se marcan como calles 'limite' (cierran las manzanas de la zona) aunque queden dentro del contorno.
+Calles del proyecto   : las 32 de CALLES_PROYECTO (más abajo), con los nombres exactos que tienen en OpenStreetMap.
+                        Cualquier otra calle de OSM se ignora.
 
 Entrada : exportación JSON de Overpass (ver db/consulta_overpass.txt), con geometría.
 Salida  : data/zona.geojson      polígono del perímetro
@@ -18,14 +22,14 @@ Salida  : data/zona.geojson      polígono del perímetro
 
 Uso:
     python db/osm_a_zona.py data/osm_jlo.json
-    python db/osm_a_zona.py data/osm_jlo.json --limites "Sáenz Peña,México,Virrey Toledo,Túpac Amaru"
+    python db/osm_a_zona.py data/osm_jlo.json --limites "México,Túpac Amaru,Virrey Toledo,Castañeda,Cruz de Chalpón,Próceres,Curacas,José Balta"
     python db/osm_a_zona.py data/osm_jlo.json --salida otra_carpeta   (para probar sin pisar data/)
 
 El ORDEN de recorrido que genera es PROVISIONAL (de norte a sur). Cámbienlo por el
 recorrido real del camión editando la columna `orden` de ruta_tramos o la propiedad `orden` en tramos.geojson.
 """
 import argparse
-import itertools
+import heapq
 import json
 import math
 import re
@@ -39,14 +43,48 @@ from tramos import construir_tramos  # noqa: E402  (seccionado en tramos y carri
 
 TOL_M = 15  # tolerancia (m) para considerar que un punto está sobre el borde de la zona
 
-# Las 16 calles del proyecto (el tipo de vía -calle, avenida, jirón, pasaje- no importa al comparar).
-CALLES_PROYECTO = [
-    "Avenida Sáenz Peña", "Avenida México", "Calle Cacique Cinto",
-    "Calle Cacique Collique", "Calle Caminos del Inca", "Calle Virrey Toledo",
-    "Jirón Gonzalo Pizarro", "Jirón Hernando de Soto",
-    "Calle Chongoyape", "Calle Carlos Castañeda Iparraguirre", "Calle Atusparias",
-    "Pasaje Perú", "Calle José Carlos Mariátegui", "Calle Unión", "Pasaje San Martín", "Calle Túpac Amaru",
-]
+# Las 32 calles del proyecto: nombre que se muestra -> nombres EXACTOS que tiene en OpenStreetMap (sin importar
+# mayúsculas ni tildes). Una calle puede tener varios nombres en OSM (por ejemplo "Calle X" y "Pasaje X").
+CALLES_OSM = {
+    "Avenida México": ["Avenida México"],
+    "Avenida José Balta": ["Avenida José Balta"],
+    "Los Curacas": ["Los Curacas"],
+    "Calle Los Próceres": ["Calle Los Próceres", "Los Próceres", "Pasaje Los Próceres"],
+    "Calle Cruz de Chalpón": ["Calle Cruz de Chalpón"],
+    "Calle Chongoyape": ["Calle Chongoyape"],
+    "Enrique de la Piedra": ["Enrique de la Piedra"],
+    "Calle Carlos Castañeda Iparraguirre": ["Calle Carlos Castañeda Iparraguirre", "Carlos Castañeda"],
+    "Calle Virrey Toledo": ["Calle Virrey Toledo"],
+    "Calle Túpac Amaru": ["Calle Túpac Amaru", "Pasaje Túpac Amaru"],
+    "Calle Conquista": ["Calle Conquista", "Conquista"],
+    "Los Quipus": ["Los Quipus"],
+    "Calle Los Libertadores": ["Calle Los Libertadores"],
+    "Jirón El Cabildo": ["Jirón El Cabildo"],
+    "Jirón El Intendente": ["Jirón El Intendente"],
+    "Jirón El Corregidor": ["Jirón El Corregidor"],
+    "Avenida Sáenz Peña": ["Avenida Sáenz Peña"],
+    "Calle Horacio Patiño": ["Horacio Patiño", "Pasaje Horacio Patiño"],
+    "Santiago Cassinelli": ["Santiago Cassinelli"],
+    "Pardo y Miguel": ["Pardo y Miguel"],
+    "Filántropo": ["Filántropo"],
+    "M. Orellana": ["M. Orellana"],
+    "Calle Unión": ["Calle Unión"],
+    "Pasaje San Martín": ["Pasaje San Martín"],
+    "Calle José Carlos Mariátegui": ["Calle José Carlos Mariátegui", "José Carlos Mariátegui"],
+    "Pasaje Perú": ["Pasaje Perú"],
+    "Calle Atusparias": ["Calle Atusparias"],
+    "Jirón Hernando de Soto": ["Jirón Hernando de Soto"],
+    "Jirón Gonzalo Pizarro": ["Jirón Gonzalo Pizarro"],
+    "Calle Caminos del Inca": ["Calle Caminos del Inca"],
+    "Calle Cacique Collique": ["Calle Cacique Collique"],
+    "Calle Cacique Cinto": ["Calle Cacique Cinto"],
+}
+CALLES_PROYECTO = list(CALLES_OSM)
+# Calles que se marcan como 'limite' (las 8 del contorno + las 3 que cierran las manzanas de la zona).
+CALLES_LIMITE = {"Avenida México", "Avenida José Balta", "Los Curacas", "Calle Los Próceres", "Calle Cruz de Chalpón",
+                 "Calle Chongoyape", "Enrique de la Piedra", "Calle Carlos Castañeda Iparraguirre", "Calle Virrey Toledo",
+                 "Calle Túpac Amaru", "Avenida Sáenz Peña"}
+LIMITES_POR_DEFECTO = "México,Túpac Amaru,Virrey Toledo,Castañeda,Cruz de Chalpón,Próceres,Curacas,José Balta"
 TIPOS_VIA = {"calle", "avenida", "av", "jiron", "jr", "pasaje", "psje", "pje", "ca", "ave"}
 
 
@@ -60,6 +98,11 @@ def norm(t):
 def clave(t):
     """Nombre sin tildes ni tipo de vía: 'Jirón Gonzalo Pizarro' -> 'gonzalo pizarro'."""
     return " ".join(w for w in norm(t).split() if w not in TIPOS_VIA)
+
+
+def exacto(t):
+    # Nombre normalizado completo (sin tildes ni mayúsculas, CON el tipo de vía): "Pasaje Perú" -> "pasaje peru".
+    return " ".join(norm(t).split())
 
 
 def slug(t):
@@ -171,10 +214,50 @@ def extremos_corner(comp_a, comp_b):
     return d, ((p[0] + c[0]) / 2, (p[1] + c[1]) / 2), 0
 
 
+def camino_por_calle(ways, A, B):
+    # Recorrido más corto POR LA PROPIA CALLE entre los puntos A y B (ambos en metros). Sirve para que el borde de la zona
+    # siga el trazo real de la calle límite (si es curva) y no una línea recta. Devuelve los vértices intermedios.
+    # Si la calle no tiene un camino continuo entre A y B, devuelve [] (el borde queda recto).
+    ady = defaultdict(list)
+    for w in ways:
+        for p, q in zip(w, w[1:]):
+            kp, kq = (round(p[0], 3), round(p[1], 3)), (round(q[0], 3), round(q[1], 3))
+            d = math.hypot(p[0] - q[0], p[1] - q[1])
+            ady[kp].append((kq, d))
+            ady[kq].append((kp, d))
+    if not ady:
+        return []
+    cerca = lambda pt: min(ady, key=lambda k: math.hypot(k[0] - pt[0], k[1] - pt[1]))
+    ini, fin = cerca(A), cerca(B)
+    dist, previo, cola = {ini: 0.0}, {}, [(0.0, ini)]
+    while cola:
+        d, u = heapq.heappop(cola)
+        if u == fin:
+            break
+        if d > dist.get(u, float("inf")):
+            continue
+        for v, w in ady[u]:
+            if d + w < dist.get(v, float("inf")):
+                dist[v], previo[v] = d + w, u
+                heapq.heappush(cola, (d + w, v))
+    if fin not in dist:
+        return []
+    ruta, u = [fin], fin
+    while u != ini:
+        u = previo[u]
+        ruta.append(u)
+    ruta.reverse()
+    cuerda = math.hypot(A[0] - B[0], A[1] - B[1])
+    if dist[fin] > 1.6 * cuerda + 30:          # un rodeo raro: mejor el borde recto
+        return []
+    return [(x, y) for x, y in ruta]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("entrada")
-    ap.add_argument("--limites", default="Sáenz Peña,México,Virrey Toledo,Túpac Amaru")
+    ap.add_argument("--limites", default=LIMITES_POR_DEFECTO,
+                    help="calles del contorno EN ORDEN (cada una se cruza con la siguiente; la última con la primera)")
     ap.add_argument("--salida", default=".", help="carpeta base donde están data/ y db/")
     ap.add_argument("--ruta", default="Ruta 1")
     ap.add_argument("--tramo-minimo", type=float, default=30.0,
@@ -195,7 +278,7 @@ def main():
     P = Plano(lat0)
 
     # tramos con nombre, solo de las calles del proyecto
-    canon = {clave(n): n for n in CALLES_PROYECTO}   # clave -> nombre oficial del proyecto
+    canon = {exacto(v): oficial for oficial, vs in CALLES_OSM.items() for v in vs}   # nombre en OSM -> nombre oficial
     permitidas = set(canon)
     variantes = defaultdict(set)                     # nombre oficial -> nombres distintos que tiene en OSM
     tramos = []  # (nombre, [(x,y)...], [(lng,lat)...], osm_id)
@@ -206,9 +289,9 @@ def main():
         if not nom:
             sin_nombre += 1
             continue
-        if clave(nom) not in permitidas:
+        if exacto(nom) not in permitidas:
             continue
-        variantes[canon[clave(nom)]].add(nom)
+        variantes[canon[exacto(nom)]].add(nom)
         ll = [(p["lon"], p["lat"]) for p in e["geometry"]]
         ow = (e.get("tags") or {}).get("oneway")
         if ow == "-1":
@@ -216,58 +299,63 @@ def main():
         sentido_via[e["id"]] = 1 if ow in ("yes", "true", "1", "-1") else 0
         tramos.append((nom, [P.xy(*p) for p in ll], ll, e["id"]))
 
-    # --- localizar las 4 calles límite ---
-    claves = [norm(x).strip() for x in a.limites.split(",")]
-    if len(claves) != 4:
-        sys.exit("--limites necesita exactamente 4 nombres separados por coma.")
-    candidatos = []  # por cada límite: lista de componentes (cada uno = lista de polilíneas en metros)
+    # --- localizar las calles límite y cerrar el contorno ---
+    # Las calles se dan EN ORDEN alrededor de la zona: la esquina i es donde se cruzan la calle i y la calle i+1.
+    claves = [norm(x).strip() for x in a.limites.split(",") if x.strip()]
+    if len(claves) < 3:
+        sys.exit("--limites necesita al menos 3 calles separadas por coma (en orden alrededor de la zona).")
+    vias = []   # por cada límite: todas las polilíneas (en metros) de esa calle
     for k in claves:
-        nombres = sorted({n for n, *_ in tramos if k in norm(n).split() or k in norm(n)})
+        nombres = sorted({n for n, *_ in tramos if k in norm(n)})
         print(f"[límite '{k}'] nombres encontrados: {nombres or 'NINGUNO'}")
         if not nombres:
             sys.exit(f"No se encontró ninguna calle que contenga '{k}'. Revisa la ortografía en OSM o ajusta --limites.")
-        ways = [t[1] for t in tramos if t[0] in nombres]
-        candidatos.append(componentes(ways))
+        vias.append([t[1] for t in tramos if t[0] in nombres])
 
-    # --- elegir componentes y la forma de unirlos que dé el cuadrado más ajustado ---
-    mejor = None
-    for combo in itertools.product(*candidatos):
-        for opuestas in ([(0, 2), (1, 3)], [(0, 1), (2, 3)], [(0, 3), (1, 2)]):
-            ady = [(i, j) for i in range(4) for j in range(i + 1, 4)
-                   if (i, j) not in opuestas and (j, i) not in opuestas]
-            esq = {}
-            costo = 0
-            for i, j in ady:
-                d, c, n = extremos_corner(combo[i], combo[j])
-                esq[(i, j)] = (c, n)
-                costo += d
-            if mejor is None or costo < mejor[0]:
-                mejor = (costo, combo, opuestas, esq)
-    costo, combo, opuestas, esq = mejor
-    if costo > 4 * 60:
-        print(f"AVISO: las 4 calles no se cierran bien (separación total {costo:.0f} m). "
-              "Puede que alguna calle del OSM tenga otro nombre o esté dividida. Revisa data/zona.geojson.")
+    def esquina(va, vb):
+        # Punto donde se cruzan dos calles. Si hay varios cruces (carriles paralelos) se promedian los que están
+        # a menos de 40 m del primero; si no se cruzan, punto medio del par de puntos más cercano.
+        pts = []
+        for wa in va:
+            for i in range(len(wa) - 1):
+                for wb in vb:
+                    for j in range(len(wb) - 1):
+                        x = seg_inter(wa[i], wa[i + 1], wb[j], wb[j + 1])
+                        if x:
+                            pts.append(x)
+        if pts:
+            p0 = pts[0]
+            cerca = [p for p in pts if math.hypot(p[0] - p0[0], p[1] - p0[1]) <= 40]
+            return 0.0, (sum(p[0] for p in cerca) / len(cerca), sum(p[1] for p in cerca) / len(cerca)), len(pts)
+        return extremos_corner(va, vb)
 
-    # orden cíclico A, B, C, D según las parejas opuestas
-    (a0, a1), (b0, b1) = opuestas
-    ciclo = [a0, b0, a1, b1]
-
-    def corner(i, j):
-        return esq[(i, j)][0] if (i, j) in esq else esq[(j, i)][0]
-
-    esquinas = [corner(ciclo[k], ciclo[(k + 1) % 4]) for k in range(4)]
-    poligono = esquinas
-    area = abs(sum(poligono[i][0] * poligono[(i + 1) % 4][1] - poligono[(i + 1) % 4][0] * poligono[i][1]
-                   for i in range(4))) / 2
-    print(f"Zona delimitada: {area / 10000:.2f} ha (≈ {math.sqrt(area):.0f} m de lado promedio)")
+    esquinas, costo = [], 0.0
+    for i in range(len(claves)):
+        d, c, n = esquina(vias[i], vias[(i + 1) % len(claves)])
+        esquinas.append(c)
+        costo += d
+        print(f"  esquina {i + 1}: {claves[i]} x {claves[(i + 1) % len(claves)]}"
+              + (f" (cruce, {n} punto(s))" if n else f" (no se cruzan: separación {d:.0f} m)"))
+    if costo > len(claves) * 60:
+        print(f"AVISO: las calles límite no se cierran bien (separación total {costo:.0f} m). "
+              "Puede que alguna calle del OSM tenga otro nombre o esté dividida, o que el orden de --limites no sea el del contorno. "
+              "Revisa data/zona.geojson.")
+    # El borde entre la esquina anterior y la siguiente sigue el trazo de la calle límite correspondiente.
+    poligono = []
+    for i in range(len(claves)):
+        A, B = esquinas[i - 1], esquinas[i]
+        poligono.append(A)
+        poligono.extend(pt for pt in camino_por_calle(vias[i], A, B)
+                        if math.hypot(pt[0] - A[0], pt[1] - A[1]) > 3 and math.hypot(pt[0] - B[0], pt[1] - B[1]) > 3)
+    area = abs(sum(poligono[i][0] * poligono[(i + 1) % len(poligono)][1] - poligono[(i + 1) % len(poligono)][0] * poligono[i][1]
+                   for i in range(len(poligono)))) / 2
+    print(f"Zona delimitada: {area / 10000:.2f} ha ({len(esquinas)} esquinas, {len(poligono)} vértices)")
 
     # --- calles dentro del cuadrado (o sobre su borde) ---
     def dentro(p):
         return en_poligono(p, poligono) or dist_borde(p, poligono) <= a.tolerancia
 
     tol = a.tolerancia
-    nombres_lim = {t[0] for t in tramos
-                   if any(k in norm(t[0]) for k in claves)}
     def t_cortes(a, b):
         """Parámetros (0..1) donde el segmento a-b cruza el borde del polígono."""
         ts = [0.0, 1.0]
@@ -318,18 +406,14 @@ def main():
                     run.append(p1)
                 else:
                     if len(run) >= 2 and largo_m(run) >= a.tramo_minimo:
-                        por_nombre[canon[clave(nom)]].append(run)
+                        por_nombre[canon[exacto(nom)]].append(run)
                         sentido_corrida[id(run)] = sentido_via[oid]
                     run = []
         if len(run) >= 2 and largo_m(run) >= a.tramo_minimo:
-            por_nombre[canon[clave(nom)]].append(run)
+            por_nombre[canon[exacto(nom)]].append(run)
             sentido_corrida[id(run)] = sentido_via[oid]
 
-    nombre_lim_zona = set()
-    for k, comp in zip(claves, combo):
-        for t in tramos:
-            if k in norm(t[0]) and any(t[1] is w for c in [comp] for w in c):
-                nombre_lim_zona.add(canon[clave(t[0])])
+    nombre_lim_zona = set(CALLES_LIMITE)
 
     def inv(c):  # lng,lat -> m
         return P.xy(*c)
