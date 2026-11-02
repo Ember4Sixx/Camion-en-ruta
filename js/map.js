@@ -12,7 +12,17 @@
 
   function iniciar() {
     mapa = L.map("map", { zoomControl: true }).setView(cfg.centro, cfg.zoom);
-    L.tileLayer(cfg.teselas.url, { maxZoom: 19, attribution: cfg.teselas.atribucion }).addTo(mapa);
+    const opcionesTeselas = { maxZoom: 19, subdomains: "abcd", attribution: cfg.teselas.atribucion };
+    L.tileLayer(cfg.teselas.url, opcionesTeselas).addTo(mapa);
+
+    // Capa de NOMBRES de calles por ENCIMA de las líneas de colores.
+    // Orden de capas en Leaflet: líneas = 400, nombres = 450, camión = 600, popups = 700.
+    if (cfg.teselas.etiquetas) {
+      mapa.createPane("nombres");
+      mapa.getPane("nombres").style.zIndex = 450;
+      mapa.getPane("nombres").style.pointerEvents = "none";   // los clics pasan a las calles de abajo
+      L.tileLayer(cfg.teselas.etiquetas, { ...opcionesTeselas, pane: "nombres", attribution: "" }).addTo(mapa);
+    }
     return mapa;
   }
 
@@ -104,7 +114,9 @@
     if (!marcadorCamion) {
       marcadorCamion = L.marker(ll, {
         icon: L.divIcon({ className: "", html: '<div class="truck-icon" aria-hidden="true">🚛</div>', iconSize: [28, 28], iconAnchor: [14, 14] }),
-        title: "Camión recolector"
+        title: "Camión recolector",
+        zIndexOffset: 1000,      // siempre por encima de todo
+        interactive: false
       }).addTo(mapa);
     } else {
       marcadorCamion.setLatLng(ll);

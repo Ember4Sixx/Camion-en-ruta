@@ -53,11 +53,18 @@ window.APP_CONFIG = {
     negro:    { etiqueta: "Finalizado",    descripcion: "La recolección ha finalizado",    color: "#1a1a1a" }
   },
 
-  // Mapa base. Respeta la atribución de OpenStreetMap y sus condiciones de uso
-  // (https://operations.osmfoundation.org/policies/tiles/). Para mucho tráfico
-  // usa un proveedor de teselas propio.
+  // Mapa base en DOS capas (CARTO, gratis para proyectos no comerciales, con atribución):
+  //   url       -> calles y edificios SIN nombres (va debajo de las líneas de colores)
+  //   etiquetas -> SOLO los nombres de las calles (va ENCIMA de las líneas, así no se tapan)
+  // Datos de OpenStreetMap. Si algún día se quiere volver al mapa anterior:
+  //   url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png" y borrar la línea "etiquetas".
   teselas: {
-    url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-    atribucion: "&copy; colaboradores de <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a>"
-  }
+    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
+    etiquetas: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png",
+    atribucion: "&copy; colaboradores de <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> &copy; <a href=\"https://carto.com/attributions\">CARTO</a>"
+  },
+
+  // Simulación del recorrido (panel "Modo demostración").
+  // Cuántos segundos dura la simulación completa, de principio a fin.
+  simulacionSegundos: 90
 };

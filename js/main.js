@@ -161,38 +161,95 @@
     $("#demo-simular").addEventListener("click", simular);
   }
 
+  // ---------- Simulación del recorrido ----------
+  // El camión avanza por un recorrido CONTINUO (js/simulacion.js): sigue las calles,
+  // nunca salta. Mientras recolecta un tramo: verde; los ya hechos: negro;
+  // los 2 siguientes: amarillo; el resto: gris. El ícono 🚛 se mueve sobre la línea.
+  const PROXIMOS = 2;
+  let plan = null;            // se calcula una sola vez
+  let camionSimulado = false; // true mientras el 🚛 del mapa es el de la simulación
+
   function detenerSimulacion() {
-    if (simulacion) { clearInterval(simulacion); simulacion = null; $("#demo-simular").textContent = "Simular recorrido"; }
+    if (simulacion) cancelAnimationFrame(simulacion);
+    simulacion = null;
+    $("#demo-simular").textContent = "Simular recorrido";
+    if (camionSimulado) {
+      camionSimulado = false;
+      AppMap.mostrarCamion(null);   // quita el camión simulado
+      actualizarCamion();           // y vuelve a mostrar el real (si hay GPS)
+    }
   }
 
-  // Simula el paso del camión: cada calle avanza gris -> amarillo -> verde -> negro en orden.
   function simular() {
     if (simulacion) { detenerSimulacion(); return; }
-    const ids = calles.features.map((f) => f.properties.id);
-    let paso = 0;
-    const total = ids.length + 3;
-    aplicarEstados(Object.fromEntries(ids.map((id) => [id, "gris"])));
+    if (!plan) plan = Simulacion.planificar(calles);
+    if (!plan.length) return;
+
+    // Orden en que se recolecta cada tramo (para saber cuáles son los "próximos").
+    const ordenRecoleccion = plan.filter((p) => p.recolecta).map((p) => p.id);
+    const total = plan.reduce((s, p) => s + p.largo, 0);
+    const metrosPorSeg = total / (cfg.simulacionSegundos || 90);
+
+    const hechos = new Set();
+    let i = 0;                 // paso actual del plan
+    let recorrido = 0;         // metros avanzados dentro del paso actual
+    let ultimoClave = "";
+    let antes = performance.now();
     $("#demo-simular").textContent = "Detener simulación";
-    simulacion = setInterval(() => {
-      paso++;
+
+    function pintar() {
+      const actual = plan[i];
+      const enCurso = actual && actual.recolecta ? actual.id : null;
+      const yaHechos = hechos.size + (enCurso ? 1 : 0);
+      const proximos = ordenRecoleccion.slice(yaHechos, yaHechos + PROXIMOS);
+      const clave = hechos.size + "|" + enCurso;
+      if (clave === ultimoClave) return;          // solo repinta cuando algo cambia
+      ultimoClave = clave;
       const nuevo = {};
-      ids.forEach((id, i) => {
-        const avance = paso - i; // cuántos pasos lleva esta calle en la secuencia
-        nuevo[id] = ORDEN[Math.max(0, Math.min(3, avance))];
-      });
+      calles.features.forEach((f) => { nuevo[f.properties.id] = "gris"; });
+      proximos.forEach((id) => { nuevo[id] = "amarillo"; });
+      hechos.forEach((id) => { nuevo[id] = "negro"; });
+      if (enCurso) nuevo[enCurso] = "verde";
       aplicarEstados(nuevo);
-      if (paso >= total) detenerSimulacion();
-    }, 1500);
+    }
+
+    function cuadro(ahora) {
+      const dt = Math.min(0.1, (ahora - antes) / 1000);   // máx. 0,1 s por cuadro (si la pestaña estuvo oculta)
+      antes = ahora;
+      recorrido += metrosPorSeg * dt;
+      while (i < plan.length && recorrido >= plan[i].largo) {
+        recorrido -= plan[i].largo;
+        if (plan[i].recolecta) hechos.add(plan[i].id);
+        i++;
+      }
+      if (i >= plan.length) {                           // terminó: todo negro
+        pintar();
+        const fin = plan[plan.length - 1].coords;
+        AppMap.mostrarCamion({ lng: fin[fin.length - 1][0], lat: fin[fin.length - 1][1] });
+        simulacion = null;
+        $("#demo-simular").textContent = "Simular recorrido";
+        return;
+      }
+      AppMap.mostrarCamion(Simulacion.puntoEn(plan[i].coords, recorrido));
+      pintar();
+      simulacion = requestAnimationFrame(cuadro);
+    }
+
+    AppMap.mostrarCamion(null);
+    camionSimulado = true;
+    simulacion = requestAnimationFrame(cuadro);
   }
 
   // ---------- GPS (opcional) ----------
   async function actualizarCamion() {
-    if (!cfg.gpsActivo) return;
+    if (!cfg.gpsActivo || simulacion) return;   // durante la simulación manda el camión simulado
     try { AppMap.mostrarCamion(await AppData.camion()); } catch (e) { console.warn("Sin ubicación del camión", e); }
   }
 
   // ---------- Refresco periódico ----------
   async function refrescar() {
+    if (simulacion) return;   // no pisar los colores mientras se simula
+    if (camionSimulado) { camionSimulado = false; AppMap.mostrarCamion(null); }
     try {
       const e = await AppData.estados();
       aplicarEstados(e.estados || {}, e.actualizado, e.origen);
