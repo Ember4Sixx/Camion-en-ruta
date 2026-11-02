@@ -58,7 +58,10 @@ window.APP_CONFIG = {
   //   etiquetas -> SOLO los nombres de las calles (va ENCIMA de las líneas, así no se tapan)
   // Datos de OpenStreetMap. Si algún día se quiere volver al mapa anterior:
   //   url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png" y borrar la línea "etiquetas".
-  teselas: {
+teselas: {
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    atribucion: "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> colaboradores"
+  },
     url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
     etiquetas: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png",
     atribucion: "&copy; colaboradores de <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> &copy; <a href=\"https://carto.com/attributions\">CARTO</a>"
