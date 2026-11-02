@@ -62,11 +62,6 @@ teselas: {
     url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     atribucion: "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> colaboradores"
   },
-    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
-    etiquetas: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png",
-    atribucion: "&copy; colaboradores de <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> &copy; <a href=\"https://carto.com/attributions\">CARTO</a>"
-  },
-
   // Simulación del recorrido (panel "Modo demostración").
   // Cuántos segundos dura la simulación completa, de principio a fin.
   simulacionSegundos: 90
