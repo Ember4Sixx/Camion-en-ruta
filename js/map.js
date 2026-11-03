@@ -12,7 +12,7 @@
 
   function iniciar() {
     mapa = L.map("map", { zoomControl: true }).setView(cfg.centro, cfg.zoom);
-    const opcionesTeselas = { maxZoom: 19, subdomains: "abcd", attribution: cfg.teselas.atribucion };
+    const opcionesTeselas = { maxZoom: 19, keepBuffer: 4, attribution: cfg.teselas.atribucion };
     L.tileLayer(cfg.teselas.url, opcionesTeselas).addTo(mapa);
 
     // Capa de NOMBRES de calles por ENCIMA de las líneas de colores.
@@ -42,10 +42,18 @@
   // para que se vean como dos líneas independientes. El nombre del tramo trae "· sentido …" (db/tramos.py).
   const esCarril = (id) => /· sentido /.test(nombrePorId[id] || "");
 
-  function estilo(estado, id) {
+    function estilo(estado, id) {
     const e = cfg.estados[estado] || cfg.estados.gris;
     const carril = esCarril(id);
-    return { color: e.color, weight: carril ? 4 : 7, opacity: 0.95, lineCap: carril ? "butt" : "round" };
+    return {
+      color: e.color,
+      weight: carril ? 4 : 7,
+      opacity: 0.95,
+      lineCap: carril ? "butt" : "round",
+      lineJoin: "round",
+      smoothFactor: 0,
+      noClip: true
+    };
   }
 
   function textoPopup(id) {
