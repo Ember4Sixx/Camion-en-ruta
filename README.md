@@ -4,7 +4,6 @@ Página web para saber, calle por calle, si el camión recolector de residuos ya
 
 > Las calles salen de OpenStreetMap (ver GUIA.md, paso 2B). El **horario oficial** de recolección de la zona todavía está pendiente de confirmar con la municipalidad, así que no hay horarios cargados.
 
-**Para trabajar en equipo, conectar la base de datos, el tiempo real y el GPS, sigan [GUIA.md](GUIA.md).**
 
 ## Estructura
 
