@@ -203,7 +203,6 @@
       const yaHechos = hechos.size + (enCurso ? 1 : 0);
       const proximos = ordenRecoleccion.slice(yaHechos, yaHechos + PROXIMOS);
       const clave = hechos.size + "|" + enCurso;
-      if (clave === ultimoClave) return;          // solo repinta cuando algo cambia
       ultimoClave = clave;
       const nuevo = {};
       calles.features.forEach((f) => { nuevo[f.properties.id] = "gris"; });
