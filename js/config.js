@@ -29,7 +29,7 @@ window.APP_CONFIG = {
   // Cada cuántos segundos se vuelven a pedir los estados (0 = no repetir).
   // Con supabase el tiempo real avisa cuando llega una posición del camión; esto sirve
   // además para el cálculo por horario, que cambia con el reloj (30 es un buen valor).
-  refrescarCadaSegundos: 30,
+  refrescarCadaSegundos: 12,
 
   // Minutos antes del inicio del horario en que las primeras calles pasan a amarillo (cálculo por horario).
   avisoMinutos: 15,
@@ -43,7 +43,7 @@ window.APP_CONFIG = {
 
   // Segundos máximos de antigüedad de la posición del camión para considerarla vigente.
   // Si es más vieja, no se dibuja el camión y los colores vuelven a calcularse por horario.
-  gpsVigenciaSegundos: 120,
+  gpsVigenciaSegundos: 30,
 
   // Textos y colores de los 4 estados. Los colores deben coincidir con css/styles.css.
   estados: {
@@ -64,5 +64,5 @@ teselas: {
   },
   // Simulación del recorrido (panel "Modo demostración").
   // Cuántos segundos dura la simulación completa, de principio a fin.
-  simulacionSegundos: 90
+  simulacionSegundos: 60
 };
