@@ -1,32 +1,28 @@
 /* ==========================================================
-   Camión En Ruta · mapa (Leaflet)
-   Expone window.AppMap con: iniciar, pintarCalles, actualizarEstados,
-   enfocarCalle, mostrarCamion.
+   Camión En Ruta · mapa (Leaflet con Sprites y Gris Ultra Sutil)
    ========================================================== */
 (function () {
   const cfg = window.APP_CONFIG;
   let mapa, capaCalles, capaZona, marcadorCamion;
-  const capasPorId = {};      // id calle -> capa Leaflet
-  const nombrePorId = {};     // id calle -> nombre
-  const estadoPorId = {};     // id calle -> estado actual
+  const capasPorId = {};      
+  const nombrePorId = {};     
+  const estadoPorId = {};     
+  let posicionAnterior = null; 
 
   function iniciar() {
     mapa = L.map("map", { zoomControl: true }).setView(cfg.centro, cfg.zoom);
     const opcionesTeselas = { maxZoom: 19, keepBuffer: 4, attribution: cfg.teselas.atribucion };
     L.tileLayer(cfg.teselas.url, opcionesTeselas).addTo(mapa);
 
-    // Capa de NOMBRES de calles por ENCIMA de las líneas de colores.
-    // Orden de capas en Leaflet: líneas = 400, nombres = 450, camión = 600, popups = 700.
     if (cfg.teselas.etiquetas) {
       mapa.createPane("nombres");
       mapa.getPane("nombres").style.zIndex = 450;
-      mapa.getPane("nombres").style.pointerEvents = "none";   // los clics pasan a las calles de abajo
+      mapa.getPane("nombres").style.pointerEvents = "none";
       L.tileLayer(cfg.teselas.etiquetas, { ...opcionesTeselas, pane: "nombres", attribution: "" }).addTo(mapa);
     }
     return mapa;
   }
 
-  // Dibuja el cuadrado delimitado por las 4 calles (GeoJSON Polygon). Es solo un contorno, no cambia de color.
   function pintarZona(geojson) {
     if (capaZona) capaZona.remove();
     if (!geojson) return;
@@ -38,17 +34,20 @@
     if (b.isValid()) mapa.fitBounds(b.pad(0.1));
   }
 
-  // Los carriles de una avenida de doble vía están a ~8 m uno del otro: van más finos y con extremos rectos
-  // para que se vean como dos líneas independientes. El nombre del tramo trae "· sentido …" (db/tramos.py).
   const esCarril = (id) => /· sentido /.test(nombrePorId[id] || "");
 
-    function estilo(estado, id) {
+  function estilo(estado, id) {
     const e = cfg.estados[estado] || cfg.estados.gris;
     const carril = esCarril(id);
+    
+    // Si la calle está en estado "gris", la hacemos súper translúcida y delgada 
+    // para que no tape las calles del fondo de OpenStreetMap.
+    const esGris = (estado === "gris" || !estado);
+
     return {
       color: e.color,
-      weight: carril ? 4 : 7,
-      opacity: 0.95,
+      weight: esGris ? (carril ? 2 : 3) : (carril ? 4 : 7), 
+      opacity: esGris ? 0.20 : 0.95, // <--- Opacidad muy baja (20%) para ver las calles debajo
       lineCap: carril ? "butt" : "round",
       lineJoin: "round",
       smoothFactor: 0,
@@ -102,7 +101,6 @@
     document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  // Encuadra varios tramos a la vez (una calle completa, para la lista agrupada).
   function enfocarCalles(ids) {
     let b = null;
     ids.forEach((id) => {
@@ -116,18 +114,79 @@
     document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  function calcularRumbo(lat1, lon1, lat2, lon2) {
+    const rad = Math.PI / 180;
+    const dLon = (lon2 - lon1) * rad;
+    const y = Math.sin(dLon) * Math.cos(lat2 * rad);
+    const x =
+      Math.cos(lat1 * rad) * Math.sin(lat2 * rad) -
+      Math.sin(lat1 * rad) * Math.cos(lat2 * rad) * Math.cos(dLon);
+    const brng = Math.atan2(y, x) * (180 / Math.PI);
+    return (brng + 360) % 360;
+  }
+
+  function obtenerDireccionCardinal(angulo) {
+    if (angulo >= 45 && angulo < 135) return "derecha";
+    if (angulo >= 135 && angulo < 225) return "abajo";
+    if (angulo >= 225 && angulo < 315) return "izquierda";
+    return "arriba";
+  }
+
   function mostrarCamion(pos) {
-    if (!pos) { if (marcadorCamion) { marcadorCamion.remove(); marcadorCamion = null; } return; }
+    if (!pos) { 
+      if (marcadorCamion) { marcadorCamion.remove(); marcadorCamion = null; } 
+      posicionAnterior = null;
+      return; 
+    }
+
     const ll = [pos.lat, pos.lng];
+    let direccion = "derecha";
+
+    if (typeof pos.rumbo === "number") {
+      direccion = obtenerDireccionCardinal(pos.rumbo);
+    } else if (posicionAnterior) {
+      const dLat = Math.abs(pos.lat - posicionAnterior.lat);
+      const dLng = Math.abs(pos.lng - posicionAnterior.lng);
+      if (dLat > 0.000002 || dLng > 0.000002) {
+        const rumboBruto = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
+        direccion = obtenerDireccionCardinal(rumboBruto);
+        posicionAnterior = { lat: pos.lat, lng: pos.lng };
+      }
+    } else {
+      posicionAnterior = { lat: pos.lat, lng: pos.lng };
+    }
+
+    const urlImagen = `img/camion-${direccion}.png`;
+    const anchoIcono = (direccion === "derecha" || direccion === "izquierda") ? 40 : 28;
+    const altoIcono = (direccion === "derecha" || direccion === "izquierda") ? 28 : 40;
+
+    const htmlSprite = `<img id="img-camion-sprite" src="${urlImagen}" style="width: ${anchoIcono}px; height: ${altoIcono}px; display: block;" alt="Camión">`;
+
     if (!marcadorCamion) {
       marcadorCamion = L.marker(ll, {
-        icon: L.divIcon({ className: "", html: '<div class="truck-icon" aria-hidden="true">🚛</div>', iconSize: [28, 28], iconAnchor: [14, 14] }),
+        icon: L.divIcon({
+          className: "",
+          html: `<div id="truck-icon-container" style="display: flex; justify-content: center; align-items: center;">${htmlSprite}</div>`,
+          iconSize: [44, 44],
+          iconAnchor: [22, 22]
+        }),
         title: "Camión recolector",
-        zIndexOffset: 1000,      // siempre por encima de todo
+        zIndexOffset: 1000,
         interactive: false
       }).addTo(mapa);
     } else {
+      // Corrección del error tipográfico (marcadorCamion en lugar de marcadarCamion)
       marcadorCamion.setLatLng(ll);
+      const truckElement = document.getElementById("truck-icon-container");
+      if (truckElement) {
+        truckElement.innerHTML = htmlSprite;
+      }
+      marcadorCamion.setIcon(L.divIcon({
+        className: "",
+        html: `<div id="truck-icon-container" style="display: flex; justify-content: center; align-items: center;">${htmlSprite}</div>`,
+        iconSize: [44, 44],
+        iconAnchor: [22, 22]
+      }));
     }
   }
 
