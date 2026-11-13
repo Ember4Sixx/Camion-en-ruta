@@ -1,5 +1,5 @@
 /* ==========================================================
-   Camión En Ruta · mapa (Leaflet con Sprites Direccionales)
+   Camión En Ruta · mapa (Leaflet con Sprites y Gris Sutil)
    Expone window.AppMap con: iniciar, pintarCalles, actualizarEstados,
    enfocarCalle, mostrarCamion.
    ========================================================== */
@@ -41,10 +41,15 @@
   function estilo(estado, id) {
     const e = cfg.estados[estado] || cfg.estados.gris;
     const carril = esCarril(id);
+    
+    // Si la calle está en estado "gris" (todavía no recorrida), le bajamos la opacidad 
+    // y el grosor para que se vea muy sutil y deje ver las calles de fondo perfectamente.
+    const esGris = (estado === "gris" || !estado);
+
     return {
       color: e.color,
-      weight: carril ? 4 : 7,
-      opacity: 0.95,
+      weight: esGris ? (carril ? 2 : 4) : (carril ? 4 : 7), // Más delgado si es gris
+      opacity: esGris ? 0.35 : 0.95,                       // <--- Opacidad sutil (35% para gris)
       lineCap: carril ? "butt" : "round",
       lineJoin: "round",
       smoothFactor: 0,
@@ -111,7 +116,6 @@
     document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  // Calcula el ángulo de desplazamiento entre dos coordenadas
   function calcularRumbo(lat1, lon1, lat2, lon2) {
     const rad = Math.PI / 180;
     const dLon = (lon2 - lon1) * rad;
@@ -123,12 +127,11 @@
     return (brng + 360) % 360;
   }
 
-  // Traduce los grados a una de las 4 direcciones exactas
   function obtenerDireccionCardinal(angulo) {
-    if (angulo >= 45 && angulo < 135) return "derecha";    // Este -> Sprite de perfil derecho
-    if (angulo >= 135 && angulo < 225) return "abajo";     // Sur -> Sprite vertical cabina abajo
-    if (angulo >= 225 && angulo < 315) return "izquierda"; // Oeste -> Sprite de perfil izquierdo
-    return "arriba";                                       // Norte -> Sprite vertical cabina arriba
+    if (angulo >= 45 && angulo < 135) return "derecha";
+    if (angulo >= 135 && angulo < 225) return "abajo";
+    if (angulo >= 225 && angulo < 315) return "izquierda";
+    return "arriba";
   }
 
   function mostrarCamion(pos) {
@@ -139,7 +142,7 @@
     }
 
     const ll = [pos.lat, pos.lng];
-    let direccion = "derecha"; // Dirección por defecto
+    let direccion = "derecha";
 
     if (typeof pos.rumbo === "number") {
       direccion = obtenerDireccionCardinal(pos.rumbo);
@@ -155,9 +158,7 @@
       posicionAnterior = { lat: pos.lat, lng: pos.lng };
     }
 
-    // Ruta de la imagen según la dirección actual
     const urlImagen = `img/camion-${direccion}.png`;
-    // Ancho y alto ajustables según el tamaño de tus imágenes (ej. 36px x 36px o rectangular)
     const anchoIcono = (direccion === "derecha" || direccion === "izquierda") ? 40 : 28;
     const altoIcono = (direccion === "derecha" || direccion === "izquierda") ? 28 : 40;
 
@@ -176,12 +177,11 @@
         interactive: false
       }).addTo(mapa);
     } else {
-      marcadorCamion.setLatLng(ll);
+      marcadarCamion?.setLatLng ? marcadorCamion.setLatLng(ll) : marcadorCamion.setLatLng(ll);
       const truckElement = document.getElementById("truck-icon-container");
       if (truckElement) {
         truckElement.innerHTML = htmlSprite;
       }
-      // Actualizamos las dimensiones del ancla si cambia de horizontal a vertical
       marcadorCamion.setIcon(L.divIcon({
         className: "",
         html: `<div id="truck-icon-container" style="display: flex; justify-content: center; align-items: center;">${htmlSprite}</div>`,
@@ -189,6 +189,10 @@
         iconAnchor: [22, 22]
       }));
     }
+  }
+
+  window.AppMap = { iniciar, pintarZona, pintarCalles, actualizarEstados, enfocarCalle, enfocarCalles, mostrarCamion };
+})();
   }
 
   window.AppMap = { iniciar, pintarZona, pintarCalles, actualizarEstados, enfocarCalle, enfocarCalles, mostrarCamion };
