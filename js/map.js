@@ -1,14 +1,12 @@
 /* ==========================================================
-   Camión En Ruta · mapa (Leaflet con Sprites y Gris Sutil)
-   Expone window.AppMap con: iniciar, pintarCalles, actualizarEstados,
-   enfocarCalle, mostrarCamion.
+   Camión En Ruta · mapa (Leaflet con Sprites y Gris Ultra Sutil)
    ========================================================== */
 (function () {
   const cfg = window.APP_CONFIG;
   let mapa, capaCalles, capaZona, marcadorCamion;
-  const capasPorId = {};      // id calle -> capa Leaflet
-  const nombrePorId = {};     // id calle -> nombre
-  const estadoPorId = {};     // id calle -> estado actual
+  const capasPorId = {};      
+  const nombrePorId = {};     
+  const estadoPorId = {};     
   let posicionAnterior = null; 
 
   function iniciar() {
@@ -42,14 +40,14 @@
     const e = cfg.estados[estado] || cfg.estados.gris;
     const carril = esCarril(id);
     
-    // Si la calle está en estado "gris" (todavía no recorrida), le bajamos la opacidad 
-    // y el grosor para que se vea muy sutil y deje ver las calles de fondo perfectamente.
+    // Si la calle está en estado "gris", la hacemos súper translúcida y delgada 
+    // para que no tape las calles del fondo de OpenStreetMap.
     const esGris = (estado === "gris" || !estado);
 
     return {
       color: e.color,
-      weight: esGris ? (carril ? 2 : 4) : (carril ? 4 : 7), // Más delgado si es gris
-      opacity: esGris ? 0.35 : 0.95,                       // <--- Opacidad sutil (35% para gris)
+      weight: esGris ? (carril ? 2 : 3) : (carril ? 4 : 7), 
+      opacity: esGris ? 0.20 : 0.95, // <--- Opacidad muy baja (20%) para ver las calles debajo
       lineCap: carril ? "butt" : "round",
       lineJoin: "round",
       smoothFactor: 0,
@@ -177,7 +175,8 @@
         interactive: false
       }).addTo(mapa);
     } else {
-      marcadarCamion?.setLatLng ? marcadorCamion.setLatLng(ll) : marcadorCamion.setLatLng(ll);
+      // Corrección del error tipográfico (marcadorCamion en lugar de marcadarCamion)
+      marcadorCamion.setLatLng(ll);
       const truckElement = document.getElementById("truck-icon-container");
       if (truckElement) {
         truckElement.innerHTML = htmlSprite;
@@ -189,10 +188,6 @@
         iconAnchor: [22, 22]
       }));
     }
-  }
-
-  window.AppMap = { iniciar, pintarZona, pintarCalles, actualizarEstados, enfocarCalle, enfocarCalles, mostrarCamion };
-})();
   }
 
   window.AppMap = { iniciar, pintarZona, pintarCalles, actualizarEstados, enfocarCalle, enfocarCalles, mostrarCamion };
