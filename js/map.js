@@ -1,5 +1,5 @@
 /* ==========================================================
-    Camión En Ruta · mapa (Leaflet con Emoji de 4 Direcciones Fijas)
+    Camión En Ruta · mapa (Leaflet corregido)
     ========================================================== */
 (function () {
   const cfg = window.APP_CONFIG;
@@ -8,7 +8,7 @@
   const nombrePorId = {};     
   const estadoPorId = {};     
   let posicionAnterior = null;
-  let ultimoAngulo = 0;       // Mantiene el último rumbo válido para evitar saltos al detenerse
+  let ultimoAngulo = 0;       
 
   function iniciar() {
     mapa = L.map("map", { zoomControl: true }).setView(cfg.centro, cfg.zoom);
@@ -21,6 +21,14 @@
       mapa.getPane("nombres").style.pointerEvents = "none";
       L.tileLayer(cfg.teselas.etiquetas, { ...opcionesTeselas, pane: "nombres", attribution: "" }).addTo(mapa);
     }
+
+    // CORRECCIÓN CLAVE: Forzar a Leaflet a recalcular el tamaño para eliminar los cuadros grises o el mapa cortado
+    setTimeout(() => {
+      if (mapa) {
+        mapa.invalidateSize();
+      }
+    }, 200);
+
     return mapa;
   }
 
@@ -32,7 +40,10 @@
     }).addTo(mapa);
     capaZona.bringToBack();
     const b = capaZona.getBounds();
-    if (b.isValid()) mapa.fitBounds(b.pad(0.1));
+    if (b.isValid()) {
+      mapa.fitBounds(b.pad(0.1));
+      setTimeout(() => mapa.invalidateSize(), 100);
+    }
   }
 
   const esCarril = (id) => /· sentido /.test(nombrePorId[id] || "");
@@ -79,7 +90,10 @@
     }).addTo(mapa);
     if (!capaZona) {
       const b = capaCalles.getBounds();
-      if (b.isValid()) mapa.fitBounds(b.pad(0.2));
+      if (b.isValid()) {
+        mapa.fitBounds(b.pad(0.2));
+        setTimeout(() => mapa.invalidateSize(), 100);
+      }
     }
   }
 
@@ -95,6 +109,7 @@
     const capa = capasPorId[id];
     if (!capa) return;
     mapa.fitBounds(capa.getBounds().pad(0.8));
+    mapa.invalidateSize();
     capa.openPopup();
     document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
   }
@@ -109,6 +124,7 @@
     });
     if (!b) return;
     mapa.fitBounds(b.pad(0.4));
+    mapa.invalidateSize();
     document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
@@ -151,24 +167,18 @@
       posicionAnterior = { lat: pos.lat, lng: pos.lng };
     }
 
-    // Normalizar ángulo a 0 - 360 grados
     const angNorm = (angulo % 360 + 360) % 360;
-
-    // Determinación estricta de las 4 direcciones ortogonales
     let transformStyle = "";
 
+    // 4 Direcciones limpias
     if (angNorm >= 315 || angNorm < 45) {
-      // Movimiento hacia la DERECHA (Este)
-      transformStyle = "transform: scaleX(1);";
+      transformStyle = "transform: scaleX(1);"; // Derecha
     } else if (angNorm >= 45 && angNorm < 135) {
-      // Movimiento hacia ABAJO (Sur)
-      transformStyle = "transform: rotate(90deg);";
+      transformStyle = "transform: rotate(90deg);"; // Abajo
     } else if (angNorm >= 135 && angNorm < 225) {
-      // Movimiento hacia la IZQUIERDA (Oeste)
-      transformStyle = "transform: scaleX(-1);";
+      transformStyle = "transform: scaleX(-1);"; // Izquierda
     } else {
-      // Movimiento hacia ARRIBA (Norte)
-      transformStyle = "transform: rotate(-90deg);";
+      transformStyle = "transform: rotate(-90deg);"; // Arriba
     }
 
     if (!marcadorCamion) {
@@ -185,7 +195,6 @@
       }).addTo(mapa);
     } else {
       marcadorCamion.setLatLng(ll);
-      
       const elementoDom = marcadorCamion.getElement();
       if (elementoDom) {
         const inner = elementoDom.querySelector(".camion-inner");
@@ -198,3 +207,4 @@
 
   window.AppMap = { iniciar, pintarZona, pintarCalles, actualizarEstados, enfocarCalle, enfocarCalles, mostrarCamion };
 })();
+
