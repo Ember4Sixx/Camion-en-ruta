@@ -10,7 +10,7 @@
   const nombrePorId = {};     // id calle -> nombre
   const estadoPorId = {};     // id calle -> estado actual
   let posicionAnterior = null; // Memoria de la ubicación previa para calcular el rumbo
-  let ultimoAnguloValido = 0;  // Último ángulo estable para evitar tirones
+  let ultimoAnguloValido = 0;  // Último ángulo estable para mantener coherencia al detenerse
 
   function iniciar() {
     mapa = L.map("map", { zoomControl: true }).setView(cfg.centro, cfg.zoom);
@@ -136,15 +136,15 @@
     const ll = [pos.lat, pos.lng];
     let anguloRotacion = ultimoAnguloValido;
 
-    // Si viene el rumbo directo desde Supabase (GPS real), lo usamos
+    // Si viene el rumbo directo desde Supabase (GPS real)
     if (typeof pos.rumbo === "number") {
       anguloRotacion = pos.rumbo;
       ultimoAnguloValido = anguloRotacion;
     } else if (posicionAnterior) {
-      // Si es simulación, lo calculamos por coordenadas con umbral de ruido
+      // Si es simulación, calculamos el rumbo con un umbral para evitar ruido y temblores
       const dLat = Math.abs(pos.lat - posicionAnterior.lat);
       const dLng = Math.abs(pos.lng - posicionAnterior.lng);
-      if (dLat > 0.00001 || dLng > 0.00001) {
+      if (dLat > 0.000005 || dLng > 0.000005) {
         anguloRotacion = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
         ultimoAnguloValido = anguloRotacion;
         posicionAnterior = { lat: pos.lat, lng: pos.lng };
@@ -157,7 +157,8 @@
       marcadorCamion = L.marker(ll, {
         icon: L.divIcon({
           className: "",
-          html: `<div id="truck-icon-container" style="transform: rotate(${anguloRotacion}deg); transition: transform 0.2s ease-out;" aria-hidden="true">🚛</div>`,
+          // Transición suave para que el camión "doble" el volante de forma natural en las esquinas
+          html: `<div id="truck-icon-container" style="transform: rotate(${anguloRotacion}deg); transition: transform 0.3s ease-out;" aria-hidden="true">🚛</div>`,
           iconSize: [28, 28],
           iconAnchor: [14, 14]
         }),
