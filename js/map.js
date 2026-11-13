@@ -10,7 +10,6 @@
   const nombrePorId = {};     // id calle -> nombre
   const estadoPorId = {};     // id calle -> estado actual
   let posicionAnterior = null; 
-  let ultimoAnguloValido = 0;  
 
   function iniciar() {
     mapa = L.map("map", { zoomControl: true }).setView(cfg.centro, cfg.zoom);
@@ -112,6 +111,7 @@
     document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  // Calcula el ángulo básico entre dos puntos
   function calcularRumbo(lat1, lon1, lat2, lon2) {
     const rad = Math.PI / 180;
     const dLon = (lon2 - lon1) * rad;
@@ -123,46 +123,46 @@
     return (brng + 360) % 360;
   }
 
+  // Convierte los grados en los 4 ángulos cardinales exactos (0: Arriba, 90: Derecha, 180: Abajo, 270: Izquierda)
+  function obtenerAnguloCardinal(angulo) {
+    if (angulo >= 45 && angulo < 135) return 90;   // Derecha (Este)
+    if (angulo >= 135 && angulo < 225) return 180; // Abajo (Sur)
+    if (angulo >= 225 && angulo < 315) return 270; // Izquierda (Oeste)
+    return 0;                                      // Arriba (Norte)
+  }
+
   function mostrarCamion(pos) {
     if (!pos) { 
       if (marcadorCamion) { marcadorCamion.remove(); marcadorCamion = null; } 
       posicionAnterior = null;
-      ultimoAnguloValido = 0;
       return; 
     }
 
     const ll = [pos.lat, pos.lng];
-    let anguloBase = ultimoAnguloValido;
+    let anguloFinal = 0;
 
     if (typeof pos.rumbo === "number") {
-      anguloBase = pos.rumbo;
-      ultimoAnguloValido = anguloBase;
+      anguloFinal = obtenerAnguloCardinal(pos.rumbo);
     } else if (posicionAnterior) {
       const dLat = Math.abs(pos.lat - posicionAnterior.lat);
       const dLng = Math.abs(pos.lng - posicionAnterior.lng);
       if (dLat > 0.000002 || dLng > 0.000002) {
-        anguloBase = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
-        ultimoAnguloValido = anguloBase;
+        const rumboBruto = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
+        anguloFinal = obtenerAnguloCardinal(rumboBruto);
         posicionAnterior = { lat: pos.lat, lng: pos.lng };
       }
     } else {
       posicionAnterior = { lat: pos.lat, lng: pos.lng };
     }
 
-    // =========================================================================
-    // CORRECCIÓN DE LA ORIENTACIÓN (OFFSET DE LA CARA DEL CAMIÓN)
-    // El emoji de camión 🚛 por defecto apunta hacia la izquierda o arriba según 
-    // la fuente del sistema. Añadimos un desfase de -90 grados (o puedes cambiar a 
-    // +90 o +180 si notas que aún apunta al lado opuesto) para alinear su frente 
-    // exactamente con la dirección del movimiento en la pista.
-    // =========================================================================
-    const anguloRotacion = (anguloBase - 90 + 360) % 360;
+    // Ajuste limpio para que el emoji 🚛 mire exactamente hacia la dirección de avance
+    const rotacionCSS = (anguloFinal - 90 + 360) % 360;
 
     if (!marcadorCamion) {
       marcadorCamion = L.marker(ll, {
         icon: L.divIcon({
           className: "",
-          html: `<div id="truck-icon-container" style="transform: rotate(${anguloRotacion}deg); transition: transform 0.25s ease-out;" aria-hidden="true">🚛</div>`,
+          html: `<div id="truck-icon-container" style="transform: rotate(${rotacionCSS}deg); transition: transform 0.2s ease;" aria-hidden="true">🚛</div>`,
           iconSize: [28, 28],
           iconAnchor: [14, 14]
         }),
@@ -174,7 +174,7 @@
       marcadorCamion.setLatLng(ll);
       const truckElement = document.getElementById("truck-icon-container");
       if (truckElement) {
-        truckElement.style.transform = `rotate(${anguloRotacion}deg)`;
+        truckElement.style.transform = `rotate(${rotacionCSS}deg)`;
       }
     }
   }
