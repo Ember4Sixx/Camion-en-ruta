@@ -28,7 +28,7 @@ window.APP_CONFIG = {
 
   // Avisos de retraso por notificación (vecinos.html). vapidPublica = la clave PÚBLICA que da
   // "npx web-push generate-vapid-keys". La privada NUNCA va aquí: va en los secretos de Supabase.
- avisos: { vapidPublica: "BLaClaveNueva..." },
+ avisos: { vapidPublica: "BF6erkvhnC0BhKldcvL2xD65kdsqrgiV4dlk2hR__EH6IExoPAwF67pW-VMnW0O3735JlqKYPlTYdm_JMSqRdhQ" },
 
   // Cada cuántos segundos se vuelven a pedir los estados (0 = no repetir).
   // Con supabase el tiempo real avisa cuando llega una posición del camión; esto sirve
