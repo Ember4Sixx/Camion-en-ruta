@@ -138,19 +138,10 @@
       angulo = pos.rumbo;
       ultimoAngulo = angulo;
     } else if (posicionAnterior) {
-      const dLat = pos.lat - posicionAnterior.lat;
-      const dLng = pos.lng - posicionAnterior.lng;
-      const distancia = Math.sqrt(dLat * dLat + dLng * dLng);
-
-      // Umbral para evitar temblores por ruido GPS
-      if (distancia > 0.000008) {
-        angulo = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
-        ultimoAngulo = angulo;
-        posicionAnterior = { lat: pos.lat, lng: pos.lng };
-      }
-    } else {
+      angulo = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
+      ultimoAngulo = angulo;
       posicionAnterior = { lat: pos.lat, lng: pos.lng };
-    }
+    } else {
 
     // Evaluación en 4 direcciones ortogonales fijas (Norte, Sur, Este, Oeste)
     let anguloVisual = 0;
