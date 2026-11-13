@@ -161,6 +161,8 @@
 
   /**
    * Recorrido que sigue EXACTAMENTE el orden de la ruta (properties.orden 1, 2, 3…).
+   * Solo usa los tramos del plano oficial (properties.en_plano !== false); los demás tramos
+   * de la zona se quedan en gris (la app del conductor igual los marca si el camión pasa).
    * Cada tramo se recorre en el sentido en que está dibujado (la geometría ya viene en el
    * sentido de marcha). Entre un tramo y el siguiente:
    *   - si están a pocos metros (cruzar una avenida de doble vía), va directo;
@@ -170,7 +172,7 @@
   var CRUCE_M = 25;
   function planificarEnOrden(geojson) {
     var conOrden = { type: "FeatureCollection", features: geojson.features
-      .filter(function (f) { return f.properties && f.properties.orden > 0; })
+      .filter(function (f) { return f.properties && f.properties.orden > 0 && f.properties.en_plano !== false; })
       .sort(function (x, y) { return x.properties.orden - y.properties.orden; }) };
     var red = construirRed(conOrden), nodos = red.nodos, aristas = red.aristas, ady = red.ady;
     if (!aristas.length) return [];

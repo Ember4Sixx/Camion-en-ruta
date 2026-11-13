@@ -5,7 +5,8 @@
    JSON a base de datos no rompe nada más.
 
    Contrato (igual para "json" y "supabase"):
-     calles()    -> GeoJSON FeatureCollection de TRAMOS; properties { id, nombre, calle, calle_id, carril, ruta, orden }
+     calles()    -> GeoJSON FeatureCollection de TRAMOS; properties { id, nombre, calle, calle_id, carril, ruta, orden, en_plano }
+                    (`en_plano` = false: tramo de la zona que no está en el plano oficial; no entra en la simulación)
                     (`calle` = nombre de la calle completa; `nombre` = nombre del tramo, ej. "Calle Unión · entre A y B")
      estados()   -> { actualizado, origen, estados: { "<id calle>": "gris|amarillo|verde|negro" } }
                     origen: "horario" (estimado con la hora) | "gps" (con la ubicación del camión) | "mixto"
@@ -112,7 +113,7 @@
           sb.from("calles").select("id,nombre,tipo"),
           sb.from("tramos").select("id,calle_id,nombre,carril,k,geom"),
           sb.from("rutas").select("id,nombre,proximas"),
-          sb.from("ruta_tramos").select("ruta_id,tramo_id,orden"),
+          sb.from("ruta_tramos").select("ruta_id,tramo_id,orden,en_plano"),
           sb.from("horarios").select("ruta_id,dias,hora_inicio,hora_fin")
         ]).then((r) => ({ calles: chk(r[0]), tramos: chk(r[1]), rutas: chk(r[2]), rt: chk(r[3]), horarios: chk(r[4]).map((h) => ({ ...h, dias: diasANumeros(h.dias) })) }))
           .catch((e) => { estaticos = null; throw e; });
@@ -127,8 +128,8 @@
     return {
       async calles() {
         const s = await cargarEstaticos();
-        const rutaDe = {}, ordenDe = {}, calleDe = {};
-        s.rt.forEach((x) => { if (!rutaDe[x.tramo_id]) { rutaDe[x.tramo_id] = x.ruta_id; ordenDe[x.tramo_id] = x.orden; } });
+        const rutaDe = {}, ordenDe = {}, calleDe = {}, planoDe = {};
+        s.rt.forEach((x) => { if (!rutaDe[x.tramo_id]) { rutaDe[x.tramo_id] = x.ruta_id; ordenDe[x.tramo_id] = x.orden; planoDe[x.tramo_id] = x.en_plano !== false; } });
         s.calles.forEach((c) => { calleDe[c.id] = c.nombre; });
         return {
           type: "FeatureCollection",
@@ -136,7 +137,8 @@
           features: s.tramos.map((t) => ({
             type: "Feature",
             properties: { id: t.id, nombre: t.nombre, calle: calleDe[t.calle_id] || Estado.nombreBase(t.nombre),
-                          calle_id: t.calle_id, carril: t.carril || "", ruta: rutaDe[t.id] || "", orden: ordenDe[t.id] || 0 },
+                          calle_id: t.calle_id, carril: t.carril || "", ruta: rutaDe[t.id] || "", orden: ordenDe[t.id] || 0,
+                          en_plano: planoDe[t.id] !== false },
             geometry: t.geom
           })).sort((a, b) => (a.properties.orden || 1e9) - (b.properties.orden || 1e9))   // en orden de recorrido
         };
