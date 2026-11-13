@@ -155,3 +155,10 @@ th { background: var(--fondo-alt); }
   .nav { display: none; position: absolute; top: 64px; left: 0; right: 0; flex-direction: column; background: #fff; padding: 1rem; border-bottom: 1px solid var(--borde); }
   .nav.open { display: flex; }
 }
+/* ===================================================
+   Solución Problema 1: Transparencia en la ruta del camión
+   para que no tape los nombres de las calles
+   =================================================== */
+.leaflet-interactive {
+    stroke-opacity: 0.75; /* Ajusta la opacidad de la línea (0.7 a 0.8 es ideal para leer el texto debajo) */
+}
