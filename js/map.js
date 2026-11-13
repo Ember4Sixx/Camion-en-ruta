@@ -8,6 +8,7 @@
   const nombrePorId = {};     
   const estadoPorId = {};     
   let posicionAnterior = null; 
+  let direccionActual = "derecha"; // Dirección por defecto inicial
 
   function iniciar() {
     mapa = L.map("map", { zoomControl: true }).setView(cfg.centro, cfg.zoom);
@@ -40,14 +41,12 @@
     const e = cfg.estados[estado] || cfg.estados.gris;
     const carril = esCarril(id);
     
-    // Si la calle está en estado "gris", la hacemos súper translúcida y delgada 
-    // para que no tape las calles del fondo de OpenStreetMap.
     const esGris = (estado === "gris" || !estado);
 
     return {
       color: e.color,
       weight: esGris ? (carril ? 2 : 3) : (carril ? 4 : 7), 
-      opacity: esGris ? 0.20 : 0.95, // <--- Opacidad muy baja (20%) para ver las calles debajo
+      opacity: esGris ? 0.20 : 0.95,
       lineCap: carril ? "butt" : "round",
       lineJoin: "round",
       smoothFactor: 0,
@@ -120,7 +119,7 @@
     const y = Math.sin(dLon) * Math.cos(lat2 * rad);
     const x =
       Math.cos(lat1 * rad) * Math.sin(lat2 * rad) -
-      Math.sin(lat1 * rad) * Math.cos(lat2 * rad) * Math.cos(dLon);
+    \tMath.sin(lat1 * rad) * Math.cos(lat2 * rad) * Math.cos(dLon);
     const brng = Math.atan2(y, x) * (180 / Math.PI);
     return (brng + 360) % 360;
   }
@@ -140,25 +139,27 @@
     }
 
     const ll = [pos.lat, pos.lng];
-    let direccion = "derecha";
 
     if (typeof pos.rumbo === "number") {
-      direccion = obtenerDireccionCardinal(pos.rumbo);
+      direccionActual = obtenerDireccionCardinal(pos.rumbo);
     } else if (posicionAnterior) {
-      const dLat = Math.abs(pos.lat - posicionAnterior.lat);
-      const dLng = Math.abs(pos.lng - posicionAnterior.lng);
-      if (dLat > 0.000002 || dLng > 0.000002) {
+      const dLat = pos.lat - posicionAnterior.lat;
+      const dLng = pos.lng - posicionAnterior.lng;
+      const distancia = Math.sqrt(dLat * dLat + dLng * dLng);
+
+      // Umbral mínimo de desplazamiento para evitar temblores por ruido GPS
+      if (distancia > 0.000008) {
         const rumboBruto = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
-        direccion = obtenerDireccionCardinal(rumboBruto);
+        direccionActual = obtenerDireccionCardinal(rumboBruto);
         posicionAnterior = { lat: pos.lat, lng: pos.lng };
       }
     } else {
       posicionAnterior = { lat: pos.lat, lng: pos.lng };
     }
 
-    const urlImagen = `img/camion-${direccion}.png`;
-    const anchoIcono = (direccion === "derecha" || direccion === "izquierda") ? 40 : 28;
-    const altoIcono = (direccion === "derecha" || direccion === "izquierda") ? 28 : 40;
+    const urlImagen = `img/camion-${direccionActual}.png`;
+    const anchoIcono = (direccionActual === "derecha" || direccionActual === "izquierda") ? 40 : 28;
+    const altoIcono = (direccionActual === "derecha" || direccionActual === "izquierda") ? 28 : 40;
 
     const htmlSprite = `<img id="img-camion-sprite" src="${urlImagen}" style="width: ${anchoIcono}px; height: ${altoIcono}px; display: block;" alt="Camión">`;
 
@@ -169,18 +170,13 @@
           html: `<div id="truck-icon-container" style="display: flex; justify-content: center; align-items: center;">${htmlSprite}</div>`,
           iconSize: [44, 44],
           iconAnchor: [22, 22]
-        }),
+          }),
         title: "Camión recolector",
         zIndexOffset: 1000,
         interactive: false
       }).addTo(mapa);
     } else {
-      // Corrección del error tipográfico (marcadorCamion en lugar de marcadarCamion)
       marcadorCamion.setLatLng(ll);
-      const truckElement = document.getElementById("truck-icon-container");
-      if (truckElement) {
-        truckElement.innerHTML = htmlSprite;
-      }
       marcadorCamion.setIcon(L.divIcon({
         className: "",
         html: `<div id="truck-icon-container" style="display: flex; justify-content: center; align-items: center;">${htmlSprite}</div>`,
