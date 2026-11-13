@@ -185,16 +185,18 @@
     let i = 0;                   
     let recorrido = 0;           
     let antes = performance.now();
-    let ultimaPosSim = null;
-    let anguloSim = 0;
+    let anguloActual = 0;
 
     $("#demo-simular").textContent = "Detener simulación";
 
-    function calcularAnguloSim(p1, p2) {
+    // Calcula el rumbo geométrico estricto entre dos nodos consecutivos de la vía
+    function calcularRumboCalle(p1, p2) {
       const rad = Math.PI / 180;
-      const dLon = (p2.lng - p1.lng) * rad;
-      const y = Math.sin(dLon) * Math.cos(p2.lat * rad);
-      const x = Math.cos(p1.lat * rad) * Math.sin(p2.lat * rad) - Math.sin(p1.lat * rad) * Math.cos(p2.lat * rad) * Math.cos(dLon);
+      const dLon = (p2[0] - p1[0]) * rad;
+      const lat1 = p1[1] * rad;
+      const lat2 = p2[1] * rad;
+      const y = Math.sin(dLon) * Math.cos(lat2);
+      const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
       const brng = Math.atan2(y, x) * (180 / Math.PI);
       return (brng + 360) % 360;
     }
@@ -216,34 +218,43 @@
       const dt = Math.min(0.1, (ahora - antes) / 1000);   
       antes = ahora;
       recorrido += metrosPorSeg * dt;
+      
       while (i < plan.length && recorrido >= plan[i].largo) {
         recorrido -= plan[i].largo;
         if (plan[i].recolecta) hechos.add(plan[i].id);
         i++;
       }
+
       if (i >= plan.length) {                            
         pintar();
         const fin = plan[plan.length - 1].coords;
-        AppMap.mostrarCamion({ lng: fin[fin.length - 1][0], lat: fin[fin.length - 1][1], rumbo: anguloSim });
+        AppMap.mostrarCamion({ lng: fin[fin.length - 1][0], lat: fin[fin.length - 1][1], rumbo: anguloActual });
         simulacion = null;
         $("#demo-simular").textContent = "Simular recorrido";
         return;
       }
 
-      const puntoActual = Simulacion.puntoEn(plan[i].coords, recorrido);
-      if (ultimaPosSim) {
-        const dLat = Math.abs(puntoActual.lat - ultimaPosSim.lat);
-        const dLng = Math.abs(puntoActual.lng - ultimaPosSim.lng);
-        if (dLat > 0.000001 || dLng > 0.000001) {
-          anguloSim = calcularAnguloSim(ultimaPosSim, puntoActual);
-          ultimaPosSim = puntoActual;
+      // Obtenemos el tramo actual y sus coordenadas geométricas para forzar el seguimiento de la pista
+      const segmento = plan[i];
+      const puntoActual = Simulacion.puntoEn(segmento.coords, recorrido);
+      
+      // Calculamos el ángulo basándonos en los vértices exactos de la polilínea del tramo
+      if (segmento.coords && segmento.coords.length > 1) {
+        // Buscamos el subsegmento de coordenadas más cercano dentro de la calle
+        let idxCoord = 0;
+        let distMin = Infinity;
+        for (let c = 0; c < segmento.coords.length - 1; c++) {
+          const d = Math.abs(segmento.coords[c][0] - puntoActual.lng) + Math.abs(segmento.coords[c][1] - puntoActual.lat);
+          if (d < distMin) {
+            distMin = d;
+            idxCoord = c;
+          }
         }
-      } else {
-        ultimaPosSim = puntoActual;
+        anguloActual = calcularRumboCalle(segmento.coords[idxCoord], segmento.coords[idxCoord + 1]);
       }
 
-      // Enviamos la posición junto con el rumbo calculado para la simulación
-      AppMap.mostrarCamion({ lat: puntoActual.lat, lng: puntoActual.lng, rumbo: anguloSim });
+      // Enviamos las coordenadas estrictas sobre la vía y el ángulo coherente de la calle
+      AppMap.mostrarCamion({ lat: puntoActual.lat, lng: puntoActual.lng, rumbo: anguloActual });
       pintar();
       simulacion = requestAnimationFrame(cuadro);
     }
