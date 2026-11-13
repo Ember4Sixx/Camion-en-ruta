@@ -1,5 +1,5 @@
 /* ==========================================================
-    Camión En Ruta · mapa (Leaflet con Movimiento Horizontal Fijo)
+    Camión En Ruta · mapa (Leaflet)
     ========================================================== */
 (function () {
   const cfg = window.APP_CONFIG;
@@ -9,7 +9,7 @@
   const estadoPorId = {};     
   let posicionAnterior = null;
   let ultimoAngulo = 0;       
-  let latBase = null;         // Guarda la latitud inicial de la ruta para mantenerlo horizontal
+  let latFija = null;         
 
   function iniciar() {
     mapa = L.map("map", { zoomControl: true }).setView(cfg.centro, cfg.zoom);
@@ -118,25 +118,25 @@
       if (marcadorCamion) { marcadorCamion.remove(); marcadorCamion = null; }  
       posicionAnterior = null;
       ultimoAngulo = 0;
-      latBase = null;
+      latFija = null;
       return;  
     }
 
-    // Fijar la latitud en el primer punto que reciba para evitar saltos verticales
-    if (latBase === null) {
-      latBase = pos.lat;
+    if (latFija === null && pos.lat) {
+      latFija = pos.lat;
     }
 
-    const ll = [latBase, pos.lng];
+    const latUsa = latFija || (cfg.centro ? cfg.centro[0] : pos.lat);
+    const ll = [latUsa, pos.lng];
     let escalaX = 1;
 
     if (posicionAnterior) {
       const dLng = pos.lng - posicionAnterior.lng;
       if (dLng !== 0) {
-        escalaX = dLng > 0 ? -1 : 1; // Voltea el camión según avance a derecha o izquierda
+        escalaX = dLng > 0 ? -1 : 1;
       }
     }
-    posicionAnterior = { lat: latBase, lng: pos.lng };
+    posicionAnterior = { lat: latUsa, lng: pos.lng };
 
     const anguloVisual = 0;
     const transformStyle = `transform: rotate(${anguloVisual}deg) scaleX(${escalaX});`;
