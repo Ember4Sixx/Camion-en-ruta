@@ -162,3 +162,22 @@ th { background: var(--fondo-alt); }
 .leaflet-interactive {
     stroke-opacity: 0.75; /* Ajusta la opacidad de la línea (0.7 a 0.8 es ideal para leer el texto debajo) */
 }
+/* Contenedor base del marcador del camión */
+.camion-marker-container {
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Elemento interno que rotará suavemente */
+.camion-icono-rotativo {
+  width: 36px;
+  height: 36px;
+  transition: transform 0.3s ease-out; /* Suaviza el giro en las esquinas */
+  transform-origin: center center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
