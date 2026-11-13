@@ -9,15 +9,14 @@
   const capasPorId = {};      // id calle -> capa Leaflet
   const nombrePorId = {};     // id calle -> nombre
   const estadoPorId = {};     // id calle -> estado actual
-  let posicionAnterior = null; // Memoria de la ubicación previa para calcular el rumbo
-  let ultimoAnguloValido = 0;  // Último ángulo estable para mantener coherencia al detenerse
+  let posicionAnterior = null; 
+  let ultimoAnguloValido = 0;  
 
   function iniciar() {
     mapa = L.map("map", { zoomControl: true }).setView(cfg.centro, cfg.zoom);
     const opcionesTeselas = { maxZoom: 19, keepBuffer: 4, attribution: cfg.teselas.atribucion };
     L.tileLayer(cfg.teselas.url, opcionesTeselas).addTo(mapa);
 
-    // Capa de NOMBRES de calles por ENCIMA de las líneas de colores.
     if (cfg.teselas.etiquetas) {
       mapa.createPane("nombres");
       mapa.getPane("nombres").style.zIndex = 450;
@@ -113,7 +112,6 @@
     document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  // Calcula el ángulo de desplazamiento entre dos puntos geográficos (Rumbo / Bearing)
   function calcularRumbo(lat1, lon1, lat2, lon2) {
     const rad = Math.PI / 180;
     const dLon = (lon2 - lon1) * rad;
@@ -136,15 +134,14 @@
     const ll = [pos.lat, pos.lng];
     let anguloRotacion = ultimoAnguloValido;
 
-    // Si viene el rumbo directo desde Supabase (GPS real)
+    // Si la posición trae el rumbo calculado (desde la simulación o Supabase)
     if (typeof pos.rumbo === "number") {
       anguloRotacion = pos.rumbo;
       ultimoAnguloValido = anguloRotacion;
     } else if (posicionAnterior) {
-      // Si es simulación, calculamos el rumbo con un umbral para evitar ruido y temblores
       const dLat = Math.abs(pos.lat - posicionAnterior.lat);
       const dLng = Math.abs(pos.lng - posicionAnterior.lng);
-      if (dLat > 0.000005 || dLng > 0.000005) {
+      if (dLat > 0.000002 || dLng > 0.000002) {
         anguloRotacion = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
         ultimoAnguloValido = anguloRotacion;
         posicionAnterior = { lat: pos.lat, lng: pos.lng };
@@ -157,8 +154,8 @@
       marcadorCamion = L.marker(ll, {
         icon: L.divIcon({
           className: "",
-          // Transición suave para que el camión "doble" el volante de forma natural en las esquinas
-          html: `<div id="truck-icon-container" style="transform: rotate(${anguloRotacion}deg); transition: transform 0.3s ease-out;" aria-hidden="true">🚛</div>`,
+          // Transición suave para que rote fluidamente al tomar esquinas
+          html: `<div id="truck-icon-container" style="transform: rotate(${anguloRotacion}deg); transition: transform 0.25s ease-out;" aria-hidden="true">🚛</div>`,
           iconSize: [28, 28],
           iconAnchor: [14, 14]
         }),
