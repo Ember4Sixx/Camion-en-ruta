@@ -142,6 +142,8 @@
       ultimoAngulo = angulo;
       posicionAnterior = { lat: pos.lat, lng: pos.lng };
     } else {
+      posicionAnterior = { lat: pos.lat, lng: pos.lng };
+    }
 
     // Evaluación en 4 direcciones ortogonales fijas (Norte, Sur, Este, Oeste)
     let anguloVisual = 0;
