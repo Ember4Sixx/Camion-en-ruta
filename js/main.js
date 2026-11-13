@@ -25,8 +25,8 @@
   $("#anio").textContent = new Date().getFullYear();
   $("#aviso-datos").hidden = !cfg.datosDemostracion;
 
-  // ---------- Lista lateral: una fila por CALLE (tabla `calles`); sus tramos (tabla `tramos`) se despliegan ----------
-  const abiertas = new Set();   // calles desplegadas: se conservan cuando la lista se vuelve a dibujar
+  // ---------- Lista lateral ----------
+  const abiertas = new Set();   
 
   function crearBadge(estado, texto) {
     const badge = document.createElement("span");
@@ -38,16 +38,16 @@
   function renderLista(fecha, origen) {
     const ul = $("#lista-calles");
     ul.textContent = "";
-    const grupos = new Map();   // nombre de la calle -> sus tramos
-    calles.features.forEach((f) => {
-      const base = f.properties.calle || Estado.nombreBase(f.properties.nombre);   // la calle completa
+    const grupos = new Map();   
+    calles.features.features?.forEach || calles.features.forEach((f) => {
+      const base = f.properties.calle || Estado.nombreBase(f.properties.nombre);   
       if (!grupos.has(base)) grupos.set(base, []);
       grupos.get(base).push(f);
     });
 
     grupos.forEach((feats, base) => {
       const li = document.createElement("li");
-      if (feats.length === 1) {                         // calle de un solo tramo: botón directo
+      if (feats.length === 1) {             
         const id = feats[0].properties.id;
         const e = estados[id] || "gris";
         const btn = document.createElement("button");
@@ -106,7 +106,7 @@
     });
     if (fecha !== undefined) {
       const ORIGEN = {
-        horario: "estimado según el horario (no es en tiempo real)",
+        horario: "estimado según el horario",
         gps: "calculado con la ubicación del camión",
         mixto: "varias fuentes"
       };
@@ -123,7 +123,6 @@
     renderLista(fecha, origen);
   }
 
-  // ---------- Horarios ----------
   function renderHorarios(h) {
     $("#horarios-nota").textContent = h.nota || "";
     const tb = $("#tabla-horarios");
@@ -139,7 +138,6 @@
     });
   }
 
-  // ---------- Panel demo ----------
   function iniciarDemo() {
     if (!cfg.modoDemo) return;
     $("#panel-demo").hidden = false;
@@ -161,13 +159,9 @@
     $("#demo-simular").addEventListener("click", simular);
   }
 
-  // ---------- Simulación del recorrido ----------
-  // El camión avanza por un recorrido CONTINUO (js/simulacion.js): sigue las calles,
-  // nunca salta. Mientras recolecta un tramo: verde; los ya hechos: negro;
-  // los 2 siguientes: amarillo; el resto: gris. El ícono 🚛 se mueve sobre la línea.
   const PROXIMOS = 2;
-  let plan = null;            // se calcula una sola vez
-  let camionSimulado = false; // true mientras el 🚛 del mapa es el de la simulación
+  let plan = null;            
+  let camionSimulado = false; 
 
   function detenerSimulacion() {
     if (simulacion) cancelAnimationFrame(simulacion);
@@ -175,8 +169,8 @@
     $("#demo-simular").textContent = "Simular recorrido";
     if (camionSimulado) {
       camionSimulado = false;
-      AppMap.mostrarCamion(null);   // quita el camión simulado
-      actualizarCamion();           // y vuelve a mostrar el real (si hay GPS)
+      AppMap.mostrarCamion(null);   
+      actualizarCamion();            
     }
   }
 
@@ -185,15 +179,13 @@
     if (!plan) plan = Simulacion.planificar(calles);
     if (!plan.length) return;
 
-    // Orden en que se recolecta cada tramo (para saber cuáles son los "próximos").
     const ordenRecoleccion = plan.filter((p) => p.recolecta).map((p) => p.id);
     const total = plan.reduce((s, p) => s + p.largo, 0);
     const metrosPorSeg = total / (cfg.simulacionSegundos || 90);
 
     const hechos = new Set();
-    let i = 0;                 // paso actual del plan
-    let recorrido = 0;         // metros avanzados dentro del paso actual
-    let ultimoClave = "";
+    let i = 0;                   
+    let recorrido = 0;           
     let antes = performance.now();
     $("#demo-simular").textContent = "Detener simulación";
 
@@ -202,8 +194,6 @@
       const enCurso = actual && actual.recolecta ? actual.id : null;
       const yaHechos = hechos.size + (enCurso ? 1 : 0);
       const proximos = ordenRecoleccion.slice(yaHechos, yaHechos + PROXIMOS);
-      const clave = hechos.size + "|" + enCurso;
-      ultimoClave = clave;
       const nuevo = {};
       calles.features.forEach((f) => { nuevo[f.properties.id] = "gris"; });
       proximos.forEach((id) => { nuevo[id] = "amarillo"; });
@@ -213,7 +203,7 @@
     }
 
     function cuadro(ahora) {
-      const dt = Math.min(0.1, (ahora - antes) / 1000);   // máx. 0,1 s por cuadro (si la pestaña estuvo oculta)
+      const dt = Math.min(0.1, (ahora - antes) / 1000);   
       antes = ahora;
       recorrido += metrosPorSeg * dt;
       while (i < plan.length && recorrido >= plan[i].largo) {
@@ -221,7 +211,7 @@
         if (plan[i].recolecta) hechos.add(plan[i].id);
         i++;
       }
-      if (i >= plan.length) {                           // terminó: todo negro
+      if (i >= plan.length) {                            
         pintar();
         const fin = plan[plan.length - 1].coords;
         AppMap.mostrarCamion({ lng: fin[fin.length - 1][0], lat: fin[fin.length - 1][1] });
@@ -239,15 +229,13 @@
     simulacion = requestAnimationFrame(cuadro);
   }
 
-  // ---------- GPS (opcional) ----------
   async function actualizarCamion() {
-    if (!cfg.gpsActivo || simulacion) return;   // durante la simulación manda el camión simulado
-    try { AppMap.mostrarCamion(await AppData.camion()); } catch (e) { console.warn("Sin ubicación del camión", e); }
+    if (!cfg.gpsActivo || simulacion) return;   
+    try { AppMap.mostrarCamion(await AppData.camion()); } catch (e) { console.warn("Sin ubicación", e); }
   }
 
-  // ---------- Refresco periódico ----------
   async function refrescar() {
-    if (simulacion) return;   // no pisar los colores mientras se simula
+    if (simulacion) return;   
     if (camionSimulado) { camionSimulado = false; AppMap.mostrarCamion(null); }
     try {
       const e = await AppData.estados();
@@ -256,7 +244,6 @@
     } catch (err) { console.warn("No se pudo refrescar", err); }
   }
 
-  // ---------- Arranque ----------
   async function iniciar() {
     AppMap.iniciar();
     try {
@@ -271,11 +258,10 @@
       iniciarDemo();
       actualizarCamion();
       if (cfg.refrescarCadaSegundos > 0) setInterval(refrescar, cfg.refrescarCadaSegundos * 1000);
-      if (AppData.suscribir) AppData.suscribir(refrescar); // tiempo real (solo fuente supabase)
+      if (AppData.suscribir) AppData.suscribir(refrescar); 
     } catch (err) {
       console.error(err);
-      $("#ultima-actualizacion").textContent =
-        "No se pudieron cargar los datos. Si abriste index.html con doble clic, usa un servidor local (ver README).";
+      $("#ultima-actualizacion").textContent = "No se pudieron cargar los datos.";
     }
   }
 
