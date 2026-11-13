@@ -1,0 +1,15 @@
+{
+  "name": "Camión En Ruta · José Leonardo Ortiz",
+  "short_name": "Camión En Ruta",
+  "description": "Mapa del camión recolector y avisos de retraso.",
+  "lang": "es",
+  "start_url": "vecinos.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#14532d",
+  "icons": [
+    { "src": "conductor/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "conductor/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

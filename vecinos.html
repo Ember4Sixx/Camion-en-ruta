@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://unpkg.com; connect-src 'self' https://bltyftujdfowhyjsjjrj.supabase.co wss://bltyftujdfowhyjsjjrj.supabase.co; object-src 'none'; base-uri 'self'; form-action 'none'">
   <title>Camión En Ruta · José Leonardo Ortiz</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#14532d">
+  <link rel="apple-touch-icon" href="conductor/icon-192.png">
   <meta name="description" content="Información sobre la recolección de residuos sólidos en José Leonardo Ortiz, Chiclayo, y ODS 12: Producción y Consumo Responsables.">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="css/styles.css">
@@ -116,6 +119,18 @@
         </div>
       </div>
     </section>
+    <section id="avisos" class="section" aria-labelledby="avisos-titulo">
+      <div class="container">
+        <div class="card avisos-card">
+          <div class="avisos-texto">
+            <h2 id="avisos-titulo">Avísame si el camión se retrasa</h2>
+            <p class="muted">Activa los avisos y te llegará una notificación al celular si el camión no sale a su hora, aunque cierres esta página. No pedimos tu nombre ni tu número.</p>
+            <p id="avisos-estado" class="avisos-estado" role="status" aria-live="polite">Revisando…</p>
+          </div>
+          <button id="avisos-boton" class="btn btn-primary" type="button" hidden>Activar avisos</button>
+        </div>
+      </div>
+    </section>
     <section id="horarios" class="section section-alt">
       <div class="container">
         <h2>Horarios y recorridos</h2>
@@ -159,5 +174,6 @@
   <script src="js/data-source.js"></script>
   <script src="js/map.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/avisos.js"></script>
 </body>
 </html>

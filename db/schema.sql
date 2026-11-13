@@ -116,3 +116,6 @@ create policy "escritura con sesion" on avance_tramos   for all to authenticated
 -- Hace que Supabase avise a la página cuando cambia la posición del camión.
 alter publication supabase_realtime add table posicion_camion;
 alter publication supabase_realtime add table avance_tramos;
+
+-- Avisos de retraso por notificación: tablas suscripciones_push y avisos_retraso.
+-- Ver db/migracion_04_avisos_retraso.sql y db/cron_avisos_retraso.sql.
