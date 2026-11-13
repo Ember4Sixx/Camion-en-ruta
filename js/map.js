@@ -131,25 +131,26 @@
       return;  
     }
 
-    const ll = [pos.lat, pos.lng];
+    // Forzar latitud fija para evitar movimiento vertical
+    const latFija = cfg.centro ? cfg.centro[0] : pos.lat;
+    const ll = [latFija, pos.lng];
     let angulo = ultimoAngulo;
 
     if (typeof pos.rumbo === "number") {
       angulo = pos.rumbo;
       ultimoAngulo = angulo;
     } else if (posicionAnterior) {
-      const dLat = pos.lat - posicionAnterior.lat;
       const dLng = pos.lng - posicionAnterior.lng;
-      const distancia = Math.sqrt(dLat * dLat + dLng * dLng);
+      const distancia = Math.abs(dLng);
 
       // Umbral para evitar temblores por ruido GPS
       if (distancia > 0.000008) {
-        angulo = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
+        angulo = calcularRumbo(latFija, posicionAnterior.lng, latFija, pos.lng);
         ultimoAngulo = angulo;
-        posicionAnterior = { lat: pos.lat, lng: pos.lng };
+        posicionAnterior = { lat: latFija, lng: pos.lng };
       }
     } else {
-      posicionAnterior = { lat: pos.lat, lng: pos.lng };
+      posicionAnterior = { lat: latFija, lng: pos.lng };
     }
 
     // Evaluación en 4 direcciones ortogonales fijas (Norte, Sur, Este, Oeste)
