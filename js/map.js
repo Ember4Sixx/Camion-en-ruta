@@ -1,5 +1,5 @@
 /* ==========================================================
-    Camión En Ruta · mapa (Leaflet con Emoji de 4 Direcciones Fijas)
+    Camión En Ruta · mapa (Leaflet con Movimiento Horizontal Fijo)
     ========================================================== */
 (function () {
   const cfg = window.APP_CONFIG;
@@ -8,7 +8,8 @@
   const nombrePorId = {};     
   const estadoPorId = {};     
   let posicionAnterior = null;
-  let ultimoAngulo = 0;       // Mantiene el último rumbo válido para evitar saltos al detenerse
+  let ultimoAngulo = 0;       
+  let latBase = null;         // Guarda la latitud inicial de la ruta para mantenerlo horizontal
 
   function iniciar() {
     mapa = L.map("map", { zoomControl: true }).setView(cfg.centro, cfg.zoom);
@@ -112,58 +113,32 @@
     document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  function calcularRumbo(lat1, lon1, lat2, lon2) {
-    const rad = Math.PI / 180;
-    const dLon = (lon2 - lon1) * rad;
-    const y = Math.sin(dLon) * Math.cos(lat2 * rad);
-    const x =
-      Math.cos(lat1 * rad) * Math.sin(lat2 * rad) -
-      Math.sin(lat1 * rad) * Math.cos(lat2 * rad) * Math.cos(dLon);
-    const brng = Math.atan2(y, x) * (180 / Math.PI);
-    return (brng + 360) % 360;
-  }
-
   function mostrarCamion(pos) {
     if (!pos) {  
       if (marcadorCamion) { marcadorCamion.remove(); marcadorCamion = null; }  
       posicionAnterior = null;
       ultimoAngulo = 0;
+      latBase = null;
       return;  
     }
 
-    const ll = [pos.lat, pos.lng];
-    let angulo = ultimoAngulo;
-
-    if (typeof pos.rumbo === "number") {
-      angulo = pos.rumbo;
-      ultimoAngulo = angulo;
-    } else if (posicionAnterior) {
-      angulo = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
-      ultimoAngulo = angulo;
-      posicionAnterior = { lat: pos.lat, lng: pos.lng };
-    } else {
-      posicionAnterior = { lat: pos.lat, lng: pos.lng };
+    // Fijar la latitud en el primer punto que reciba para evitar saltos verticales
+    if (latBase === null) {
+      latBase = pos.lat;
     }
 
-    // Evaluación en 4 direcciones ortogonales fijas (Norte, Sur, Este, Oeste)
-    let anguloVisual = 0;
+    const ll = [latBase, pos.lng];
     let escalaX = 1;
-    const angNorm = (angulo % 360 + 360) % 360;
 
-    if (angNorm >= 45 && angNorm < 135) {
-      anguloVisual = 0;
-      escalaX = -1; // Horizontal Derecha
-    } else if (angNorm >= 135 && angNorm < 225) {
-      anguloVisual = 270; // Vertical Abajo
-      escalaX = 1;
-    } else if (angNorm >= 225 && angNorm < 315) {
-      anguloVisual = 0;
-      escalaX = 1; // Horizontal Izquierda
-    } else {
-      anguloVisual = 90; // Vertical Arriba
-      escalaX = 1;
+    if (posicionAnterior) {
+      const dLng = pos.lng - posicionAnterior.lng;
+      if (dLng !== 0) {
+        escalaX = dLng > 0 ? -1 : 1; // Voltea el camión según avance a derecha o izquierda
+      }
     }
+    posicionAnterior = { lat: latBase, lng: pos.lng };
 
+    const anguloVisual = 0;
     const transformStyle = `transform: rotate(${anguloVisual}deg) scaleX(${escalaX});`;
 
     if (!marcadorCamion) {
@@ -181,7 +156,6 @@
     } else {
       marcadorCamion.setLatLng(ll);
       
-      // Actualizar el DOM directamente para que la transición CSS funcione de manera fluida
       const elementoDom = marcadorCamion.getElement();
       if (elementoDom) {
         const inner = elementoDom.querySelector(".camion-inner");
