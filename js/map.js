@@ -142,7 +142,6 @@
       const dLng = pos.lng - posicionAnterior.lng;
       const distancia = Math.sqrt(dLat * dLat + dLng * dLng);
 
-      // Umbral para evitar temblores por ruido GPS
       if (distancia > 0.000008) {
         angulo = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
         ultimoAngulo = angulo;
@@ -152,26 +151,25 @@
       posicionAnterior = { lat: pos.lat, lng: pos.lng };
     }
 
-    // Evaluación en 4 direcciones ortogonales fijas (Norte, Sur, Este, Oeste)
-    let anguloVisual = 0;
-    let escalaX = 1;
+    // Normalizar ángulo a 0 - 360 grados
     const angNorm = (angulo % 360 + 360) % 360;
 
-    if (angNorm >= 45 && angNorm < 135) {
-      anguloVisual = 0;
-      escalaX = -1; // Horizontal Derecha
-    } else if (angNorm >= 135 && angNorm < 225) {
-      anguloVisual = 270; // Vertical Abajo
-      escalaX = 1;
-    } else if (angNorm >= 225 && angNorm < 315) {
-      anguloVisual = 0;
-      escalaX = 1; // Horizontal Izquierda
-    } else {
-      anguloVisual = 90; // Vertical Arriba
-      escalaX = 1;
-    }
+    // Determinación estricta de las 4 direcciones ortogonales
+    let transformStyle = "";
 
-    const transformStyle = `transform: rotate(${anguloVisual}deg) scaleX(${escalaX});`;
+    if (angNorm >= 315 || angNorm < 45) {
+      // Movimiento hacia la DERECHA (Este)
+      transformStyle = "transform: scaleX(1);";
+    } else if (angNorm >= 45 && angNorm < 135) {
+      // Movimiento hacia ABAJO (Sur)
+      transformStyle = "transform: rotate(90deg);";
+    } else if (angNorm >= 135 && angNorm < 225) {
+      // Movimiento hacia la IZQUIERDA (Oeste)
+      transformStyle = "transform: scaleX(-1);";
+    } else {
+      // Movimiento hacia ARRIBA (Norte)
+      transformStyle = "transform: rotate(-90deg);";
+    }
 
     if (!marcadorCamion) {
       marcadorCamion = L.marker(ll, {
@@ -188,12 +186,11 @@
     } else {
       marcadorCamion.setLatLng(ll);
       
-      // Actualizar el DOM directamente para que la transición CSS funcione de manera fluida
       const elementoDom = marcadorCamion.getElement();
       if (elementoDom) {
         const inner = elementoDom.querySelector(".camion-inner");
         if (inner) {
-          inner.style.transform = `rotate(${anguloVisual}deg) scaleX(${escalaX})`;
+          inner.style.cssText = `font-size: 26px; ${transformStyle} transition: transform 0.2s ease; display: inline-block; line-height: 1;`;
         }
       }
     }
