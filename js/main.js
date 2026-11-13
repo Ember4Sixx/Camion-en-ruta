@@ -4,14 +4,13 @@
 (function () {
   const cfg = window.APP_CONFIG;
   const ORDEN = ["gris", "amarillo", "verde", "negro"];
-  let calles = null;          // GeoJSON
-  let estados = {};           // id -> estado
-  let estadosIniciales = {};  // para "Reiniciar"
+  let calles = null;          
+  let estados = {};           
+  let estadosIniciales = {};  
   let simulacion = null;
 
   const $ = (s) => document.querySelector(s);
 
-  // ---------- Menú móvil ----------
   const toggle = $(".nav-toggle");
   const menu = $("#menu");
   toggle.addEventListener("click", () => {
@@ -25,7 +24,6 @@
   $("#anio").textContent = new Date().getFullYear();
   $("#aviso-datos").hidden = !cfg.datosDemostracion;
 
-  // ---------- Lista lateral ----------
   const abiertas = new Set();   
 
   function crearBadge(estado, texto) {
@@ -39,7 +37,7 @@
     const ul = $("#lista-calles");
     ul.textContent = "";
     const grupos = new Map();   
-    calles.features.features?.forEach || calles.features.forEach((f) => {
+    calles.features.forEach((f) => {
       const base = f.properties.calle || Estado.nombreBase(f.properties.nombre);   
       if (!grupos.has(base)) grupos.set(base, []);
       grupos.get(base).push(f);
@@ -187,7 +185,19 @@
     let i = 0;                   
     let recorrido = 0;           
     let antes = performance.now();
+    let ultimaPosSim = null;
+    let anguloSim = 0;
+
     $("#demo-simular").textContent = "Detener simulación";
+
+    function calcularAnguloSim(p1, p2) {
+      const rad = Math.PI / 180;
+      const dLon = (p2.lng - p1.lng) * rad;
+      const y = Math.sin(dLon) * Math.cos(p2.lat * rad);
+      const x = Math.cos(p1.lat * rad) * Math.sin(p2.lat * rad) - Math.sin(p1.lat * rad) * Math.cos(p2.lat * rad) * Math.cos(dLon);
+      const brng = Math.atan2(y, x) * (180 / Math.PI);
+      return (brng + 360) % 360;
+    }
 
     function pintar() {
       const actual = plan[i];
@@ -214,12 +224,26 @@
       if (i >= plan.length) {                            
         pintar();
         const fin = plan[plan.length - 1].coords;
-        AppMap.mostrarCamion({ lng: fin[fin.length - 1][0], lat: fin[fin.length - 1][1] });
+        AppMap.mostrarCamion({ lng: fin[fin.length - 1][0], lat: fin[fin.length - 1][1], rumbo: anguloSim });
         simulacion = null;
         $("#demo-simular").textContent = "Simular recorrido";
         return;
       }
-      AppMap.mostrarCamion(Simulacion.puntoEn(plan[i].coords, recorrido));
+
+      const puntoActual = Simulacion.puntoEn(plan[i].coords, recorrido);
+      if (ultimaPosSim) {
+        const dLat = Math.abs(puntoActual.lat - ultimaPosSim.lat);
+        const dLng = Math.abs(puntoActual.lng - ultimaPosSim.lng);
+        if (dLat > 0.000001 || dLng > 0.000001) {
+          anguloSim = calcularAnguloSim(ultimaPosSim, puntoActual);
+          ultimaPosSim = puntoActual;
+        }
+      } else {
+        ultimaPosSim = puntoActual;
+      }
+
+      // Enviamos la posición junto con el rumbo calculado para la simulación
+      AppMap.mostrarCamion({ lat: puntoActual.lat, lng: puntoActual.lng, rumbo: anguloSim });
       pintar();
       simulacion = requestAnimationFrame(cuadro);
     }
