@@ -1,5 +1,5 @@
 /* ==========================================================
-   Camión En Ruta · mapa (Leaflet con Emoji Rotativo Realista)
+   Camión En Ruta · mapa (Leaflet con Emoji de 4 Direcciones Fijas)
    ========================================================== */
 (function () {
   const cfg = window.APP_CONFIG;
@@ -148,10 +148,26 @@
       posicionAnterior = { lat: pos.lat, lng: pos.lng };
     }
 
-    // CORRECCIÓN APLICADA: +90 grados para alinear de frente el emoji 🚚 con la dirección de la calle
-    const anguloVisual = angulo + 90;
+    // Evaluación en 4 direcciones ortogonales fijas (Norte, Sur, Este, Oeste)
+    let anguloVisual = 0;
+    let escalaX = 1;
+    const angNorm = (angulo % 360 + 360) % 360;
 
-    const htmlEmoji = `<div style="font-size: 26px; transform: rotate(${anguloVisual}deg); transition: transform 0.3s ease; display: inline-block; line-height: 1;">🚚</div>`;
+    if (angNorm >= 45 && angNorm < 135) {
+      anguloVisual = 0;
+      escalaX = -1; // Horizontal Derecha (volteo horizontal para alinear la cabina)
+    } else if (angNorm >= 135 && angNorm < 225) {
+      anguloVisual = 270; // Vertical Abajo
+      escalaX = 1;
+    } else if (angNorm >= 225 && angNorm < 315) {
+      anguloVisual = 0;
+      escalaX = 1; // Horizontal Izquierda
+    } else {
+      anguloVisual = 90; // Vertical Arriba
+      escalaX = 1;
+    }
+
+    const htmlEmoji = `<div style="font-size: 26px; transform: rotate(${anguloVisual}deg) scaleX(${escalaX}); transition: transform 0.2s ease; display: inline-block; line-height: 1;">🚚</div>`;
 
     if (!marcadorCamion) {
       marcadorCamion = L.marker(ll, {
