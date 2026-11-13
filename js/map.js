@@ -12,7 +12,7 @@
 
   function iniciar() {
     mapa = L.map("map", { zoomControl: true }).setView(cfg.centro, cfg.zoom);
-    const opcionesTeselas = { maxZoom: 19, subdomains: "abc", keepBuffer: 4, attribution: cfg.teselas.atribucion };
+    const opcionesTeselas = { maxZoom: 19, keepBuffer: 4, attribution: cfg.teselas.atribucion };
     L.tileLayer(cfg.teselas.url, opcionesTeselas).addTo(mapa);
 
     if (cfg.teselas.etiquetas) {
