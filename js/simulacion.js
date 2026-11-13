@@ -36,8 +36,8 @@
     return s;
   }
 
-  /** Devuelve una lista de pasos [{id, coords:[[lng,lat],…], recolecta:bool, largo}] */
-  function planificar(geojson) {
+  /** Arma la red de calles: nodos (esquinas), aristas (tramos) y adyacencia. */
+  function construirRed(geojson) {
     var nodos = [];      // [[lng,lat]]
     function nodoDe(p) {
       for (var i = 0; i < nodos.length; i++) if (distM(nodos[i], p) < TOL_M) return i;
@@ -62,7 +62,6 @@
         hecha: false
       });
     });
-    if (!aristas.length) return [];
 
     // En los bordes de la zona, los carriles de avenida terminan a unos metros de la esquina
     // (están corridos ~8 m del eje). Un extremo "suelto" se une a la esquina más cercana (≤ 15 m).
@@ -87,6 +86,13 @@
       ady[e.a].push({ e: e, hacia: e.b, inv: false });
       if (!e.unaVia) ady[e.b].push({ e: e, hacia: e.a, inv: true });
     });
+    return { nodos: nodos, aristas: aristas, ady: ady };
+  }
+
+  /** Devuelve una lista de pasos [{id, coords:[[lng,lat],…], recolecta:bool, largo}] */
+  function planificar(geojson) {
+    var red = construirRed(geojson), nodos = red.nodos, aristas = red.aristas, ady = red.ady;
+    if (!aristas.length) return [];
 
     function paso(sal, recolecta) {
       var c = sal.inv ? sal.e.coords.slice().reverse() : sal.e.coords;
@@ -153,6 +159,77 @@
     return pasos;
   }
 
+  /**
+   * Recorrido que sigue EXACTAMENTE el orden de la ruta (properties.orden 1, 2, 3…).
+   * Cada tramo se recorre en el sentido en que está dibujado (la geometría ya viene en el
+   * sentido de marcha). Entre un tramo y el siguiente:
+   *   - si están a pocos metros (cruzar una avenida de doble vía), va directo;
+   *   - si no, vuelve por calles ya recorridas (sin recolectar) por el camino más corto;
+   *   - si no hay camino dentro del mapa (la ruta sale de la zona), salta al siguiente tramo.
+   */
+  var CRUCE_M = 25;
+  function planificarEnOrden(geojson) {
+    var conOrden = { type: "FeatureCollection", features: geojson.features
+      .filter(function (f) { return f.properties && f.properties.orden > 0; })
+      .sort(function (x, y) { return x.properties.orden - y.properties.orden; }) };
+    var red = construirRed(conOrden), nodos = red.nodos, aristas = red.aristas, ady = red.ady;
+    if (!aristas.length) return [];
+
+    function caminoA(desde, hasta) {   // Dijkstra entre dos esquinas (respeta el sentido de las avenidas)
+      var dist = nodos.map(function () { return Infinity; });
+      var prev = nodos.map(function () { return null; });
+      var visto = nodos.map(function () { return false; });
+      dist[desde] = 0;
+      for (;;) {
+        var u = -1;
+        for (var i = 0; i < nodos.length; i++) if (!visto[i] && dist[i] < Infinity && (u < 0 || dist[i] < dist[u])) u = i;
+        if (u < 0) return null;
+        if (u === hasta) break;
+        visto[u] = true;
+        ady[u].forEach(function (s) {
+          if (!s.e.hecha) return;   // solo vuelve por calles que ya recorrió
+          var d = dist[u] + s.e.largo;
+          if (d < dist[s.hacia]) { dist[s.hacia] = d; prev[s.hacia] = { desde: u, sal: s }; }
+        });
+      }
+      var camino = [];
+      for (var v = hasta; prev[v]; v = prev[v].desde) camino.unshift(prev[v].sal);
+      return camino;
+    }
+
+    var pasos = [];
+    var punto = aristas[0].coords[0], nodo = aristas[0].a;
+    function recta(desde, hasta) {
+      var d = distM(desde, hasta);
+      if (d > 0.5) pasos.push({ id: null, coords: [desde, hasta], recolecta: false, largo: d });
+    }
+    aristas.forEach(function (e) {
+      var inicio = e.coords[0];
+      var d = distM(punto, inicio);
+      if (d > 0.5) {
+        var camino = d <= CRUCE_M ? null : caminoA(nodo, e.a);
+        if (d <= CRUCE_M) {
+          recta(punto, inicio);                       // cruzar la avenida / la esquina
+        } else if (camino && camino.length) {
+          camino.forEach(function (sal) {             // vuelve por calles ya recorridas
+            var c = sal.inv ? sal.e.coords.slice().reverse() : sal.e.coords;
+            recta(punto, c[0]);
+            pasos.push({ id: sal.e.id, coords: c, recolecta: false, largo: sal.e.largo });
+            punto = c[c.length - 1];
+          });
+          recta(punto, inicio);
+        } else {
+          pasos.push({ id: null, coords: [inicio, inicio], recolecta: false, largo: 0, salto: true });   // la ruta sale del mapa
+        }
+      }
+      pasos.push({ id: e.id, coords: e.coords, recolecta: true, largo: e.largo });
+      e.hecha = true;
+      punto = e.coords[e.coords.length - 1];
+      nodo = e.b;
+    });
+    return pasos;
+  }
+
   /** Punto a `m` metros desde el inicio de una línea [[lng,lat],…]. Devuelve {lat,lng}. */
   function puntoEn(coords, m) {
     for (var i = 0; i < coords.length - 1; i++) {
@@ -170,7 +247,7 @@
     return { lng: u[0], lat: u[1] };
   }
 
-  var api = { planificar: planificar, puntoEn: puntoEn, distM: distM };
+  var api = { planificar: planificar, planificarEnOrden: planificarEnOrden, puntoEn: puntoEn, distM: distM };
   root.Simulacion = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : this);

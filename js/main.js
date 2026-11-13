@@ -174,7 +174,12 @@
 
   function simular() {
     if (simulacion) { detenerSimulacion(); return; }
-    if (!plan) plan = Simulacion.planificar(calles);
+    // Si la ruta tiene orden (ruta_tramos), la simulación lo sigue al pie de la letra;
+    // si no, arma un recorrido continuo por su cuenta.
+    if (!plan) {
+      const tieneOrden = calles.features.some((f) => f.properties.orden > 0);
+      plan = tieneOrden ? Simulacion.planificarEnOrden(calles) : Simulacion.planificar(calles);
+    }
     if (!plan.length) return;
 
     const ordenRecoleccion = plan.filter((p) => p.recolecta).map((p) => p.id);
