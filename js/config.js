@@ -26,13 +26,6 @@ window.APP_CONFIG = {
   // NUNCA pegues aquí la clave "service_role".
   supabase: { url: "https://bltyftujdfowhyjsjjrj.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJsdHlmdHVqZGZvd2h5anNqanJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxNTcxMDgsImV4cCI6MjEwODczMzEwOH0.Ex_YcG7qbprILpf3KZHHFQYfQz8x4l1r8JAC_4wqRDo" },
 
-<<<<<<< HEAD
-=======
-  // Avisos de retraso por notificación (vecinos.html). vapidPublica = la clave PÚBLICA que da
-  // "npx web-push generate-vapid-keys". La privada NUNCA va aquí: va en los secretos de Supabase.
- avisos: { vapidPublica: "BF6erkvhnC0BhKldcvL2xD65kdsqrgiV4dlk2hR__EH6IExoPAwF67pW-VMnW0O3735JlqKYPlTYdm_JMSqRdhQ" },
-
->>>>>>> 3a1925db817c1d3fab77397d5be19bf66dbae94a
   // Cada cuántos segundos se vuelven a pedir los estados (0 = no repetir).
   // Con supabase el tiempo real avisa cuando llega una posición del camión; esto sirve
   // además para el cálculo por horario, que cambia con el reloj (30 es un buen valor).
