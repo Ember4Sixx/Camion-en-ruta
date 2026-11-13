@@ -70,7 +70,7 @@
       let sub = await reg.pushManager.getSubscription();
       if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: claveEnBytes(clave) });
       await guardar(sub);
-      mostrar("Avisos activados. Te llegará una notificación si el camión se retrasa, aunque cierres esta página.", { ok: true, boton: "Desactivar avisos" });
+      mostrar("Avisos activados. Te llegará una notificación si el camión se retrasa o se adelanta, aunque cierres esta página.", { ok: true, boton: "Desactivar avisos" });
     } catch (e) {
       mostrar("No se pudieron activar los avisos (" + e.message + "). Revisa tu conexión e inténtalo otra vez.", { error: true, boton: "Activar avisos" });
     }
@@ -116,7 +116,7 @@
         return mostrar("Avisos activados en este celular.", { ok: true, boton: "Desactivar avisos" });
       }
     } catch (e) { /* sigue abajo */ }
-    mostrar("Recibe una notificación si el camión no sale a su hora.", { boton: "Activar avisos" });
+    mostrar("Recibe una notificación si el camión sale tarde o antes de su hora.", { boton: "Activar avisos" });
   }
 
   iniciar();

@@ -191,3 +191,10 @@ th { background: var(--fondo-alt); }
 .avisos-estado.ok { color: var(--verde-oscuro); }
 .avisos-estado.ok::before { content: "✔ "; }
 .avisos-estado.error { color: #b3261e; }
+
+/* Prueba de avisos (modo demo de index.html, js/prueba-avisos.js) */
+.demo-avisos { margin-top: 1.2rem; padding-top: 1rem; border-top: 1px dashed var(--verde-marca); }
+.demo-avisos[hidden] { display: none; }
+.demo-avisos h4 { margin: 0 0 .3rem; }
+.demo-controls input { font: inherit; padding: .5rem; border-radius: 8px; border: 1px solid var(--borde); }
+.demo-avisos button:disabled { opacity: .6; cursor: wait; }

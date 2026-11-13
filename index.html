@@ -152,6 +152,20 @@
             <button id="demo-simular" class="btn btn-ghost" type="button">Simular recorrido</button>
             <button id="demo-reiniciar" class="btn btn-ghost" type="button">Reiniciar</button>
           </div>
+
+          <!-- Prueba de avisos al celular (js/prueba-avisos.js). Llega a quienes activaron los avisos en vecinos.html -->
+          <div id="demo-avisos" class="demo-avisos">
+            <h4>Probar avisos al celular</h4>
+            <p class="muted">Manda una notificación de prueba a los celulares que activaron los avisos en <a href="vecinos.html">vecinos.html</a>. Pide la clave de prueba (la <code>CLAVE_PRUEBA</code> de Supabase); no se guarda.</p>
+            <div class="demo-controls">
+              <label>Clave de prueba
+                <input id="prueba-clave" type="password" autocomplete="off">
+              </label>
+              <button class="btn btn-primary" type="button" data-tipo="retraso">Aviso de retraso</button>
+              <button class="btn btn-ghost" type="button" data-tipo="adelanto">Aviso de adelanto</button>
+            </div>
+            <p id="prueba-estado" class="avisos-estado" aria-live="polite"></p>
+          </div>
         </div>
       </div>
     </section>
@@ -206,5 +220,6 @@
   <script src="js/map.js"></script>
   <script src="js/simulacion.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/prueba-avisos.js"></script>
 </body>
 </html>

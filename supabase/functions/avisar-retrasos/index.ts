@@ -2,10 +2,13 @@
 // Camión En Ruta · función "avisar-retrasos" (Supabase Edge Function)
 //
 // Supabase la llama cada minuto (ver db/cron_avisos_retraso.sql). Revisa los
-// horarios de hoy: si pasaron TOLERANCIA_MIN minutos desde la hora de inicio
-// de una ruta y el camión todavía no manda su ubicación, manda una notificación
-// a los celulares que activaron los avisos en vecinos.html. Avisa UNA sola vez
-// por ruta y turno (tabla avisos_retraso).
+// horarios de hoy y manda una notificación a los celulares que activaron los
+// avisos en vecinos.html cuando:
+//   · RETRASO:  pasaron TOLERANCIA_MIN minutos desde la hora de inicio de una
+//               ruta y el camión todavía no manda su ubicación.
+//   · ADELANTO: faltan TOLERANCIA_MIN minutos o más para la hora de inicio y el
+//               camión YA está mandando su ubicación (salió antes).
+// Avisa UNA sola vez por ruta y turno (tabla avisos_retraso, guarda los dos tipos).
 //
 // Secretos que necesita (Supabase > Edge Functions > Secrets):
 //   VAPID_PUBLICA, VAPID_PRIVADA  -> las claves de notificaciones (npx web-push generate-vapid-keys)
@@ -14,14 +17,19 @@
 //   TOLERANCIA_MIN (opcional)     -> minutos de tolerancia, por defecto 15
 // SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY ya los pone Supabase solo.
 //
-// Aviso de prueba: en el editor de la función, botón "Test", con el cuerpo
-//   {"prueba": true, "clave": "<CLAVE_PRUEBA>"}
+// Aviso de prueba (editor de la función > "Test", o el botón del modo demo de index.html):
+//   {"prueba": true, "clave": "<CLAVE_PRUEBA>"}                       -> aviso genérico
+//   {"prueba": true, "clave": "<CLAVE_PRUEBA>", "tipo": "retraso"}     -> simula un aviso de retraso
+//   {"prueba": true, "clave": "<CLAVE_PRUEBA>", "tipo": "adelanto"}    -> simula un aviso de adelanto
+// Las pruebas no se anotan en avisos_retraso: no bloquean los avisos reales.
 // =====================================================================
 import webpush from "npm:web-push@3.6.7";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
 const TOLERANCIA_MIN = Number(Deno.env.get("TOLERANCIA_MIN") ?? "15");
 const ADELANTO_MIN = 30;     // si el camión empezó a mandar ubicación hasta 30 min antes de la hora, cuenta como "salió"
+const VENTANA_ADELANTO_MIN = 120; // se vigila si sale antes desde 2 horas antes de la hora de inicio
+const RECIENTE_MIN = 5;      // la ubicación tiene que ser de los últimos 5 min: el camión está andando AHORA
 const LIMA_UTC_MIN = -300;   // Perú: UTC-5 todo el año (no hay horario de verano)
 const URL_PAGINA = Deno.env.get("URL_PAGINA") ?? "https://ember4sixx.github.io/Camion-en-ruta/vecinos.html";
 
@@ -30,6 +38,8 @@ const URL_PAGINA = Deno.env.get("URL_PAGINA") ?? "https://ember4sixx.github.io/C
 type Horario = { ruta_id: string; dias: number[] | string | null; hora_inicio: string; hora_fin: string };
 type Posicion = { ruta_id: string; actualizado: string };
 type Retraso = { ruta_id: string; hora_inicio: string; minutos: number };
+type Aviso = Retraso & { tipo: "retraso" | "adelanto" };
+type Mensaje = { titulo: string; cuerpo: string; url: string; tag: string };
 
 /** Fecha, día de la semana (0 = domingo) y minutos del día en hora de Lima. */
 export function horaLima(ahora: Date) {
@@ -90,9 +100,49 @@ export function rutasRetrasadas(
   return out;
 }
 
-// ---------- Envío de notificaciones ----------
+/**
+ * Rutas cuyo camión salió ANTES de su hora (está mandando ubicación ahora y todavía
+ * faltan `tolerancia` minutos o más para la hora de inicio).
+ *   minutos = cuántos minutos antes de la hora salió.
+ */
+export function rutasAdelantadas(
+  ahora: Date, horarios: Horario[], posiciones: Posicion[], avisados: Set<string>, tolerancia = TOLERANCIA_MIN,
+): Retraso[] {
+  const { dia, minutos } = horaLima(ahora);
+  const out: Retraso[] = [];
+  for (const h of horarios) {
+    if (!diasANumeros(h.dias).includes(dia)) continue;
+    const ini = aMinutos(h.hora_inicio);
+    // Solo entre (inicio - 2 h) y (inicio - tolerancia)
+    if (minutos < ini - VENTANA_ADELANTO_MIN || minutos > ini - tolerancia) continue;
+    const turno = h.hora_inicio.slice(0, 5);
+    if (avisados.has(h.ruta_id + "|" + turno)) continue;
+    // ¿El camión está mandando su ubicación ahora mismo?
+    const p = posiciones.find((x) => x.ruta_id === h.ruta_id);
+    if (!p || Date.parse(p.actualizado) < ahora.getTime() - RECIENTE_MIN * 60_000) continue;
+    out.push({ ruta_id: h.ruta_id, hora_inicio: turno, minutos: ini - minutos });
+  }
+  return out;
+}
 
-type Mensaje = { titulo: string; cuerpo: string; url: string; tag: string };
+/** Textos de la notificación. */
+export function mensajeDe(a: Aviso, prueba = false): Mensaje {
+  const extra = prueba ? " (prueba)" : "";
+  if (a.tipo === "adelanto") {
+    return {
+      titulo: `Camión adelantado · ${a.ruta_id}${extra}`,
+      cuerpo: `El camión salió antes de su hora: debía salir a las ${a.hora_inicio} y ya está recorriendo (${a.minutos} min antes). Saca tus residuos ahora.`,
+      url: URL_PAGINA, tag: `adelanto-${a.ruta_id}`,
+    };
+  }
+  return {
+    titulo: `Camión retrasado · ${a.ruta_id}${extra}`,
+    cuerpo: `El camión debía salir a las ${a.hora_inicio} y todavía no inicia su recorrido (${a.minutos} min de retraso). Mira el mapa para ver cuándo sale.`,
+    url: URL_PAGINA, tag: `retraso-${a.ruta_id}`,
+  };
+}
+
+// ---------- Envío de notificaciones ----------
 
 type Suscripcion = { endpoint: string; p256dh: string; auth: string };
 
@@ -129,12 +179,19 @@ async function enviar(sb: any, rutaId: string | null, msg: Mensaje) {
   return { suscritos: subs.length, enviados, borrados, fallidos };
 }
 
+// CORS: para que el botón de prueba de index.html (GitHub Pages) pueda llamar a la función
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
 const json = (obj: unknown, status = 200) =>
-  new Response(JSON.stringify(obj, null, 2), { status, headers: { "Content-Type": "application/json" } });
+  new Response(JSON.stringify(obj, null, 2), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 
 // ---------- La función ----------
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   try {
     const publica = Deno.env.get("VAPID_PUBLICA"), privada = Deno.env.get("VAPID_PRIVADA");
     if (!publica || !privada) return json({ error: "Faltan los secretos VAPID_PUBLICA y VAPID_PRIVADA" }, 500);
@@ -148,12 +205,20 @@ Deno.serve(async (req) => {
     if (cuerpo.prueba === true) {
       const clave = Deno.env.get("CLAVE_PRUEBA");
       if (!clave || cuerpo.clave !== clave) return json({ error: "Clave de prueba incorrecta" }, 401);
-      const r = await enviar(sb, null, {
+      const tipo = cuerpo.tipo === "retraso" || cuerpo.tipo === "adelanto" ? cuerpo.tipo : null;
+      let msg: Mensaje = {
         titulo: "Camión En Ruta · prueba",
-        cuerpo: "Si ves esto, los avisos de retraso funcionan.",
+        cuerpo: "Si ves esto, los avisos funcionan.",
         url: URL_PAGINA, tag: "prueba",
-      });
-      return json({ prueba: true, ...r });
+      };
+      if (tipo) {
+        // Usa la primera ruta con horario (o "Ruta 1" a las 19:00 si no hay ninguno)
+        const { data } = await sb.from("horarios").select("ruta_id,hora_inicio").order("hora_inicio").limit(1);
+        const h = data?.[0] ?? { ruta_id: "Ruta 1", hora_inicio: "19:00" };
+        msg = mensajeDe({ tipo, ruta_id: h.ruta_id, hora_inicio: String(h.hora_inicio).slice(0, 5), minutos: 20 }, true);
+      }
+      const r = await enviar(sb, null, msg);
+      return json({ prueba: true, tipo: tipo ?? "general", ...r });
     }
 
     const ahora = new Date();
@@ -165,23 +230,22 @@ Deno.serve(async (req) => {
     ]);
     for (const r of [h, p, a]) if (r.error) throw new Error(r.error.message);
     const avisados = new Set((a.data ?? []).map((x) => x.ruta_id + "|" + String(x.hora_inicio).slice(0, 5)));
-    const retrasadas = rutasRetrasadas(ahora, h.data ?? [], p.data ?? [], avisados);
+    const avisos: Aviso[] = [
+      ...rutasRetrasadas(ahora, h.data ?? [], p.data ?? [], avisados).map((r) => ({ ...r, tipo: "retraso" as const })),
+      ...rutasAdelantadas(ahora, h.data ?? [], p.data ?? [], avisados).map((r) => ({ ...r, tipo: "adelanto" as const })),
+    ];
 
-    const resultados = [];
-    for (const r of retrasadas) {
+    const retrasos: unknown[] = [], adelantos: unknown[] = [];
+    for (const r of avisos) {
       // Primero se anota el aviso: si dos ejecuciones coinciden, solo una lo logra y no se manda doble.
       const ins = await sb.from("avisos_retraso").insert({ ruta_id: r.ruta_id, fecha, hora_inicio: r.hora_inicio });
       if (ins.error) continue;
-      const envio = await enviar(sb, r.ruta_id, {
-        titulo: `Camión retrasado · ${r.ruta_id}`,
-        cuerpo: `El camión debía salir a las ${r.hora_inicio} y todavía no inicia su recorrido (${r.minutos} min de retraso). Mira el mapa para ver cuándo sale.`,
-        url: URL_PAGINA, tag: `retraso-${r.ruta_id}`,
-      });
+      const envio = await enviar(sb, r.ruta_id, mensajeDe(r));
       await sb.from("avisos_retraso").update({ destinatarios: envio.enviados })
         .match({ ruta_id: r.ruta_id, fecha, hora_inicio: r.hora_inicio });
-      resultados.push({ ...r, ...envio });
+      (r.tipo === "adelanto" ? adelantos : retrasos).push({ ...r, ...envio });
     }
-    return json({ hora_lima: horaLima(ahora), horarios: (h.data ?? []).length, retrasos: resultados });
+    return json({ hora_lima: horaLima(ahora), horarios: (h.data ?? []).length, retrasos, adelantos });
   } catch (e) {
     return json({ error: (e as Error).message }, 500);
   }
