@@ -181,3 +181,13 @@ th { background: var(--fondo-alt); }
   align-items: center;
   justify-content: center;
 }
+
+/* Avisos de retraso (vecinos.html) */
+.avisos-card [hidden] { display: none !important; }  /* .btn pone display y le ganaba a "hidden" */
+.avisos-card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem 2rem; }
+.avisos-texto { flex: 1 1 320px; }
+.avisos-texto h2 { margin-bottom: .4rem; }
+.avisos-estado { margin: .6rem 0 0; font-weight: 600; color: var(--texto); }
+.avisos-estado.ok { color: var(--verde-oscuro); }
+.avisos-estado.ok::before { content: "✔ "; }
+.avisos-estado.error { color: #b3261e; }
