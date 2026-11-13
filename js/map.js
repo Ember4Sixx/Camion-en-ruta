@@ -1,13 +1,14 @@
 /* ==========================================================
-   Camión En Ruta · mapa (Leaflet con Emoji de 4 Direcciones Fijas)
-   ========================================================== */
+    Camión En Ruta · mapa (Leaflet con Emoji de 4 Direcciones Fijas)
+    ========================================================== */
 (function () {
   const cfg = window.APP_CONFIG;
   let mapa, capaCalles, capaZona, marcadorCamion;
   const capasPorId = {};      
   const nombrePorId = {};     
   const estadoPorId = {};     
-  let posicionAnterior = null; 
+  let posicionAnterior = null;
+  let ultimoAngulo = 0;       // Mantiene el último rumbo válido para evitar saltos al detenerse
 
   function iniciar() {
     mapa = L.map("map", { zoomControl: true }).setView(cfg.centro, cfg.zoom);
@@ -126,14 +127,16 @@
     if (!pos) {  
       if (marcadorCamion) { marcadorCamion.remove(); marcadorCamion = null; }  
       posicionAnterior = null;
+      ultimoAngulo = 0;
       return;  
     }
 
     const ll = [pos.lat, pos.lng];
-    let angulo = 0;
+    let angulo = ultimoAngulo;
 
     if (typeof pos.rumbo === "number") {
       angulo = pos.rumbo;
+      ultimoAngulo = angulo;
     } else if (posicionAnterior) {
       const dLat = pos.lat - posicionAnterior.lat;
       const dLng = pos.lng - posicionAnterior.lng;
@@ -142,6 +145,7 @@
       // Umbral para evitar temblores por ruido GPS
       if (distancia > 0.000008) {
         angulo = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
+        ultimoAngulo = angulo;
         posicionAnterior = { lat: pos.lat, lng: pos.lng };
       }
     } else {
@@ -155,7 +159,7 @@
 
     if (angNorm >= 45 && angNorm < 135) {
       anguloVisual = 0;
-      escalaX = -1; // Horizontal Derecha (volteo horizontal para alinear la cabina)
+      escalaX = -1; // Horizontal Derecha
     } else if (angNorm >= 135 && angNorm < 225) {
       anguloVisual = 270; // Vertical Abajo
       escalaX = 1;
@@ -167,13 +171,13 @@
       escalaX = 1;
     }
 
-    const htmlEmoji = `<div style="font-size: 26px; transform: rotate(${anguloVisual}deg) scaleX(${escalaX}); transition: transform 0.2s ease; display: inline-block; line-height: 1;">🚚</div>`;
+    const transformStyle = `transform: rotate(${anguloVisual}deg) scaleX(${escalaX});`;
 
     if (!marcadorCamion) {
       marcadorCamion = L.marker(ll, {
         icon: L.divIcon({
           className: "",
-          html: `<div style="display: flex; justify-content: center; align-items: center; width: 40px; height: 40px;">${htmlEmoji}</div>`,
+          html: `<div style="display: flex; justify-content: center; align-items: center; width: 40px; height: 40px;"><div class="camion-inner" style="font-size: 26px; ${transformStyle} transition: transform 0.2s ease; display: inline-block; line-height: 1;">🚚</div></div>`,
           iconSize: [40, 40],
           iconAnchor: [20, 20]
         }),
@@ -183,12 +187,15 @@
       }).addTo(mapa);
     } else {
       marcadorCamion.setLatLng(ll);
-      marcadorCamion.setIcon(L.divIcon({
-        className: "",
-        html: `<div style="display: flex; justify-content: center; align-items: center; width: 40px; height: 40px;">${htmlEmoji}</div>`,
-        iconSize: [40, 40],
-        iconAnchor: [20, 20]
-      }));
+      
+      // Actualizar el DOM directamente para que la transición CSS funcione de manera fluida
+      const elementoDom = marcadorCamion.getElement();
+      if (elementoDom) {
+        const inner = elementoDom.querySelector(".camion-inner");
+        if (inner) {
+          inner.style.transform = `rotate(${anguloVisual}deg) scaleX(${escalaX})`;
+        }
+      }
     }
   }
 
