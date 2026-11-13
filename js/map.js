@@ -1,5 +1,5 @@
 /* ==========================================================
-   Camión En Ruta · mapa (Leaflet con Sprites y Gris Ultra Sutil)
+   Camión En Ruta · mapa (Leaflet con Emoji Rotativo)
    ========================================================== */
 (function () {
   const cfg = window.APP_CONFIG;
@@ -8,7 +8,6 @@
   const nombrePorId = {};     
   const estadoPorId = {};     
   let posicionAnterior = null; 
-  let direccionActual = "derecha"; // Dirección por defecto inicial
 
   function iniciar() {
     mapa = L.map("map", { zoomControl: true }).setView(cfg.centro, cfg.zoom);
@@ -40,7 +39,6 @@
   function estilo(estado, id) {
     const e = cfg.estados[estado] || cfg.estados.gris;
     const carril = esCarril(id);
-    
     const esGris = (estado === "gris" || !estado);
 
     return {
@@ -119,58 +117,48 @@
     const y = Math.sin(dLon) * Math.cos(lat2 * rad);
     const x =
       Math.cos(lat1 * rad) * Math.sin(lat2 * rad) -
-    \tMath.sin(lat1 * rad) * Math.cos(lat2 * rad) * Math.cos(dLon);
+      Math.sin(lat1 * rad) * Math.cos(lat2 * rad) * Math.cos(dLon);
     const brng = Math.atan2(y, x) * (180 / Math.PI);
     return (brng + 360) % 360;
   }
 
-  function obtenerDireccionCardinal(angulo) {
-    if (angulo >= 45 && angulo < 135) return "derecha";
-    if (angulo >= 135 && angulo < 225) return "abajo";
-    if (angulo >= 225 && angulo < 315) return "izquierda";
-    return "arriba";
-  }
-
   function mostrarCamion(pos) {
-    if (!pos) { 
-      if (marcadorCamion) { marcadorCamion.remove(); marcadorCamion = null; } 
+    if (!pos) {  
+      if (marcadorCamion) { marcadorCamion.remove(); marcadorCamion = null; }  
       posicionAnterior = null;
-      return; 
+      return;  
     }
 
     const ll = [pos.lat, pos.lng];
+    let angulo = 0;
 
     if (typeof pos.rumbo === "number") {
-      direccionActual = obtenerDireccionCardinal(pos.rumbo);
+      angulo = pos.rumbo;
     } else if (posicionAnterior) {
       const dLat = pos.lat - posicionAnterior.lat;
       const dLng = pos.lng - posicionAnterior.lng;
       const distancia = Math.sqrt(dLat * dLat + dLng * dLng);
 
-      // Umbral mínimo de desplazamiento para evitar temblores por ruido GPS
+      // Umbral para evitar temblores por ruido GPS
       if (distancia > 0.000008) {
-        const rumboBruto = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
-        direccionActual = obtenerDireccionCardinal(rumboBruto);
+        angulo = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
         posicionAnterior = { lat: pos.lat, lng: pos.lng };
       }
     } else {
       posicionAnterior = { lat: pos.lat, lng: pos.lng };
     }
 
-    const urlImagen = `img/camion-${direccionActual}.png`;
-    const anchoIcono = (direccionActual === "derecha" || direccionActual === "izquierda") ? 40 : 28;
-    const altoIcono = (direccionActual === "derecha" || direccionActual === "izquierda") ? 28 : 40;
-
-    const htmlSprite = `<img id="img-camion-sprite" src="${urlImagen}" style="width: ${anchoIcono}px; height: ${altoIcono}px; display: block;" alt="Camión">`;
+    // Aquí usamos el emoji del camión 🚚 aplicando una rotación CSS dinámica según el rumbo calculado
+    const htmlEmoji = `<div style="font-size: 26px; transform: rotate(${angulo}deg); transition: transform 0.3s ease; display: inline-block; line-height: 1;">🚚</div>`;
 
     if (!marcadorCamion) {
       marcadorCamion = L.marker(ll, {
         icon: L.divIcon({
           className: "",
-          html: `<div id="truck-icon-container" style="display: flex; justify-content: center; align-items: center;">${htmlSprite}</div>`,
-          iconSize: [44, 44],
-          iconAnchor: [22, 22]
-          }),
+          html: `<div style="display: flex; justify-content: center; align-items: center; width: 40px; height: 40px;">${htmlEmoji}</div>`,
+          iconSize: [40, 40],
+          iconAnchor: [20, 20]
+        }),
         title: "Camión recolector",
         zIndexOffset: 1000,
         interactive: false
@@ -179,9 +167,9 @@
       marcadorCamion.setLatLng(ll);
       marcadorCamion.setIcon(L.divIcon({
         className: "",
-        html: `<div id="truck-icon-container" style="display: flex; justify-content: center; align-items: center;">${htmlSprite}</div>`,
-        iconSize: [44, 44],
-        iconAnchor: [22, 22]
+        html: `<div style="display: flex; justify-content: center; align-items: center; width: 40px; height: 40px;">${htmlEmoji}</div>`,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
       }));
     }
   }
