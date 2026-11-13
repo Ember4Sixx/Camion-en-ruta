@@ -1,5 +1,5 @@
 /* ==========================================================
-   Camión En Ruta · mapa (Leaflet con Emoji Rotativo)
+   Camión En Ruta · mapa (Leaflet con Emoji Rotativo Realista)
    ========================================================== */
 (function () {
   const cfg = window.APP_CONFIG;
@@ -148,8 +148,10 @@
       posicionAnterior = { lat: pos.lat, lng: pos.lng };
     }
 
-    // Aquí usamos el emoji del camión 🚚 aplicando una rotación CSS dinámica según el rumbo calculado
-    const htmlEmoji = `<div style="font-size: 26px; transform: rotate(${angulo}deg); transition: transform 0.3s ease; display: inline-block; line-height: 1;">🚚</div>`;
+    // CORRECCIÓN APLICADA: +90 grados para alinear de frente el emoji 🚚 con la dirección de la calle
+    const anguloVisual = angulo + 90;
+
+    const htmlEmoji = `<div style="font-size: 26px; transform: rotate(${anguloVisual}deg); transition: transform 0.3s ease; display: inline-block; line-height: 1;">🚚</div>`;
 
     if (!marcadorCamion) {
       marcadorCamion = L.marker(ll, {
