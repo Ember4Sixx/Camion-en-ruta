@@ -1,5 +1,5 @@
 /* ==========================================================
-    Camión En Ruta · mapa (Leaflet con ResizeObserver definitivo)
+    Camión En Ruta · mapa (Leaflet con Emoji de 4 Direcciones Fijas)
     ========================================================== */
 (function () {
   const cfg = window.APP_CONFIG;
@@ -8,7 +8,7 @@
   const nombrePorId = {};     
   const estadoPorId = {};     
   let posicionAnterior = null;
-  let ultimoAngulo = 0;       
+  let ultimoAngulo = 0;       // Mantiene el último rumbo válido para evitar saltos al detenerse
 
   function iniciar() {
     mapa = L.map("map", { zoomControl: true }).setView(cfg.centro, cfg.zoom);
@@ -21,22 +21,6 @@
       mapa.getPane("nombres").style.pointerEvents = "none";
       L.tileLayer(cfg.teselas.etiquetas, { ...opcionesTeselas, pane: "nombres", attribution: "" }).addTo(mapa);
     }
-
-    // Forzar redimensionamiento múltiple para sincronizar las teselas
-    setTimeout(() => { if (mapa) mapa.invalidateSize(true); }, 100);
-    setTimeout(() => { if (mapa) mapa.invalidateSize(true); }, 500);
-
-    // Observador automático de cambios de tamaño en el contenedor `#map`
-    const contenedorMapa = document.getElementById("map");
-    if (window.ResizeObserver && contenedorMapa) {
-      const observer = new ResizeObserver(() => {
-        if (mapa) {
-          mapa.invalidateSize(true);
-        }
-      });
-      observer.observe(contenedorMapa);
-    }
-
     return mapa;
   }
 
@@ -48,10 +32,7 @@
     }).addTo(mapa);
     capaZona.bringToBack();
     const b = capaZona.getBounds();
-    if (b.isValid()) {
-      mapa.fitBounds(b.pad(0.1));
-      setTimeout(() => mapa.invalidateSize(true), 100);
-    }
+    if (b.isValid()) mapa.fitBounds(b.pad(0.1));
   }
 
   const esCarril = (id) => /· sentido /.test(nombrePorId[id] || "");
@@ -98,10 +79,7 @@
     }).addTo(mapa);
     if (!capaZona) {
       const b = capaCalles.getBounds();
-      if (b.isValid()) {
-        mapa.fitBounds(b.pad(0.2));
-        setTimeout(() => mapa.invalidateSize(true), 100);
-      }
+      if (b.isValid()) mapa.fitBounds(b.pad(0.2));
     }
   }
 
@@ -117,7 +95,6 @@
     const capa = capasPorId[id];
     if (!capa) return;
     mapa.fitBounds(capa.getBounds().pad(0.8));
-    mapa.invalidateSize(true);
     capa.openPopup();
     document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
   }
@@ -132,7 +109,6 @@
     });
     if (!b) return;
     mapa.fitBounds(b.pad(0.4));
-    mapa.invalidateSize(true);
     document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
@@ -166,6 +142,7 @@
       const dLng = pos.lng - posicionAnterior.lng;
       const distancia = Math.sqrt(dLat * dLat + dLng * dLng);
 
+      // Umbral para evitar temblores por ruido GPS
       if (distancia > 0.000008) {
         angulo = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
         ultimoAngulo = angulo;
@@ -175,18 +152,26 @@
       posicionAnterior = { lat: pos.lat, lng: pos.lng };
     }
 
+    // Evaluación en 4 direcciones ortogonales fijas (Norte, Sur, Este, Oeste)
+    let anguloVisual = 0;
+    let escalaX = 1;
     const angNorm = (angulo % 360 + 360) % 360;
-    let transformStyle = "";
 
-    if (angNorm >= 315 || angNorm < 45) {
-      transformStyle = "transform: scaleX(1);"; // Derecha
-    } else if (angNorm >= 45 && angNorm < 135) {
-      transformStyle = "transform: rotate(90deg);"; // Abajo
+    if (angNorm >= 45 && angNorm < 135) {
+      anguloVisual = 0;
+      escalaX = -1; // Horizontal Derecha
     } else if (angNorm >= 135 && angNorm < 225) {
-      transformStyle = "transform: scaleX(-1);"; // Izquierda
+      anguloVisual = 270; // Vertical Abajo
+      escalaX = 1;
+    } else if (angNorm >= 225 && angNorm < 315) {
+      anguloVisual = 0;
+      escalaX = 1; // Horizontal Izquierda
     } else {
-      transformStyle = "transform: rotate(-90deg);"; // Arriba
+      anguloVisual = 90; // Vertical Arriba
+      escalaX = 1;
     }
+
+    const transformStyle = `transform: rotate(${anguloVisual}deg) scaleX(${escalaX});`;
 
     if (!marcadorCamion) {
       marcadorCamion = L.marker(ll, {
@@ -202,11 +187,13 @@
       }).addTo(mapa);
     } else {
       marcadorCamion.setLatLng(ll);
+      
+      // Actualizar el DOM directamente para que la transición CSS funcione de manera fluida
       const elementoDom = marcadorCamion.getElement();
       if (elementoDom) {
         const inner = elementoDom.querySelector(".camion-inner");
         if (inner) {
-          inner.style.cssText = `font-size: 26px; ${transformStyle} transition: transform 0.2s ease; display: inline-block; line-height: 1;`;
+          inner.style.transform = `rotate(${anguloVisual}deg) scaleX(${escalaX})`;
         }
       }
     }
