@@ -132,29 +132,36 @@
     }
 
     const ll = [pos.lat, pos.lng];
-    let anguloRotacion = ultimoAnguloValido;
+    let anguloBase = ultimoAnguloValido;
 
-    // Si la posición trae el rumbo calculado (desde la simulación o Supabase)
     if (typeof pos.rumbo === "number") {
-      anguloRotacion = pos.rumbo;
-      ultimoAnguloValido = anguloRotacion;
+      anguloBase = pos.rumbo;
+      ultimoAnguloValido = anguloBase;
     } else if (posicionAnterior) {
       const dLat = Math.abs(pos.lat - posicionAnterior.lat);
       const dLng = Math.abs(pos.lng - posicionAnterior.lng);
       if (dLat > 0.000002 || dLng > 0.000002) {
-        anguloRotacion = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
-        ultimoAnguloValido = anguloRotacion;
+        anguloBase = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
+        ultimoAnguloValido = anguloBase;
         posicionAnterior = { lat: pos.lat, lng: pos.lng };
       }
     } else {
       posicionAnterior = { lat: pos.lat, lng: pos.lng };
     }
 
+    // =========================================================================
+    // CORRECCIÓN DE LA ORIENTACIÓN (OFFSET DE LA CARA DEL CAMIÓN)
+    // El emoji de camión 🚛 por defecto apunta hacia la izquierda o arriba según 
+    // la fuente del sistema. Añadimos un desfase de -90 grados (o puedes cambiar a 
+    // +90 o +180 si notas que aún apunta al lado opuesto) para alinear su frente 
+    // exactamente con la dirección del movimiento en la pista.
+    // =========================================================================
+    const anguloRotacion = (anguloBase - 90 + 360) % 360;
+
     if (!marcadorCamion) {
       marcadorCamion = L.marker(ll, {
         icon: L.divIcon({
           className: "",
-          // Transición suave para que rote fluidamente al tomar esquinas
           html: `<div id="truck-icon-container" style="transform: rotate(${anguloRotacion}deg); transition: transform 0.25s ease-out;" aria-hidden="true">🚛</div>`,
           iconSize: [28, 28],
           iconAnchor: [14, 14]
