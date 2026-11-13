@@ -9,6 +9,8 @@
   const capasPorId = {};      // id calle -> capa Leaflet
   const nombrePorId = {};     // id calle -> nombre
   const estadoPorId = {};     // id calle -> estado actual
+  let posicionAnterior = null; // Memoria de la ubicación previa para calcular el rumbo
+  let ultimoAnguloValido = 0;  // Último ángulo estable para evitar tirones
 
   function iniciar() {
     mapa = L.map("map", { zoomControl: true }).setView(cfg.centro, cfg.zoom);
@@ -16,17 +18,15 @@
     L.tileLayer(cfg.teselas.url, opcionesTeselas).addTo(mapa);
 
     // Capa de NOMBRES de calles por ENCIMA de las líneas de colores.
-    // Orden de capas en Leaflet: líneas = 400, nombres = 450, camión = 600, popups = 700.
     if (cfg.teselas.etiquetas) {
       mapa.createPane("nombres");
       mapa.getPane("nombres").style.zIndex = 450;
-      mapa.getPane("nombres").style.pointerEvents = "none";   // los clics pasan a las calles de abajo
+      mapa.getPane("nombres").style.pointerEvents = "none";
       L.tileLayer(cfg.teselas.etiquetas, { ...opcionesTeselas, pane: "nombres", attribution: "" }).addTo(mapa);
     }
     return mapa;
   }
 
-  // Dibuja el cuadrado delimitado por las 4 calles (GeoJSON Polygon). Es solo un contorno, no cambia de color.
   function pintarZona(geojson) {
     if (capaZona) capaZona.remove();
     if (!geojson) return;
@@ -38,11 +38,9 @@
     if (b.isValid()) mapa.fitBounds(b.pad(0.1));
   }
 
-  // Los carriles de una avenida de doble vía están a ~8 m uno del otro: van más finos y con extremos rectos
-  // para que se vean como dos líneas independientes. El nombre del tramo trae "· sentido …" (db/tramos.py).
   const esCarril = (id) => /· sentido /.test(nombrePorId[id] || "");
 
-    function estilo(estado, id) {
+  function estilo(estado, id) {
     const e = cfg.estados[estado] || cfg.estados.gris;
     const carril = esCarril(id);
     return {
@@ -102,7 +100,6 @@
     document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  // Encuadra varios tramos a la vez (una calle completa, para la lista agrupada).
   function enfocarCalles(ids) {
     let b = null;
     ids.forEach((id) => {
@@ -116,18 +113,64 @@
     document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  // Calcula el ángulo de desplazamiento entre dos puntos geográficos (Rumbo / Bearing)
+  function calcularRumbo(lat1, lon1, lat2, lon2) {
+    const rad = Math.PI / 180;
+    const dLon = (lon2 - lon1) * rad;
+    const y = Math.sin(dLon) * Math.cos(lat2 * rad);
+    const x =
+      Math.cos(lat1 * rad) * Math.sin(lat2 * rad) -
+      Math.sin(lat1 * rad) * Math.cos(lat2 * rad) * Math.cos(dLon);
+    const brng = Math.atan2(y, x) * (180 / Math.PI);
+    return (brng + 360) % 360;
+  }
+
   function mostrarCamion(pos) {
-    if (!pos) { if (marcadorCamion) { marcadorCamion.remove(); marcadorCamion = null; } return; }
+    if (!pos) { 
+      if (marcadorCamion) { marcadorCamion.remove(); marcadorCamion = null; } 
+      posicionAnterior = null;
+      ultimoAnguloValido = 0;
+      return; 
+    }
+
     const ll = [pos.lat, pos.lng];
+    let anguloRotacion = ultimoAnguloValido;
+
+    // Si viene el rumbo directo desde Supabase (GPS real), lo usamos
+    if (typeof pos.rumbo === "number") {
+      anguloRotacion = pos.rumbo;
+      ultimoAnguloValido = anguloRotacion;
+    } else if (posicionAnterior) {
+      // Si es simulación, lo calculamos por coordenadas con umbral de ruido
+      const dLat = Math.abs(pos.lat - posicionAnterior.lat);
+      const dLng = Math.abs(pos.lng - posicionAnterior.lng);
+      if (dLat > 0.00001 || dLng > 0.00001) {
+        anguloRotacion = calcularRumbo(posicionAnterior.lat, posicionAnterior.lng, pos.lat, pos.lng);
+        ultimoAnguloValido = anguloRotacion;
+        posicionAnterior = { lat: pos.lat, lng: pos.lng };
+      }
+    } else {
+      posicionAnterior = { lat: pos.lat, lng: pos.lng };
+    }
+
     if (!marcadorCamion) {
       marcadorCamion = L.marker(ll, {
-        icon: L.divIcon({ className: "", html: '<div class="truck-icon" aria-hidden="true">🚛</div>', iconSize: [28, 28], iconAnchor: [14, 14] }),
+        icon: L.divIcon({
+          className: "",
+          html: `<div id="truck-icon-container" style="transform: rotate(${anguloRotacion}deg); transition: transform 0.2s ease-out;" aria-hidden="true">🚛</div>`,
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        }),
         title: "Camión recolector",
-        zIndexOffset: 1000,      // siempre por encima de todo
+        zIndexOffset: 1000,
         interactive: false
       }).addTo(mapa);
     } else {
       marcadorCamion.setLatLng(ll);
+      const truckElement = document.getElementById("truck-icon-container");
+      if (truckElement) {
+        truckElement.style.transform = `rotate(${anguloRotacion}deg)`;
+      }
     }
   }
 
