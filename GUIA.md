@@ -46,6 +46,8 @@ La fase y el `orden_actual` salen de dos fuentes (se calculan en `js/data-source
 
 Las pruebas de esta lógica están en `tests/pruebas.js` (`node tests/pruebas.js`). Si cambian el algoritmo, vuelvan a correrlas.
 
+**Barra negra animada.** El negro no aparece de golpe: sobre cada tramo se dibuja una línea negra que se llena como una barra de carga, desde el extremo por donde entró el camión, y queda justo detrás de él. Cuando el tramo se termina, la barra completa el recorrido y el tramo pasa a negro. Los colores y el algoritmo no cambian; esto es solo cómo se dibuja (`js/map.js`). Para saber hasta dónde llena, `js/data-source.js` usa la lista de puntos recorridos que ya guarda la app del conductor (`avance_tramos.puntos`), así que no hace falta cambiar la base de datos. Se ajusta o se apaga con `barraNegro` en `js/config.js` (`activa: false` vuelve al negro de golpe) y se desactiva sola si el aparato pide "reducir movimiento". Pruebas: `node tests/pruebas_barra.js`.
+
 ---
 
 ## Paso 1 · Compartir el proyecto con el equipo (GitHub)
