@@ -80,5 +80,5 @@ teselas: {
   },
   // Simulación del recorrido (panel "Modo demostración").
   // Cuántos segundos dura la simulación completa, de principio a fin.
-  simulacionSegundos: 300
+  simulacionSegundos: 90
 };
