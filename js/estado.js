@@ -270,11 +270,71 @@
     return out;
   }
 
+  // ==========================================================
+  // BARRA NEGRA ANIMADA (solo para dibujar; los colores no cambian)
+  //
+  // El mapa no pinta de golpe el negro: lo va llenando como una barra de carga,
+  // desde el extremo por donde entró el camión. Para saberlo se usa la lista de
+  // puntos de control recorridos que guarda la app del conductor (`puntos`, una
+  // cadena de "0" y "1" en el orden en que se recorre la geometría del tramo).
+  // ==========================================================
+
+  /** Largo en metros de las líneas de un tramo. lineas: [[[lng,lat],…],…] */
+  function largoLineas(lineas) {
+    var s = 0;
+    (lineas || []).forEach(function (l) {
+      for (var i = 0; i < l.length - 1; i++) s += distanciaM({ lng: l[i][0], lat: l[i][1] }, { lng: l[i + 1][0], lat: l[i + 1][1] });
+    });
+    return s;
+  }
+
+  /**
+   * Cuánto del tramo se debe ver en negro mientras el camión sigue en él, y desde qué extremo.
+   * Se cuenta solo la parte recorrida SIN huecos desde el extremo por donde entró. Como un punto
+   * queda "recorrido" cuando el camión pasa a menos de atrasM metros, ese tramo llega hasta
+   * atrasM metros por delante del camión; se descuentan para que el negro termine donde está el
+   * camión (la barra rellena lo que ya pasó, no lo que viene).
+   * Devuelve { f: 0 a 1, desde: "inicio" | "fin" }.
+   */
+  function progresoPorMascara(puntos, largoM, atrasM) {
+    var n = puntos ? puntos.length : 0;
+    if (n < 2) return { f: 0, desde: "inicio" };
+    var suma = 0, cuenta = 0, i;
+    for (i = 0; i < n; i++) if (puntos.charAt(i) === "1") { suma += i; cuenta++; }
+    if (!cuenta) return { f: 0, desde: "inicio" };
+    var desde = suma / cuenta <= (n - 1) / 2 ? "inicio" : "fin";
+    var k = 0;
+    for (i = 0; i < n; i++) {
+      if (puntos.charAt(desde === "inicio" ? i : n - 1 - i) === "1") k++; else break;
+    }
+    var f = (k - 1) / (n - 1);
+    if (largoM > 0) f = ((k - 1) / (n - 1) * largoM - (atrasM == null ? 15 : atrasM)) / largoM;
+    return { f: Math.max(0, Math.min(1, f)), desde: desde };
+  }
+
+  /**
+   * Progreso de la barra de cada tramo de una ruta (solo los verdes y los negros).
+   * estadosRuta: { id: color } ya calculado ; filas: [{tramo_id, puntos}] ; largoDe(id) -> metros.
+   * Negro siempre llega a 1, pero conserva el extremo de donde venía llenándose.
+   */
+  function progresoPorAvance(estadosRuta, filas, largoDe, atrasM) {
+    var porId = {}, out = {};
+    (filas || []).forEach(function (f) { porId[f.tramo_id] = f; });
+    Object.keys(estadosRuta).forEach(function (id) {
+      var e = estadosRuta[id];
+      if (e !== "verde" && e !== "negro") return;
+      var p = progresoPorMascara((porId[id] || {}).puntos, largoDe ? largoDe(id) : 0, atrasM);
+      out[id] = e === "negro" ? { f: 1, desde: p.desde } : p;
+    });
+    return out;
+  }
+
   var API = {
     estadosDeRuta: estadosDeRuta, estimarPorHorario: estimarPorHorario, indicePorGPS: indicePorGPS,
     distanciaM: distanciaM, distanciaACalle: distanciaACalle, muestrearCalle: muestrearCalle,
     puntosEntre: puntosEntre, marcarCercanos: marcarCercanos, fraccion: fraccion,
-    calleActual: calleActual, callesParaMarcar: callesParaMarcar, nombreBase: nombreBase, resumenGrupo: resumenGrupo, estadoPorAvance: estadoPorAvance, estadosPorAvance: estadosPorAvance
+    calleActual: calleActual, callesParaMarcar: callesParaMarcar, nombreBase: nombreBase, resumenGrupo: resumenGrupo, estadoPorAvance: estadoPorAvance, estadosPorAvance: estadosPorAvance,
+    largoLineas: largoLineas, progresoPorMascara: progresoPorMascara, progresoPorAvance: progresoPorAvance
   };
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   root.Estado = API;

@@ -49,6 +49,16 @@ window.APP_CONFIG = {
   // Si es más vieja, no se dibuja el camión y los colores vuelven a calcularse por horario.
   gpsVigenciaSegundos: 30,
 
+  // Barra negra animada: el negro ("recolección finalizada") se va llenando por el tramo,
+  // como una barra de carga, en vez de aparecer de golpe. Se desactiva sola si el aparato
+  // del usuario pide "reducir movimiento".
+  //   activa          -> false para volver a pintar el negro de golpe.
+  //   metrosPorSegundo-> velocidad de llenado (a más metros por llenar, más dura, hasta maxSeg).
+  //   minSeg / maxSeg -> duración mínima y máxima de cada llenado, en segundos.
+  //   atrasoMetros    -> el negro termina esta distancia ANTES del punto más lejano recorrido, para que
+  //                      quede justo detrás del camión (igual al radio de recorrido de conductor/app.js: 15 m).
+  barraNegro: { activa: true, metrosPorSegundo: 12, minSeg: 0.3, maxSeg: 4, atrasoMetros: 15 },
+
   // Textos y colores de los 4 estados. Los colores deben coincidir con css/styles.css.
   estados: {
     gris:     { etiqueta: "Aún no pasa",   descripcion: "El camión todavía no ha pasado",  color: "#a9aeb6" },

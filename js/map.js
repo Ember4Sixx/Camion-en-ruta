@@ -3,7 +3,7 @@
     ========================================================== */
 (function () {
   const cfg = window.APP_CONFIG;
-  let mapa, capaCalles, capaZona, marcadorCamion;
+  let mapa, capaCalles, capaZona, marcadorCamion, capaAvance;
   const capasPorId = {};      
   const nombrePorId = {};     
   const estadoPorId = {};     
@@ -63,8 +63,141 @@
     return div;
   }
 
-  function pintarCalles(geojson, estados) {
+  // ==========================================================
+  // Barra negra animada
+  // El negro ("recolección finalizada") no se pinta de golpe: sobre la línea del tramo se dibuja
+  // otra línea negra que se va llenando como una barra de carga, desde el extremo por donde entró
+  // el camión. Mientras se llena, la línea de abajo sigue con su color anterior (verde o gris);
+  // cuando la barra llega al final, el tramo pasa a negro de verdad y la barra se quita.
+  // ==========================================================
+  const geomPorId = {};   // id -> { pts: [[lat,lng]…], cum: [metros acumulados…], largo }
+  const vis = {};         // id -> { base: color que se ve debajo, f: parte negra 0..1, desde, anim, capa }
+  let bucle = null;
+
+  const opcionesBarra = () => Object.assign(
+    { activa: true, metrosPorSegundo: 12, minSeg: 0.3, maxSeg: 4 }, cfg.barraNegro || {});
+  const sinMovimiento = () =>
+    !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  function prepararGeom(id, geometry) {
+    const lineas = geometry.type === "MultiLineString" ? geometry.coordinates : [geometry.coordinates];
+    const pts = [];
+    lineas.forEach((l) => l.forEach((c) => pts.push([c[1], c[0]])));
+    const cum = [0];
+    for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + L.latLng(pts[i - 1]).distanceTo(pts[i]));
+    geomPorId[id] = { pts, cum, largo: cum[cum.length - 1] || 0 };
+  }
+
+  // Parte del tramo que ya está en negro: desde un extremo, f (0 a 1) del largo.
+  function recorte(id, desde, f) {
+    const g = geomPorId[id];
+    if (!g || g.pts.length < 2) return [];
+    const fin = desde === "fin";
+    const pts = fin ? g.pts.slice().reverse() : g.pts;
+    const cum = fin ? g.cum.map((c) => g.largo - c).reverse() : g.cum;
+    const meta = Math.max(0, Math.min(1, f)) * g.largo;
+    const out = [pts[0]];
+    for (let i = 1; i < pts.length; i++) {
+      if (cum[i] <= meta) { out.push(pts[i]); continue; }
+      const t = (meta - cum[i - 1]) / ((cum[i] - cum[i - 1]) || 1);
+      out.push([pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * t, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * t]);
+      break;
+    }
+    return out;
+  }
+
+  function cambiarBase(id, e) {
+    const v = vis[id];
+    if (v.base === e) return;
+    v.base = e;
+    capasPorId[id].setStyle(estilo(e, id));
+  }
+
+  function dibujarBarra(id) {
+    const v = vis[id];
+    if (!v || !capaAvance) return;
+    if (v.base === "negro" || v.f <= 0.001) {
+      if (v.capa) { capaAvance.removeLayer(v.capa); v.capa = null; }
+      return;
+    }
+    const pts = recorte(id, v.desde, v.f);
+    if (pts.length < 2) return;
+    if (!v.capa) {
+      v.capa = L.polyline(pts, { ...estilo("negro", id), interactive: false });
+      capaAvance.addLayer(v.capa);
+    } else {
+      v.capa.setLatLngs(pts);
+    }
+  }
+
+  // Cuando la barra llega al final de un tramo negro, el tramo queda negro de verdad.
+  function terminar(id) {
+    const v = vis[id];
+    if (estadoPorId[id] === "negro" && v.f >= 1) cambiarBase(id, "negro");
+  }
+
+  function cuadro(ahora) {
+    bucle = null;
+    let hayMas = false;
+    Object.keys(vis).forEach((id) => {
+      const v = vis[id];
+      if (!v.anim) return;
+      const t = Math.max(0, Math.min(1, (ahora - v.anim.t0) / v.anim.dur));
+      v.f = v.anim.de + (v.anim.a - v.anim.de) * t;
+      if (t >= 1) { v.f = v.anim.a; v.anim = null; terminar(id); } else { hayMas = true; }
+      dibujarBarra(id);
+    });
+    if (hayMas) bucle = requestAnimationFrame(cuadro);
+  }
+
+  // Lleva la barra del tramo hasta `a` (0 a 1). Nunca la hace retroceder.
+  function moverA(id, a) {
+    const v = vis[id], g = geomPorId[id], op = opcionesBarra();
+    if (v.anim && Math.abs(v.anim.a - a) < 1e-4) return;          // ya va hacia ahí
+    if (!v.anim && Math.abs(v.f - a) < 1e-4) { terminar(id); return; }
+    if (!op.activa || sinMovimiento() || !g || !g.largo) {        // sin animación: se pinta de golpe
+      v.anim = null; v.f = a; dibujarBarra(id); terminar(id);
+      return;
+    }
+    const metros = Math.max(0, a - v.f) * g.largo;
+    const dur = Math.min(op.maxSeg, Math.max(op.minSeg, metros / op.metrosPorSegundo)) * 1000;
+    v.anim = { de: v.f, a, t0: performance.now(), dur };
+    if (!bucle) bucle = requestAnimationFrame(cuadro);
+  }
+
+  // Aplica el estado nuevo de un tramo. progreso: { id: { f, desde } } (solo con GPS).
+  function aplicar(id, nuevo, progreso) {
+    const v = vis[id];
+    estadoPorId[id] = nuevo;
+    if (nuevo !== "verde" && nuevo !== "negro") {                // gris o amarillo: sin barra
+      v.anim = null; v.f = 0;
+      cambiarBase(id, nuevo);
+      dibujarBarra(id);
+      return;
+    }
+    const p = progreso && progreso[id];
+    if (v.base === "negro" && nuevo === "verde") { v.anim = null; v.f = 0; }   // empieza otra vez
+    if (p && p.desde && v.f <= 0.001) v.desde = p.desde;          // si ya hay barra, conserva su sentido
+    if (nuevo === "verde") {
+      cambiarBase(id, "verde");
+      moverA(id, Math.max(v.f, p ? p.f : 0));
+    } else if (v.base !== "negro") {
+      moverA(id, 1);                                              // la base conserva su color hasta llenarse
+    }
+  }
+
+  // Estado inicial (al cargar la página): sin animación.
+  function fijar(id, estado, progreso) {
+    const p = progreso && progreso[id];
+    vis[id] = { base: estado, f: estado === "negro" ? 1 : 0, desde: "inicio", anim: null, capa: null };
+    if (estado === "verde" && p) { vis[id].f = p.f; vis[id].desde = p.desde || "inicio"; }
+  }
+
+  function pintarCalles(geojson, estados, progreso) {
     if (capaCalles) capaCalles.remove();
+    if (capaAvance) capaAvance.remove();
+    Object.keys(vis).forEach((k) => delete vis[k]);
+    capaAvance = L.layerGroup();
     capaCalles = L.geoJSON(geojson, {
       style: (f) => { nombrePorId[f.properties.id] = f.properties.nombre; return estilo((estados && estados[f.properties.id]) || "gris", f.properties.id); },
       onEachFeature: (f, capa) => {
@@ -72,21 +205,24 @@
         capasPorId[id] = capa;
         nombrePorId[id] = f.properties.nombre;
         estadoPorId[id] = (estados && estados[id]) || "gris";
+        prepararGeom(id, f.geometry);
+        fijar(id, estadoPorId[id], progreso);
         capa.bindPopup(() => textoPopup(id));
         capa.bindTooltip(f.properties.nombre, { sticky: true });
       }
     }).addTo(mapa);
+    capaAvance.addTo(mapa);   // después de las calles: la barra negra queda encima
+    Object.keys(vis).forEach(dibujarBarra);
     if (!capaZona) {
       const b = capaCalles.getBounds();
       if (b.isValid()) mapa.fitBounds(b.pad(0.2));
     }
   }
 
-  function actualizarEstados(estados) {
+  function actualizarEstados(estados, progreso) {
     Object.keys(capasPorId).forEach((id) => {
-      const nuevo = estados[id] || "gris";
-      estadoPorId[id] = nuevo;
-      capasPorId[id].setStyle(estilo(nuevo, id));
+      if (!vis[id]) return;
+      aplicar(id, estados[id] || "gris", progreso);
     });
   }
 

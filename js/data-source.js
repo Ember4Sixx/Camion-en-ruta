@@ -8,7 +8,10 @@
      calles()    -> GeoJSON FeatureCollection de TRAMOS; properties { id, nombre, calle, calle_id, carril, ruta, orden, en_plano }
                     (`en_plano` = false: tramo de la zona que no está en el plano oficial; no entra en la simulación)
                     (`calle` = nombre de la calle completa; `nombre` = nombre del tramo, ej. "Calle Unión · entre A y B")
-     estados()   -> { actualizado, origen, estados: { "<id calle>": "gris|amarillo|verde|negro" } }
+     estados()   -> { actualizado, origen, estados: { "<id calle>": "gris|amarillo|verde|negro" },
+                      progreso?: { "<id tramo>": { f: 0 a 1, desde: "inicio"|"fin" } } }
+                    `progreso` (opcional, solo con GPS) dice cuánto del tramo se dibuja en negro y desde qué
+                    extremo; el mapa lo usa para llenar el negro como una barra de carga (js/map.js).
                     origen: "horario" (estimado con la hora) | "gps" (con la ubicación del camión) | "mixto"
      horarios()  -> { nota, rutas: [ { ruta, dias, horario, calles: [...] } ] }
      zona()      -> GeoJSON del cuadrado delimitado (Polygon) o null si no hay
@@ -49,12 +52,13 @@
     return x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0");
   };
 
-  function resumir(estados, origenes, gpsFechas) {
+  function resumir(estados, origenes, gpsFechas, progreso) {
     const fechas = gpsFechas.filter(Boolean).sort();
     return {
       actualizado: fechas.length ? fechas[fechas.length - 1] : new Date().toISOString(),
       origen: origenes.size === 0 ? "horario" : origenes.size === 1 ? [...origenes][0] : "mixto",
-      estados
+      estados,
+      progreso: progreso || {}
     };
   }
 
@@ -151,14 +155,19 @@
         let avance = [];
         if (cfg.gpsActivo) {
           // Si la tabla aún no existe (falta db/migracion_03_calles_y_tramos.sql), se sigue sin ella.
-          const r = await sb.from("avance_tramos").select("ruta_id,tramo_id,estado,actualizado");
+          const r = await sb.from("avance_tramos").select("ruta_id,tramo_id,estado,puntos,actualizado");
           if (r.error) console.warn("Sin tabla avance_tramos:", r.error.message);
           else avance = r.data || [];
         }
 
         const ahora = new Date();
         const hoy = diaLocal(ahora);
-        const estados = {}, origenes = new Set(), gpsFechas = [];
+        const estados = {}, progreso = {}, origenes = new Set(), gpsFechas = [];
+        if (!s.largos) {   // largo (m) de cada tramo, para saber hasta dónde llega la barra negra
+          s.largos = {};
+          s.tramos.forEach((t) => { s.largos[t.id] = Estado.largoLineas(lineasDe(t.geom)); });
+        }
+        const atras = (cfg.barraNegro && cfg.barraNegro.atrasoMetros) != null ? cfg.barraNegro.atrasoMetros : 15;
         s.rutas.forEach((ruta) => {
           const callesRuta = tramosDeRuta(s, ruta.id).map((x) => ({ id: x.tramo_id, orden: x.orden }));   // cada elemento es un tramo
           const p = pos.find((x) => x.ruta_id === ruta.id);
@@ -167,7 +176,9 @@
 
           if (cfg.gpsActivo && (filasHoy.length || fresca)) {
             // Avance real del camión (lo escribe la app del conductor).
-            Object.assign(estados, Estado.estadosPorAvance(callesRuta, filasHoy, fresca));
+            const deRuta = Estado.estadosPorAvance(callesRuta, filasHoy, fresca);
+            Object.assign(estados, deRuta);
+            Object.assign(progreso, Estado.progresoPorAvance(deRuta, filasHoy, (id) => s.largos[id], atras));
             origenes.add("gps");
             gpsFechas.push(fresca ? p.actualizado : filasHoy.map((f) => f.actualizado).sort().pop());
           } else {
@@ -176,7 +187,7 @@
             origenes.add(e.origen);
           }
         });
-        return resumir(estados, origenes, gpsFechas);
+        return resumir(estados, origenes, gpsFechas, progreso);
       },
 
       async zona() {

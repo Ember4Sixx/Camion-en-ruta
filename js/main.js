@@ -115,9 +115,9 @@
     }
   }
 
-  function aplicarEstados(nuevos, fecha, origen) {
+  function aplicarEstados(nuevos, fecha, origen, progreso) {
     estados = nuevos;
-    AppMap.actualizarEstados(estados);
+    AppMap.actualizarEstados(estados, progreso);
     renderLista(fecha, origen);
   }
 
@@ -206,6 +206,17 @@
       return (brng + 360) % 360;
     }
 
+    // Extremo de la geometría del tramo por donde entra el camión (para llenar la barra desde ahí).
+    const primerPunto = {};
+    calles.features.forEach((f) => {
+      const c = f.geometry.type === "MultiLineString" ? f.geometry.coordinates[0] : f.geometry.coordinates;
+      primerPunto[f.properties.id] = c[0];
+    });
+    const entraPorInicio = (paso) => {
+      const a = paso.coords[0], b = primerPunto[paso.id];
+      return !b || (Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9);
+    };
+
     function pintar() {
       const actual = plan[i];
       const enCurso = actual && actual.recolecta ? actual.id : null;
@@ -216,7 +227,11 @@
       proximos.forEach((id) => { nuevo[id] = "amarillo"; });
       hechos.forEach((id) => { nuevo[id] = "negro"; });
       if (enCurso) nuevo[enCurso] = "verde";
-      aplicarEstados(nuevo);
+      const progreso = {};
+      if (enCurso) {
+        progreso[enCurso] = { f: Math.min(1, recorrido / (actual.largo || 1)), desde: entraPorInicio(actual) ? "inicio" : "fin" };
+      }
+      aplicarEstados(nuevo, undefined, undefined, progreso);
     }
 
     function cuadro(ahora) {
@@ -279,7 +294,7 @@
     if (camionSimulado) { camionSimulado = false; AppMap.mostrarCamion(null); }
     try {
       const e = await AppData.estados();
-      aplicarEstados(e.estados || {}, e.actualizado, e.origen);
+      aplicarEstados(e.estados || {}, e.actualizado, e.origen, e.progreso);
       actualizarCamion();
     } catch (err) { console.warn("No se pudo refrescar", err); }
   }
@@ -292,7 +307,7 @@
       estados = e.estados || {};
       estadosIniciales = { ...estados };
       AppMap.pintarZona(await AppData.zona());
-      AppMap.pintarCalles(calles, estados);
+      AppMap.pintarCalles(calles, estados, e.progreso);
       renderLista(e.actualizado, e.origen);
       renderHorarios(h);
       iniciarDemo();
