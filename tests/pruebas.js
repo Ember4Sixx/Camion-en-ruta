@@ -116,8 +116,8 @@ prueba("progresoPorMascara: llena desde el extremo por donde entró, descontando
   assert.strictEqual(b.desde, "fin");
   assert.ok(Math.abs(b.f - (3 / 9 * 90 - 15) / 90) < 1e-9);
   // nada recorrido, o sin datos: 0 (nunca inventa avance)
-  assert.deepStrictEqual(Estado.progresoPorMascara("0000000000", 90, 15), { f: 0, desde: "inicio" });
-  assert.deepStrictEqual(Estado.progresoPorMascara("", 90, 15), { f: 0, desde: "inicio" });
+  assert.deepStrictEqual(Estado.progresoPorMascara("0000000000", 90, 15), { f: 0, desde: "inicio", visitados: 0 });
+  assert.deepStrictEqual(Estado.progresoPorMascara("", 90, 15), { f: 0, desde: "inicio", visitados: 0 });
 });
 prueba("progresoPorMascara: un hueco corta la barra; una esquina tocada al otro lado no la estira", () => {
   const r = Estado.progresoPorMascara("1111001001", 90, 0);
@@ -129,7 +129,7 @@ prueba("progresoPorAvance: negro siempre llega a 1 y conserva el extremo; gris n
   const estados = { a: "negro", b: "verde", c: "gris" };
   const filas = [{ tramo_id: "a", puntos: "0001111111" }, { tramo_id: "b", puntos: "1111100000" }];
   const p = Estado.progresoPorAvance(estados, filas, () => 90, 0);
-  assert.deepStrictEqual(p.a, { f: 1, desde: "fin" });
+  assert.deepStrictEqual(p.a, { f: 1, desde: "fin", visitados: 7 });
   assert.strictEqual(p.b.desde, "inicio");
   assert.ok(Math.abs(p.b.f - 4 / 9) < 1e-9);
   assert.strictEqual(p.c, undefined);
