@@ -33,7 +33,7 @@ window.APP_CONFIG = {
   // Cada cuántos segundos se vuelven a pedir los estados (0 = no repetir).
   // Con supabase el tiempo real avisa cuando llega una posición del camión; esto sirve
   // además para el cálculo por horario, que cambia con el reloj (30 es un buen valor).
-  refrescarCadaSegundos: 12,
+  refrescarCadaSegundos: 1,
 
   // Minutos antes del inicio del horario en que las primeras calles pasan a amarillo (cálculo por horario).
   avisoMinutos: 15,
