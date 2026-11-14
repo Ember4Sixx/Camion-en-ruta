@@ -229,7 +229,7 @@
       if (enCurso) nuevo[enCurso] = "verde";
       const progreso = {};
       if (enCurso) {
-        progreso[enCurso] = { f: Math.min(1, recorrido / (actual.largo || 1)), desde: entraPorInicio(actual) ? "inicio" : "fin" };
+        progreso[enCurso] = { f: Math.min(1, recorrido / (actual.largo || 1)), desde: entraPorInicio(actual) ? "inicio" : "fin", directo: true };
       }
       aplicarEstados(nuevo, undefined, undefined, progreso);
     }

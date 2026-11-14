@@ -294,14 +294,14 @@
    * queda "recorrido" cuando el camión pasa a menos de atrasM metros, ese tramo llega hasta
    * atrasM metros por delante del camión; se descuentan para que el negro termine donde está el
    * camión (la barra rellena lo que ya pasó, no lo que viene).
-   * Devuelve { f: 0 a 1, desde: "inicio" | "fin" }.
+   * Devuelve { f: 0 a 1, desde: "inicio" | "fin", visitados: cuántos puntos de control van recorridos }.
    */
   function progresoPorMascara(puntos, largoM, atrasM) {
     var n = puntos ? puntos.length : 0;
-    if (n < 2) return { f: 0, desde: "inicio" };
+    if (n < 2) return { f: 0, desde: "inicio", visitados: 0 };
     var suma = 0, cuenta = 0, i;
     for (i = 0; i < n; i++) if (puntos.charAt(i) === "1") { suma += i; cuenta++; }
-    if (!cuenta) return { f: 0, desde: "inicio" };
+    if (!cuenta) return { f: 0, desde: "inicio", visitados: 0 };
     var desde = suma / cuenta <= (n - 1) / 2 ? "inicio" : "fin";
     var k = 0;
     for (i = 0; i < n; i++) {
@@ -309,7 +309,7 @@
     }
     var f = (k - 1) / (n - 1);
     if (largoM > 0) f = ((k - 1) / (n - 1) * largoM - (atrasM == null ? 15 : atrasM)) / largoM;
-    return { f: Math.max(0, Math.min(1, f)), desde: desde };
+    return { f: Math.max(0, Math.min(1, f)), desde: desde, visitados: cuenta };
   }
 
   /**
@@ -324,7 +324,7 @@
       var e = estadosRuta[id];
       if (e !== "verde" && e !== "negro") return;
       var p = progresoPorMascara((porId[id] || {}).puntos, largoDe ? largoDe(id) : 0, atrasM);
-      out[id] = e === "negro" ? { f: 1, desde: p.desde } : p;
+      out[id] = e === "negro" ? { f: 1, desde: p.desde, visitados: p.visitados } : p;
     });
     return out;
   }

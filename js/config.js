@@ -52,12 +52,14 @@ window.APP_CONFIG = {
   // Barra negra animada: el negro ("recolección finalizada") se va llenando por el tramo,
   // como una barra de carga, en vez de aparecer de golpe. Se desactiva sola si el aparato
   // del usuario pide "reducir movimiento".
-  //   activa          -> false para volver a pintar el negro de golpe.
-  //   metrosPorSegundo-> velocidad de llenado (a más metros por llenar, más dura, hasta maxSeg).
+  // La barra va pegada al camión: se llena hasta donde está el camión en pantalla, y el camión se
+  // desliza con suavidad de una lectura de GPS a la siguiente (no salta).
+  //   activa          -> false para volver a pintar el negro de golpe (y el camión salta, como antes).
+  //   metrosPorSegundo-> velocidad con que se completa lo que falta cuando el camión sale del tramo.
   //   minSeg / maxSeg -> duración mínima y máxima de cada llenado, en segundos.
   //   atrasoMetros    -> el negro termina esta distancia ANTES del punto más lejano recorrido, para que
   //                      quede justo detrás del camión (igual al radio de recorrido de conductor/app.js: 15 m).
-  barraNegro: { activa: true, metrosPorSegundo: 12, minSeg: 0.3, maxSeg: 4, atrasoMetros: 15 },
+  barraNegro: { activa: true, metrosPorSegundo: 20, minSeg: 0.3, maxSeg: 2.5, atrasoMetros: 15 },
 
   // Textos y colores de los 4 estados. Los colores deben coincidir con css/styles.css.
   estados: {
@@ -78,5 +80,5 @@ teselas: {
   },
   // Simulación del recorrido (panel "Modo demostración").
   // Cuántos segundos dura la simulación completa, de principio a fin.
-  simulacionSegundos: 60
+  simulacionSegundos: 300
 };
