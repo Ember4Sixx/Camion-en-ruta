@@ -106,6 +106,38 @@ prueba("estadosPorAvance: verde solo si la posición es reciente; nunca amarillo
   assert.deepStrictEqual(Estado.estadosPorAvance(ruta, filas, true), { a: "negro", b: "verde", c: "gris" });
   assert.deepStrictEqual(Estado.estadosPorAvance(ruta, filas, false), { a: "negro", b: "gris", c: "gris" });
 });
+prueba("progresoPorMascara: llena desde el extremo por donde entró, descontando el radio de 15 m", () => {
+  // tramo de 90 m con 10 puntos de control: 3 recorridos desde el inicio -> (2/9)*90 - 15 = 5 m
+  const a = Estado.progresoPorMascara("1110000000", 90, 15);
+  assert.strictEqual(a.desde, "inicio");
+  assert.ok(Math.abs(a.f - 5 / 90) < 1e-9);
+  // entró por el otro extremo
+  const b = Estado.progresoPorMascara("0000001111", 90, 15);
+  assert.strictEqual(b.desde, "fin");
+  assert.ok(Math.abs(b.f - (3 / 9 * 90 - 15) / 90) < 1e-9);
+  // nada recorrido, o sin datos: 0 (nunca inventa avance)
+  assert.deepStrictEqual(Estado.progresoPorMascara("0000000000", 90, 15), { f: 0, desde: "inicio" });
+  assert.deepStrictEqual(Estado.progresoPorMascara("", 90, 15), { f: 0, desde: "inicio" });
+});
+prueba("progresoPorMascara: un hueco corta la barra; una esquina tocada al otro lado no la estira", () => {
+  const r = Estado.progresoPorMascara("1111001001", 90, 0);
+  assert.strictEqual(r.desde, "inicio");
+  assert.ok(Math.abs(r.f - 3 / 9) < 1e-9);       // solo los 4 puntos seguidos del inicio
+  assert.ok(Estado.progresoPorMascara("1111111111", 90, 15).f <= 1);
+});
+prueba("progresoPorAvance: negro siempre llega a 1 y conserva el extremo; gris no lleva barra", () => {
+  const estados = { a: "negro", b: "verde", c: "gris" };
+  const filas = [{ tramo_id: "a", puntos: "0001111111" }, { tramo_id: "b", puntos: "1111100000" }];
+  const p = Estado.progresoPorAvance(estados, filas, () => 90, 0);
+  assert.deepStrictEqual(p.a, { f: 1, desde: "fin" });
+  assert.strictEqual(p.b.desde, "inicio");
+  assert.ok(Math.abs(p.b.f - 4 / 9) < 1e-9);
+  assert.strictEqual(p.c, undefined);
+});
+prueba("largoLineas suma los metros de todos los tramos de una línea", () => {
+  const m = Estado.largoLineas([[[-79.84, -6.75], [-79.83, -6.75]]]);
+  assert.ok(Math.abs(m - 0.01 * 111320 * Math.cos((6.75 * Math.PI) / 180)) < 1);
+});
 
 console.log("\ncarriles de una avenida de doble vía (Av. México, datos reales)");
 // Dos carriles a ~8 m uno del otro. Tramos de db/zona.sql: "sentido este" y "sentido oeste".
@@ -212,11 +244,17 @@ const D = global.AppData;
   // La app del conductor guardó: c3 recorrida completa, c2 donde está ahora.
   TABLAS.avance_tramos = [
     { ruta_id: "R1", tramo_id: "c3", estado: "negro", actualizado: "2026-10-30T08:55:00" },
-    { ruta_id: "R1", tramo_id: "c2b", estado: "verde", actualizado: "2026-10-30T09:00:00" }
+    { ruta_id: "R1", tramo_id: "c2b", estado: "verde", puntos: "1111100000", actualizado: "2026-10-30T09:00:00" }
   ];
   e = await D.estados();
   prueba("GPS fresco con avance -> colores según lo recorrido de verdad", () =>
     assert.deepStrictEqual(e.estados, { c1: "gris", c2a: "gris", c2b: "verde", c3: "negro" }));
+  prueba("estados() entrega el progreso de la barra: verde parcial, negro completo, gris sin barra", () => {
+    assert.strictEqual(e.progreso.c3.f, 1);
+    assert.strictEqual(e.progreso.c2b.desde, "inicio");
+    assert.ok(e.progreso.c2b.f > 0.3 && e.progreso.c2b.f < 0.5, "f=" + e.progreso.c2b.f);   // 5 de 10 puntos de ~1.1 km, menos 15 m
+    assert.strictEqual(e.progreso.c1, undefined);
+  });
   prueba("camion() devuelve la posición vigente", async () => assert.ok(await D.camion()));
   assert.ok(await D.camion());
 
